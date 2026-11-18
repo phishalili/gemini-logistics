@@ -115,7 +115,7 @@ def build(route_stations):
     for s in cur.get("stations", []):
         old.setdefault(s["c"], []).append(s)
     out, today = [], datetime.date.today().isoformat()
-    for code, fn in (("FR", france), ("IT", italy)):
+    for code, fn in (("FR", france),):   # Italia (MIMIT) bllokon shkarkimet nga jashtë Italisë
         try:
             g = grid(fn())
             print(code, "grid:", len(g))
