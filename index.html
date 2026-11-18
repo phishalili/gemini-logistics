@@ -94,7 +94,7 @@ const DEFAULTS = {
     {id:"A",name:"Furgoni A (rimorkio e gjatë)",lPer100:15,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.5,h:2.75}},
     {id:"B",name:"Furgoni B",lPer100:18,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.0,h:2.50}}
   ],
-  diesel:{XK:1.42,RS:1.70,HR:1.50,SI:1.52,AT:1.62,DE:1.68,HU:1.58}, dieselAuto:true, dieselUpdated:"",
+  diesel:{XK:1.78,RS:2.01,HR:1.97,SI:1.90,AT:1.96,DE:2.22,HU:1.92}, dieselAuto:true, dieselUpdated:"",
   fuelHomeShare:40, fuelAwayCountry:"DE",
   tollsPerTrip:[{name:"Autostrada Serbi (vajtje-ardhje)",eur:70},{name:"Autostrada Kroaci (vajtje-ardhje)",eur:80},{name:"Gjermani / tjetër",eur:0}],
   fixedYear:[{name:"Sigurimi (200 € × 4)",eur:800},{name:"Vinjeta Austri",eur:90},{name:"Tunelet Austri",eur:77},{name:"Vinjeta Slloveni",eur:240}],
@@ -1113,7 +1113,7 @@ function renderSettings(){
     <div class="row">${num("fuelHomeShare","% e blerë në Kosovë")}<div><label>Pjesa tjetër në</label><select data-path="fuelAwayCountry">${Object.keys(s.diesel).map(c=>`<option ${c===s.fuelAwayCountry?"selected":""}>${c}</option>`).join("")}</select></div></div>
     <p class="mute">Çmimi që përdoret tani: <b>${eur(dieselPrice())}</b> për litër.</p>
     <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="d-auto" style="width:auto" ${s.dieselAuto!==false?"checked":""}>Përditëso çmimet vetë çdo javë</label>
-    <p class="mute" style="margin:4px 0 8px">${s.dieselUpdated?`Përditësuar së fundi: ${esc(s.dieselUpdated)}.`:"Ende pa përditësim automatik."} Austria${s.dieselStations?.DE?" dhe Gjermania":""}: pika reale më e lirë në rrugë. Të tjerat: mesatarja e vendit.</p>
+    <p class="mute" style="margin:4px 0 8px">${s.dieselUpdated?`Përditësuar së fundi: ${esc(s.dieselUpdated)}.`:"Ende pa përditësim automatik."} Austria${s.dieselStations?.DE?" dhe Gjermania":""}: pika reale më e lirë në rrugë. Kosova: mesatarja e kompanive (naftasot). Serbia: çmimi maksimal i shtetit. Të tjerat: mesatarja e BE-së.</p>
     ${Object.entries(s.dieselStations||{}).map(([c,l])=>`<h3>Pikat më të lira · ${c}</h3>${l.slice(0,4).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px"><span><b>${esc(x.name)}</b><br><span class="mute">${esc(x.address||"")}, ${esc(x.city||"")} (afër ${esc(x.near)})</span></span><b>${eur(x.price)}</b></div>`).join("")}`).join("")}
     <button class="btn ghost small" id="d-sync" type="button">Kontrollo tani</button></div>
   <div class="card"><h2>Shpenzimet e udhëtimit</h2>
