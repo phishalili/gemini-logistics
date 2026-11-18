@@ -666,21 +666,48 @@ function renderOrders(){
   if(VIEW&&String(VIEW).startsWith("car:"))return renderCar(VIEW.slice(4));
   if(VIEW)return renderOrder(VIEW);
   const list=DB.orders;
-  $("#app").innerHTML=`<div class="card"><h2>Porositë (${list.length})</h2>
-  ${list.length?"":`<p class="mute">Ende s'ka porosi. Bëj një ofertë dhe ruaje.</p>`}
-  ${list.map(o=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default;flex-wrap:wrap">
+  const waitL=list.filter(o=>o.status!=="delivered"&&!onTrip(o)),tripL=list.filter(o=>o.status!=="delivered"&&onTrip(o)),doneL=list.filter(o=>o.status==="delivered");
+  const row=o=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default;flex-wrap:wrap">
     <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
-    <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span> ${o.status==="delivered"?`<span class="pill good">dorëzuar</span>`:""}</div>
+    <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span> ${o.status==="delivered"?`<span class="pill good">dorëzuar</span>`:""}${onTrip(o)&&o.status!=="delivered"?` <span class="pill">në udhëtim: ${esc(tripLabel(o.tripId))}</span>`:""}<span id="rec-${o.id}"></span></div>
     <div><b>${eur(o.price)}</b></div>
     <div style="flex-basis:100%;display:flex;gap:6px;margin-top:4px">
       <select data-assign="${o.id}" style="flex:1;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
-      <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`}).join("")}</div>
+      <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
+  $("#app").innerHTML=`<div class="card"><h2>Porositë që presin (${waitL.length})</h2>
+  ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
+  ${waitL.map(row).join("")}</div>
+  ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
+  ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
   ${carsCard()}`;
   document.querySelectorAll("[data-assign]").forEach(sel=>sel.onchange=()=>{assignOrder(sel.dataset.assign,sel.value);render()});
   document.querySelectorAll("[data-delo]").forEach(btn=>btn.onclick=()=>{if(!twoTap(btn))return;const id=btn.dataset.delo;DB.orders=DB.orders.filter(x=>x.id!==id);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==id));save();toast("Porosia u fshi");render()});
-  const waiting=list.filter(o=>!o.tripId&&o.status!=="delivered");
+  const waiting=waitL;recommendOrders(waiting);
   if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
+}
+// A është porosia në një udhëtim që ende s'ka përfunduar?
+function onTrip(o){const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);return !!t&&t.status!=="done"}
+// "Rekomandohet": për çdo porosi që pret, udhëtimi i ardhshëm ku hyn me më pak rrugë shtesë (dhe ka vend)
+async function recommendOrders(waiting){
+  if(!waiting.length)return;
+  const s=S(),trips=DB.trips.filter(t=>t.status!=="done"&&!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).slice(0,3);
+  const best={};
+  for(const t of trips){
+    const v=vanById(t.van),os=t.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
+    const pts=[t.start||s.base,...os.map(o=>o.addr),t.dest||s.base].filter(a=>a&&a.lat),n=pts.length;
+    const M=await distMatrix([...pts,...waiting.map(o=>o.addr)]);
+    let len=0;for(let i=1;i<n;i++)len+=M[i-1][i];
+    const lim=Math.max(60,len*0.15),kg=os.reduce((a,o)=>a+orderGoods(o).kg,0),m3=os.reduce((a,o)=>a+orderGoods(o).m3,0);
+    waiting.forEach((o,k)=>{const j=n+k,g=orderGoods(o);let ex=1e9;
+      for(let a=0;a<n;a++)for(let b=0;b<n;b++)if(a!==b)ex=Math.min(ex,M[a][j]+M[j][b]-M[a][b]);
+      if(ex<=lim&&kg+g.kg<=v.payloadKg&&m3+g.m3<=vanVol(v)&&(!best[o.id]||ex<best[o.id].ex))best[o.id]={t,ex}});
+  }
+  if(TAB!=="orders"||VIEW)return;
+  waiting.forEach(o=>{const el=$("#rec-"+o.id),b=best[o.id];if(!el)return;
+    el.innerHTML=b?` <span class="pill good">rekomandohet → ${esc(tripLabel(b.t.id))} (+${km(b.ex)})</span> <button class="btn small" type="button" data-recadd="${o.id}" data-trip="${b.t.id}">Shto</button>`
+      :trips.length?` <span class="pill">s'ka vend ose është larg rrugës së udhëtimeve</span>`:` <span class="pill good">rekomandohet për udhëtimin e radhës</span>`});
+  document.querySelectorAll("[data-recadd]").forEach(btn=>btn.onclick=()=>{assignOrder(btn.dataset.recadd,btn.dataset.trip);toast("U shtua në udhëtim");render()});
 }
 // Plani automatik: radha më e mirë e dorëzimit + radha e ngarkimit (e fundit ngarkohet e para)
 async function renderPlan(waiting){
@@ -959,8 +986,7 @@ function renderTrips(){
 }
 // Porositë që presin dorëzimin: pa udhëtim, ose në një udhëtim tjetër që s'ka përfunduar
 function waitingOrders(exceptTrip){
-  return DB.orders.filter(o=>{if(o.status==="delivered")return false;if(!o.tripId)return true;
-    if(o.tripId===exceptTrip)return false;const t=DB.trips.find(x=>x.id===o.tripId);return !t||t.status!=="done"});
+  return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
 }
 function tripLabel(id){const t=DB.trips.find(x=>x.id===id);return t?dateTxt(t.date)+(t.name?" · "+t.name:""):""}
 function driverList(){const n=[...new Set(["Babai","Vëllai",...DB.trips.map(t=>t.name).filter(Boolean)])];return `<datalist id="drivers">${n.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`}
@@ -996,7 +1022,7 @@ async function renderPick(){
 }
 // Veturat që presin të kthehen në shtëpi, renditur sipas kostos shtesë në kthim
 function waitingCars(exceptTrip){
-  return DB.cars.filter(c=>{if(c.status==="home")return false;if(!c.tripId)return true;if(c.tripId===exceptTrip)return false;const t=DB.trips.find(x=>x.id===c.tripId);return !t||t.status!=="done"});
+  return DB.cars.filter(c=>{if(c.status==="home"||c.tripId===exceptTrip)return false;const t=c.tripId&&DB.trips.find(x=>x.id===c.tripId);return !t||t.status==="done"});
 }
 async function rankCars(trip,cars,v){
   const pk=perKm(v),orders=trip.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
@@ -1184,18 +1210,16 @@ function renderSettings(){
   $("#reset").onclick=()=>{if(twoTap($("#reset"))){DB.settings=structuredClone(DEFAULTS);fixPayload();save();render();toast("Cilësimet u kthyen")}};
 }
 
-/* ===================== SHEMBUJ (vetëm herën e parë) ===================== */
-if(!DB.orders.length&&!DB.trips.length&&!DB.examplesShown){
-  DB.examplesShown=true;
-  const P=S().presets,it=(j,q)=>({preset:j,qty:q,l:P[j].l,w:P[j].w,h:P[j].h,kg:P[j].kg});
-  const ex=[["SHEMBULL · Arben",[it(0,4)],{label:"Königstraße 10, 70173 Stuttgart, Gjermani",lat:48.7758,lng:9.1829},385],
-            ["SHEMBULL · Besa",[it(1,1),it(3,1)],{label:"Hauptmarkt 5, 90403 Nürnberg, Gjermani",lat:49.4521,lng:11.0767},235],
-            ["SHEMBULL · Drita",[it(4,6),it(5,1)],{label:"Zeil 50, 60313 Frankfurt am Main, Gjermani",lat:50.1109,lng:8.6821},180],
-            ["SHEMBULL · Ilir",[it(6,2)],{label:"Domkloster 4, 50667 Köln, Gjermani",lat:50.9413,lng:6.9583},290]];
-  const tr={id:uid(),date:new Date(Date.now()+3*864e5).toISOString().slice(0,10),name:"SHEMBULL",van:"A",orderIds:[],status:"planned",returnIncome:600};
-  ex.forEach(([c,items,a,price],i)=>{const o={id:uid(),created:Date.now(),status:"open",customer:c,items,what:itemsSummary(items),addr:a,price,van:"A"};
-    DB.orders.push(o);if(i<3){tr.orderIds.push(o.id);o.tripId=tr.id}});
-  DB.trips.push(tr);save();
+/* ===================== PASTRIMI I SHEMBUJVE (një herë) ===================== */
+if(!DB.examplesCleaned){
+  const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
+  DB.orders=DB.orders.filter(o=>!fake.has(o.id));
+  DB.cars=(DB.cars||[]).filter(c=>!/SHEMBULL/i.test((c.owner||"")+" "+(c.model||"")));
+  DB.trips=DB.trips.filter(t=>t.name!=="SHEMBULL");
+  DB.trips.forEach(t=>{t.orderIds=t.orderIds.filter(id=>!fake.has(id));t.carIds=(t.carIds||[]).filter(id=>DB.cars.some(c=>c.id===id))});
+  DB.orders.forEach(o=>{if(o.tripId&&!DB.trips.some(t=>t.id===o.tripId))o.tripId=null});
+  DB.cars.forEach(c=>{if(c.tripId&&!DB.trips.some(t=>t.id===c.tripId))c.tripId=null});
+  DB.examplesCleaned=true;DB.examplesShown=true;save();
 }
 
 /* ===================== NISJA ===================== */
