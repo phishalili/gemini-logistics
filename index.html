@@ -93,11 +93,11 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 "use strict";
 /* ===================== CILËSIMET FILLESTARE ===================== */
 const DEFAULTS = {
-  base:{label:"Prishtinë, Kosovë",lat:42.6629,lng:21.1655},
+  base:{label:"Ferizaj, Kosovë",lat:42.3702,lng:21.1553},
   hub:{label:"München, Gjermani",lat:48.1374,lng:11.5755},
   vans:[
-    {id:"A",name:"Furgoni A (rimorkio e gjatë)",lPer100:15,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.5,h:2.75}},
-    {id:"B",name:"Furgoni B",lPer100:18,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.0,h:2.50}}
+    {id:"A",name:"Sprinter A",lPer100:15,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.5,h:2.75}},
+    {id:"B",name:"Sprinter B",lPer100:18,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.0,h:2.50}}
   ],
   diesel:{XK:1.78,RS:2.01,HR:1.97,SI:1.90,AT:1.96,DE:2.22,HU:1.92}, dieselAuto:true, dieselUpdated:"",
   fuelHomeShare:40, fuelAwayCountry:"DE",
@@ -1207,7 +1207,7 @@ function renderTrips(){
   const hist=DB.trips.filter(isPast).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
   $("#app").innerHTML=`<div class="card"><h2>Udhëtim i ri</h2>
     <label for="f-name">1. Shoferi</label>${driverSelect("f-name",ntf.name)}
-    <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Prishtinë")}
+    <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Ferizaj")}
     <label for="f-destsel">3. Destinacioni i fundit</label>${destSelect()}<div id="f-destother" ${ntf.destOrder==="other"||!destOrders().length?"":"hidden"}>${addrField("f-dest",ntf.destOrder==="other"?ntf.dest:null,"P.sh. Dortmund")}</div>
     <label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}
     <div id="pickBox"><p class="mute">Duke ngarkuar porositë që presin…</p></div>
@@ -1474,6 +1474,13 @@ function renderSettings(){
 }
 
 /* ===================== PASTRIMI I SHEMBUJVE (një herë) ===================== */
+// v15: Nisja = Ferizaj, furgonat = Sprinter A/B (edhe për cilësimet që vijnë nga telefoni tjetër)
+function migrateSettings(st){if(!st)return false;let ch=false;
+  if(st.base&&/^Prishtin/i.test(st.base.label||"")&&!st.baseFerizaj){st.base={...DEFAULTS.base};ch=true}
+  if(!st.baseFerizaj){st.baseFerizaj=true;ch=true}
+  (st.vans||[]).forEach(v=>{if(/^Furgoni\s*[AB]\b/i.test(v.name||"")){v.name="Sprinter "+v.id;ch=true}});
+  return ch}
+if(migrateSettings(DB.settings))save();
 if(!DB.examplesCleaned){
   const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
   DB.orders=DB.orders.filter(o=>!fake.has(o.id));
@@ -1503,7 +1510,7 @@ function syncRecords(){
 }
 function applyRemote(key,v,del){
   const t=key.slice(0,2),id=key.slice(2),arr=t==="o_"?DB.orders:t==="t_"?DB.trips:t==="c_"?DB.cars:null;
-  if(key==="settings"){if(!del&&v){const keep={};LOCAL_ONLY.forEach(k=>keep[k]=DB.settings[k]);DB.settings=Object.assign(structuredClone(DEFAULTS),JSON.parse(v),keep)}return}
+  if(key==="settings"){if(!del&&v){const keep={};LOCAL_ONLY.forEach(k=>keep[k]=DB.settings[k]);DB.settings=Object.assign(structuredClone(DEFAULTS),JSON.parse(v),keep);migrateSettings(DB.settings)}return}
   if(!arr)return;const i=arr.findIndex(x=>x.id===id);
   if(del){if(i>=0)arr.splice(i,1)}else{const rec=JSON.parse(v);if(i>=0)arr[i]=rec;else arr.push(rec)}
 }
