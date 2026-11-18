@@ -1313,7 +1313,7 @@ async function renderTrip(id){
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button>
     <h2 style="margin-top:10px">${esc(dateTxt(tr.date))}</h2><div class="mute">${esc(v.name)} · ${tr.start&&tr.dest?`${esc(cityOf(tr.start))} → ${esc(cityOf(tr.dest))}, kthim në ${esc(cityOf(s.base))}`:`nisja dhe kthimi: ${esc(s.base.label)}`}</div>
     <label for="t-drv">Shoferi</label>${driverSelect("t-drv",tr.name||"")}
-    <div class="row"><div><label for="t-date">Data</label><input id="t-date" type="date" value="${tr.date||""}"></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
+    <div class="row"><div><label for="t-date">Data e nisjes (ndryshoje ose shtyje)</label><input id="t-date" type="date" value="${tr.date||""}"><div style="display:flex;gap:6px;margin-top:6px"><button class="btn ghost small" type="button" data-shift="1">+1 ditë</button><button class="btn ghost small" type="button" data-shift="7">+1 javë</button></div></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
     ${p.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
     <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
     <label>Hapësira ${num1(p.m3)} / ${num1(vanVol(v))} m³</label><div class="bar ${m3Pct>100?"over":""}"><i style="width:${Math.min(100,m3Pct)}%"></i></div>
@@ -1360,7 +1360,8 @@ async function renderTrip(id){
   ${fuelDrop(tr)}
   <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
-  $("#t-date").onchange=e=>{tr.date=e.target.value;save();renderTrip(id)};
+  $("#t-date").onchange=e=>{tr.date=e.target.value;save();toast("Data u ndryshua");renderTrip(id)};
+  document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{const d=new Date((tr.date||todayISO())+"T12:00:00");d.setDate(d.getDate()+ +b.dataset.shift);tr.date=d.toISOString().slice(0,10);save();toast("U shty për "+dateTxt(tr.date));renderTrip(id)});
   $("#t-drv").onchange=e=>{tr.name=e.target.value.trim();save()};
   if($("#carLoad"))$("#carLoad").ontoggle=e=>{if(e.target.open)carLoadView("pack-car",p.carStops,v)};
   $("#fuelDrop").ontoggle=e=>{if(e.target.open)fillFuelDrop(p,tr)};
@@ -1479,7 +1480,7 @@ function render(){
   document.body.classList.toggle("client",client);
   $("#nav").hidden=client;
   if(client){$("#sub").textContent="";return renderClient()}
-  renderNav();$("#sub").textContent=DB.orders.filter(o=>o.status!=="delivered").length+" porosi të hapura";
+  renderNav();const sub=$("#sub");sub.textContent=DB.orders.filter(o=>o.status!=="delivered").length+" porosi të hapura ›";sub.style.cursor="pointer";sub.setAttribute("role","button");sub.onclick=()=>setTab("orders");
   ({quote:renderQuote,orders:renderOrders,trips:renderTrips,client:renderClient,settings:renderSettings})[TAB]();
 }
 window.addEventListener("hashchange",render);
