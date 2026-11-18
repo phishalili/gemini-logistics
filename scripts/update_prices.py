@@ -129,6 +129,36 @@ def de_stations():
     return out
 
 
+RSD_PER_EUR = 117.2   # dinari mbahet afër këtij kursi nga Banka e Serbisë
+
+
+def kosovo_price():
+    """Kosova: mesatarja e diesel-it nga naftasot.com (çmimet nga vetë kompanitë, përditësim ditor)."""
+    html = get("https://naftasot.com/")
+    m = re.search(r"Nafta \(dizel\)[^0-9]{0,80}?([0-9]+[.,][0-9]+)\s*\u20ac", html)
+    if not m:
+        raise RuntimeError("naftasot pattern not found")
+    v = float(m.group(1).replace(",", "."))
+    d = re.search(r"P\u00ebrdit\u00ebsuar:?\s*([^<\n]{4,30})", html)
+    print("Kosovo naftasot:", v, d.group(1) if d else "")
+    return round(v, 3)
+
+
+def serbia_price():
+    """Serbia: çmimi maksimal i evrodizelit që cakton Ministria e Tregtisë çdo të premte (lajmi në danas.rs)."""
+    page = get("https://www.danas.rs/?s=cene+goriva")
+    links = list(dict.fromkeys(re.findall(r'href="(https://www\.danas\.rs/vesti/ekonomija/[^"]*cene-goriva[^"]*)"', page)))
+    print("Serbia candidate articles:", links[:3])
+    for url in links[:4]:
+        art = get(url)
+        m = re.search(r"evrodizel[a-z]*[^.]{0,160}?maksimalno\s*([0-9]{3})\s*dinara", art, re.I) or re.search(r"evrodizel[a-z]*[^.]{0,120}?([0-9]{3})\s*dinara", art, re.I)
+        if m:
+            rsd = float(m.group(1))
+            print("Serbia evrodizel RSD:", rsd, url)
+            return round(rsd / RSD_PER_EUR, 3), url
+    raise RuntimeError("serbia price not found")
+
+
 def main():
     try:
         cur = json.load(open(OUT))
@@ -141,13 +171,18 @@ def main():
                 diesel[k] = v; src[k] = "EU Weekly Oil Bulletin " + today
     except Exception as e:
         print("EU source failed:", e, file=sys.stderr)
-    for code, country in GPP.items():
-        try:
-            v = gpp_price(country)
-            if SANE[0] <= v <= SANE[1]:
-                diesel[code] = v; src[code] = "globalpetrolprices.com " + today
-        except Exception as e:
-            print(country, "failed:", e, file=sys.stderr)
+    try:
+        v = kosovo_price()
+        if SANE[0] <= v <= SANE[1]:
+            diesel["XK"] = v; src["XK"] = "naftasot.com (mesatarja e kompanive) " + today
+    except Exception as e:
+        print("Kosovo failed:", e, file=sys.stderr)
+    try:
+        v, url = serbia_price()
+        if SANE[0] <= v <= SANE[1]:
+            diesel["RS"] = v; src["RS"] = "Çmimi maksimal shtetëror (danas.rs) " + today
+    except Exception as e:
+        print("Serbia failed:", e, file=sys.stderr)
     stations = dict(cur.get("stations", {}))
     for code, fn in (("AT", at_stations), ("DE", de_stations)):
         st = [x for x in fn() if SANE[0] <= x["price"] <= SANE[1]]
