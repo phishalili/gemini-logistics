@@ -76,6 +76,49 @@ def gpp_price(country):
     raise RuntimeError("price not found for " + country)
 
 
+# ---- Çmimet reale nga pikat e karburantit përgjatë rrugës ----
+AT_POINTS = {"Spielfeld": (46.708, 15.633), "Graz": (47.070, 15.440), "Salzburg": (47.810, 13.040)}
+DE_POINTS = {"München": (48.137, 11.575), "Nürnberg": (49.452, 11.077), "Frankfurt": (50.110, 8.682), "Dortmund": (51.514, 7.468)}
+
+
+def at_stations():
+    """Austria: E-Control Spritpreisrechner (falas, pa çelës). Kthen pikat më të lira të diesel-it."""
+    out = []
+    for town, (la, lo) in AT_POINTS.items():
+        try:
+            data = json.loads(get(f"https://api.e-control.at/sprit/1.0/search/gas-stations/by-address?latitude={la}&longitude={lo}&fuelType=DIE&includeClosed=false"))
+            best = None
+            for st in data:
+                pr = [p.get("amount") for p in st.get("prices", []) if p.get("fuelType") == "DIE" and p.get("amount")]
+                if pr and (best is None or pr[0] < best["price"]):
+                    loc = st.get("location", {})
+                    best = {"name": st.get("name", ""), "address": loc.get("address", ""), "city": loc.get("city", town), "price": round(float(pr[0]), 3), "near": town}
+            if best:
+                out.append(best)
+        except Exception as e:
+            print("AT", town, "failed:", e, file=sys.stderr)
+    return out
+
+
+def de_stations():
+    """Gjermania: Tankerkönig (MTS-K). Duhet çelësi falas në sekretin TANKERKOENIG_KEY."""
+    import os
+    key = os.environ.get("TANKERKOENIG_KEY", "").strip()
+    if not key:
+        print("DE: no TANKERKOENIG_KEY yet, skipping", file=sys.stderr)
+        return []
+    out = []
+    for town, (la, lo) in DE_POINTS.items():
+        try:
+            d = json.loads(get(f"https://creativecommons.tankerkoenig.de/json/list.php?lat={la}&lng={lo}&rad=10&sort=price&type=diesel&apikey={key}"))
+            st = next((x for x in d.get("stations", []) if x.get("price") and x.get("isOpen", True)), None)
+            if st:
+                out.append({"name": st.get("brand") or st.get("name", ""), "address": f"{st.get('street','')} {st.get('houseNumber','') or ''}".strip(), "city": st.get("place", town), "price": round(float(st["price"]), 3), "near": town})
+        except Exception as e:
+            print("DE", town, "failed:", e, file=sys.stderr)
+    return out
+
+
 def main():
     try:
         cur = json.load(open(OUT))
@@ -95,8 +138,15 @@ def main():
                 diesel[code] = v; src[code] = "globalpetrolprices.com " + today
         except Exception as e:
             print(country, "failed:", e, file=sys.stderr)
-    changed = diesel != cur.get("diesel")
-    out = {"updated": today if changed else cur.get("updated", today), "checked": today, "diesel": diesel, "sources": src}
+    stations = dict(cur.get("stations", {}))
+    for code, fn in (("AT", at_stations), ("DE", de_stations)):
+        st = [x for x in fn() if SANE[0] <= x["price"] <= SANE[1]]
+        if st:
+            stations[code] = sorted(st, key=lambda x: x["price"])
+            diesel[code] = stations[code][0]["price"]   # pika më e lirë përgjatë rrugës
+            src[code] = ("E-Control" if code == "AT" else "Tankerkönig") + " (pika reale) " + today
+    changed = diesel != cur.get("diesel") or stations != cur.get("stations", {})
+    out = {"updated": today if changed else cur.get("updated", today), "checked": today, "diesel": diesel, "sources": src, "stations": stations}
     json.dump(out, open(OUT, "w"), indent=2, ensure_ascii=False)
     print(json.dumps(out, indent=2))
 

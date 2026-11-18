@@ -1113,7 +1113,8 @@ function renderSettings(){
     <div class="row">${num("fuelHomeShare","% e blerë në Kosovë")}<div><label>Pjesa tjetër në</label><select data-path="fuelAwayCountry">${Object.keys(s.diesel).map(c=>`<option ${c===s.fuelAwayCountry?"selected":""}>${c}</option>`).join("")}</select></div></div>
     <p class="mute">Çmimi që përdoret tani: <b>${eur(dieselPrice())}</b> për litër.</p>
     <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="d-auto" style="width:auto" ${s.dieselAuto!==false?"checked":""}>Përditëso çmimet vetë çdo javë</label>
-    <p class="mute" style="margin:4px 0 8px">${s.dieselUpdated?`Përditësuar së fundi: ${esc(s.dieselUpdated)}.`:"Ende pa përditësim automatik."} Burimi: buletini javor i BE-së (AT, DE, HR, SI, HU) dhe globalpetrolprices (XK, RS).</p>
+    <p class="mute" style="margin:4px 0 8px">${s.dieselUpdated?`Përditësuar së fundi: ${esc(s.dieselUpdated)}.`:"Ende pa përditësim automatik."} Austria${s.dieselStations?.DE?" dhe Gjermania":""}: pika reale më e lirë në rrugë. Të tjerat: mesatarja e vendit.</p>
+    ${Object.entries(s.dieselStations||{}).map(([c,l])=>`<h3>Pikat më të lira · ${c}</h3>${l.slice(0,4).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px"><span><b>${esc(x.name)}</b><br><span class="mute">${esc(x.address||"")}, ${esc(x.city||"")} (afër ${esc(x.near)})</span></span><b>${eur(x.price)}</b></div>`).join("")}`).join("")}
     <button class="btn ghost small" id="d-sync" type="button">Kontrollo tani</button></div>
   <div class="card"><h2>Shpenzimet e udhëtimit</h2>
     <div class="row">${num("daysPerTrip","Ditë për udhëtim")}${num("tripsPerYear","Udhëtime në vit (për furgon)")}</div>
@@ -1187,7 +1188,7 @@ const PRICES_URL="https://phishalili.github.io/gemini-logistics/prices.json";
 async function syncPrices(manual){
   const s=S();if(!manual&&s.dieselAuto===false)return;
   try{const r=await fetch(PRICES_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();
-    s.dieselChecked=new Date().toISOString().slice(0,10);
+    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;
     const ch=Object.entries(j.diesel||{}).filter(([k,v])=>+v>0.5&&+v<4&&+s.diesel[k]!==+v);
     if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);s.dieselUpdated=j.updated||s.dieselChecked;save();toast("Çmimet e naftës u përditësuan ("+(j.updated||"")+")");render()}
     else{save();if(manual){toast("Çmimet e naftës janë të fundit");render()}}
