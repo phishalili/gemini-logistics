@@ -2,8 +2,8 @@
   "updated": "2026-11-18",
   "checked": "2026-11-18",
   "diesel": {
-    "XK": 1.42,
-    "RS": 1.7,
+    "XK": 1.78,
+    "RS": 2.014,
     "HR": 1.974,
     "SI": 1.904,
     "AT": 1.962,
@@ -16,7 +16,9 @@
     "HR": "EU Weekly Oil Bulletin 2026-11-18",
     "DE": "EU Weekly Oil Bulletin 2026-11-18",
     "HU": "EU Weekly Oil Bulletin 2026-11-18",
-    "SI": "EU Weekly Oil Bulletin 2026-11-18"
+    "SI": "EU Weekly Oil Bulletin 2026-11-18",
+    "XK": "naftasot.com (mesatarja e kompanive) 2026-11-18",
+    "RS": "Çmimi maksimal shtetëror (danas.rs) 2026-11-18"
   },
   "stations": {
     "AT": [
