@@ -497,7 +497,7 @@ const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(
 let draft=null;
 function renderQuote(){
   if(!draft)draft={customer:"",phone:"",what:"",addr:null,items:[newItem(0)]};
-  $("#app").innerHTML=`<div class="card"><h2>Ofertë e re</h2>
+  $("#app").innerHTML=`${fuelBar()}<div class="card"><h2>Ofertë e re</h2>
   <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(draft.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" placeholder="+383 …" value="${esc(draft.phone||"")}"></div></div>
   <label>Adresa e dorëzimit</label>${addrField("f-addr",draft.addr)}
   <h3>Mallrat</h3><p class="mute" style="margin:0">Zgjidh llojin, ose shkruaj masat. Nëse nuk e di peshën, lëre bosh: e vlerësojmë nga madhësia. Kuzhina: shkruaj gjatësinë totale te “Gjatësia cm” (p.sh. 550), sasia 1.</p>
@@ -509,7 +509,7 @@ function renderQuote(){
   <div class="row" style="align-items:flex-end;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="q-vat" style="width:auto" ${draft.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
   <div><label for="q-docs">Dokumente / të tjera €</label><input id="q-docs" type="number" inputmode="decimal" value="${draft.docs||""}" placeholder="0"></div></div>
   <button class="btn full" id="calc">Llogarit çmimin</button></div><div id="result"></div>`;
-  wireAddr("f-addr",r=>draft.addr=r);
+  wireAddr("f-addr",r=>draft.addr=r);wireFuelBar();
   $("#f-cust").oninput=e=>draft.customer=e.target.value;$("#f-phone").oninput=e=>draft.phone=e.target.value;
   const repack=debounce(()=>packView("pack-q",piecesFromItems(draft.items).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h),vanById(draft.pkVan||"A"),draft.items.map((it,j)=>({color:j,label:it.qty+"× "+(it.preset==="x"?"Mall":(S().presets[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,""))})).filter(l=>!l.label.startsWith("0×")),{tip:draft.pkTip}),120);
   $("#pk-van").onchange=e=>{draft.pkVan=e.target.value;repack()};
@@ -1190,11 +1190,20 @@ async function syncPrices(manual){
   try{const r=await fetch(PRICES_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();
     s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;
     const ch=Object.entries(j.diesel||{}).filter(([k,v])=>+v>0.5&&+v<4&&+s.diesel[k]!==+v);
-    if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);s.dieselUpdated=j.updated||s.dieselChecked;save();toast("Çmimet e naftës u përditësuan ("+(j.updated||"")+")");render()}
-    else{save();if(manual){toast("Çmimet e naftës janë të fundit");render()}}
-  }catch(e){if(manual)toast("Nuk u lidh me internetin. Çmimet mbeten si ishin.")}
+    const was=s.dieselUpdated;s.dieselUpdated=j.updated||s.dieselChecked;
+    if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);save();toast("Çmimet e naftës u përditësuan ("+fmtDay(s.dieselUpdated)+")");render()}
+    else{save();if(manual)toast("Çmimet e naftës janë të fundit");if(manual||was!==s.dieselUpdated)refreshFuelBar()}
+  }catch(e){if(manual)toast("Nuk ka internet. Çmimet mbeten si ishin.");refreshFuelBar()}
 }
+function fmtDay(d){const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||"");return m?`${m[3]}.${m[2]}.${m[1]}`:(d||"")}
+function fuelBarInner(){const s=S(),on=navigator.onLine!==false;
+  return `<div style="flex:1;min-width:0"><div>⛽ Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
+function fuelBar(){return `<div class="card" id="fuelbar" style="display:flex;gap:10px;align-items:center;padding:10px 14px">${fuelBarInner()}</div>`}
+function wireFuelBar(){const b=$("#fuel-sync");if(b)b.onclick=()=>syncPrices(true)}
+function refreshFuelBar(){const el=$("#fuelbar");if(el){el.innerHTML=fuelBarInner();wireFuelBar()}}
 syncPrices(false);
+addEventListener("online",()=>{refreshFuelBar();syncPrices(false)});addEventListener("offline",refreshFuelBar);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S().dieselChecked!==new Date().toISOString().slice(0,10))syncPrices(false)});
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
