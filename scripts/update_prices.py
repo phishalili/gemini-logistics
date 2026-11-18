@@ -212,8 +212,8 @@ def route_si():
     for town, (la, lo) in SI_POINTS.items():
         try:
             d = json.loads(get(f"https://goriva.si/api/v1/search/?position={la},{lo}&radius=8000"))
-            near = [{"c": "SI", "name": x.get("name", "").title(), "address": (x.get("address") or "").title(), "city": "",
-                     "lat": x.get("lat"), "lng": x.get("lng"), "price": float(x["prices"]["dizel"]), "near": town}
+            near = [{"c": "SI", "name": x.get("name", "").title(), "address": (x.get("address") or "").title(),
+                     "city": town.split(" /")[0], "lat": x.get("lat"), "lng": x.get("lng"), "price": float(x["prices"]["dizel"]), "near": town}
                     for x in d.get("results", []) if (x.get("prices") or {}).get("dizel")]
             out += _best(near)
         except Exception as e:
@@ -301,7 +301,16 @@ def main():
             diesel[code] = stations[code][0]["price"]   # pika më e lirë përgjatë rrugës
             src[code] = ("E-Control" if code == "AT" else "Tankerkönig") + " (pika reale) " + today
     route = route_stations()
+    # hiq pikat me çmim të dyshimtë (p.sh. pika private të flotave), >10% nën mesataren e vendit
+    import statistics
+    for c in {x["c"] for x in route}:
+        med = statistics.median(x["price"] for x in route if x["c"] == c)
+        route = [x for x in route if x["c"] != c or x["price"] >= 0.9 * med]
     have = {x["c"] for x in route}
+    # çmimi i vendit = mesatarja (mediana) e pikave reale në rrugë, që llogaritja të jetë realiste
+    for c in have & {"HR", "SI", "DE"}:
+        diesel[c] = round(statistics.median(x["price"] for x in route if x["c"] == c), 3)
+        src[c] = {"HR": "mzoe-gor.hr", "SI": "goriva.si", "DE": "clever-tanken.de (MTS-K)"}[c] + " (mediana e pikave në rrugë) " + today
     route += [x for x in cur.get("route", []) if x.get("c") not in have]   # vendi që dështoi mban listën e djeshme
     changed = diesel != cur.get("diesel") or stations != cur.get("stations", {}) or route != cur.get("route", [])
     out = {"updated": today if changed else cur.get("updated", today), "checked": today, "diesel": diesel, "sources": src, "stations": stations, "route": route}

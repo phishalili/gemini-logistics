@@ -311,6 +311,31 @@ async function extraKm(trip,o){
   return (await routeOf(trip,[...orders,o])).len-(await routeOf(trip,orders)).len;
 }
 
+/* ===================== NAFTA NË RRUGË ===================== */
+const CTRY=[["XK","🇽🇰","Kosovë"],["RS","🇷🇸","Serbi"],["HR","🇭🇷","Kroaci"],["SI","🇸🇮","Slloveni"],["AT","🇦🇹","Austri"],["DE","🇩🇪","Gjermani"]];
+function stationMap(x){const exact=x.c!=="DE"&&x.lat&&x.lng;
+  return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(exact?`${x.lat},${x.lng}`:[x.name,x.address,x.city].filter(Boolean).join(", "))}
+// Pikat e karburantit për këtë udhëtim: korridori (HR, SI, AT) + Gjermania afër ndalesave
+function tripStations(p,tr){
+  const all=S().routeStations||[];if(!all.length)return null;
+  const pts=[...p.stops.map(o=>o.addr),tr.dest,...p.carStops.map(c=>c.from)].filter(a=>a&&a.lat);
+  const deNear=x=>["Rosenheim","München"].includes(x.near)||pts.some(a=>hav(a,{lat:x.lat,lng:x.lng})<60);
+  const by={};all.filter(x=>x.c!=="DE"||deNear(x)).forEach(x=>(by[x.c]=by[x.c]||[]).push(x));
+  Object.values(by).forEach(l=>l.sort((a,b)=>a.price-b.price));
+  return by;
+}
+function fuelCard(p,tr){
+  const s=S(),by=tripStations(p,tr);
+  if(!by)return `<div class="card"><h2>⛽ Ku të mbushësh naftë</h2><p class="mute">Pikat e karburantit shfaqen pasi app-i lidhet me internetin.</p></div>`;
+  const rows=CTRY.map(([c,f,n])=>{const l=by[c]||[],best=l[0]?.price??s.diesel[c];return {c,f,n,l,best}}).filter(r=>r.best);
+  const cheap=[...rows].sort((a,b)=>a.best-b.best)[0];
+  const back=[...rows].filter(r=>["AT","DE","SI"].includes(r.c)).sort((a,b)=>a.best-b.best)[0];
+  return `<div class="card"><h2>⛽ Ku të mbushësh naftë</h2>
+    <p style="margin:0 0 8px">Më e lira në rrugë: <b>${cheap.f} ${cheap.n} ${eur(cheap.best)}</b>/L${cheap.c==="XK"?" · mbush plot para nisjes":""}.${back&&back.c!=="DE"&&by.DE?` Në kthim, mbush në <b>${back.n}</b> (${eur(back.best)}), jo në Gjermani.`:""}</p>
+    ${rows.map(r=>`<h3 style="margin:12px 0 4px">${r.f} ${r.n}</h3>${r.l.length?r.l.slice(0,r.c==="DE"?4:3).map(x=>`<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name)}</b> · <b>${eur(x.price)}</b><br><span class="mute">${esc([x.address,x.city].filter(Boolean).join(", "))}${x.near&&x.city!==x.near?" · afër "+esc(x.near):""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`).join(""):`<p class="mute" style="margin:0">${r.c==="XK"?"Mesatarja e kompanive":r.c==="RS"?"Çmimi maksimal i shtetit (njësoj në të gjitha pikat)":"Mesatarja"}: <b>${eur(r.best)}</b>/L. Çmime për çdo pikë nuk publikohen falas.</p>`}`).join("")}
+    <p class="mute" style="margin-top:8px">${s.dieselUpdated?"Çmimet e "+esc(fmtDay(s.dieselUpdated))+". ":""}Burimet: mzoe-gor.hr, goriva.si, E-Control, clever-tanken.de.</p></div>`;
+}
+
 /* ===================== PJESË TË PËRBASHKËTA ===================== */
 const ICON={
   quote:'<path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/>',
@@ -1039,6 +1064,7 @@ async function renderTrip(id){
       <button class="btn ghost small" onclick="toggleCarHome('${c.id}','${tr.id}')">${c.status==="home"?"Anulo":"Në shtëpi ✓"}</button>
       <button class="btn warn small" onclick="carFromTrip('${c.id}','${tr.id}')">Hiqe</button></div></div></div>`).join(""):`<p class="mute">Ende s'ke zgjedhur veturë për kthim.</p>`}
     <div id="carsLoose"></div></div>
+  ${fuelCard(p,tr)}
   <div class="card"><details class="more" id="t3d" style="border:0;margin:0;padding:0" ${tr.open3d?"open":""}><summary style="font-size:18px">Ngarkimi 3D</summary><p class="mute" style="margin:0">Ngarkohet së pari ndalesa e fundit (përpara), kështu e para del e para. Numrat = radha e ngarkimit.</p>
     <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:500"><input type="checkbox" id="tk-tip" style="width:auto" ${tr.tip?"checked":""}>Lejo vendosjen anash (dyshekë, tavolina)</label>
     <div id="pack-t"></div></details></div>
@@ -1188,7 +1214,7 @@ const PRICES_URL="https://phishalili.github.io/gemini-logistics/prices.json";
 async function syncPrices(manual){
   const s=S();if(!manual&&s.dieselAuto===false)return;
   try{const r=await fetch(PRICES_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();
-    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;
+    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;if(Array.isArray(j.route))s.routeStations=j.route;
     const ch=Object.entries(j.diesel||{}).filter(([k,v])=>+v>0.5&&+v<4&&+s.diesel[k]!==+v);
     const was=s.dieselUpdated;s.dieselUpdated=j.updated||s.dieselChecked;
     if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);save();toast("Çmimet e naftës u përditësuan ("+fmtDay(s.dieselUpdated)+")");render()}
