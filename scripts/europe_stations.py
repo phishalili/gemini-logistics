@@ -13,7 +13,7 @@ UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) price-updater"}
 CELL = 0.2   # gradë, rreth 15-22 km
 
 
-def get(url, binary=False, timeout=180):
+def get(url, binary=False, timeout=120):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         d = r.read()
@@ -115,7 +115,7 @@ def build(route_stations):
     for s in cur.get("stations", []):
         old.setdefault(s["c"], []).append(s)
     out, today = [], datetime.date.today().isoformat()
-    for code, fn in (("FR", france), ("IT", italy), ("ES", spain)):
+    for code, fn in (("FR", france), ("IT", italy)):
         try:
             g = grid(fn())
             print(code, "grid:", len(g))

@@ -251,10 +251,15 @@ def route_at():
 def route_de():
     """Gjermania: lista publike e clever-tanken.de (çmimet zyrtare MTS-K), pa regjistrim."""
     import html as H
-    out = []
+    out, fails = [], 0
     for town, (la, lo) in DE_ROUTE.items():
         try:
-            d = get(f"https://www.clever-tanken.de/tankstelle_liste?lat={la}&lon={lo}&ort={urllib.request.quote(town)}&spritsorte=3&r=8")
+            if fails >= 3:
+                break
+            req = urllib.request.Request(f"https://www.clever-tanken.de/tankstelle_liste?lat={la}&lon={lo}&ort={urllib.request.quote(town)}&spritsorte=3&r=8", headers=UA)
+            with urllib.request.urlopen(req, timeout=25) as rr:
+                d = rr.read().decode("utf-8", "replace")
+            fails = 0
             near = []
             for m in re.finditer(r"generateDygraph\(event, '\d+', 'hover', '((?:[^'\\]|\\.)*)', '((?:[^'\\]|\\.)*)' \)\">(.{0,600}?)<sup>(\d)</sup>", d, re.S):
                 pm = re.search(r"(\d)\.(\d\d)\s*$", re.sub(r"<[^>]+>", " ", m.group(3)).strip())
@@ -264,8 +269,9 @@ def route_de():
                              "city": town, "lat": la, "lng": lo, "price": float(f"{pm.group(1)}.{pm.group(2)}{m.group(4)}"), "near": town})
             out += _best(near)
         except Exception as e:
+            fails += 1
             print("DE", town, "failed:", e, file=sys.stderr)
-        time.sleep(1)
+        time.sleep(2)
     return out
 
 def route_stations():
