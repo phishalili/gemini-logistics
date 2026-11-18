@@ -42,6 +42,7 @@ input:focus,select:focus,textarea:focus,.btn:focus-visible{outline:2px solid var
 .cmenu{position:fixed;inset:0;background:#0006;z-index:50;display:flex;align-items:flex-end;justify-content:center}.cm-box{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}.cm-btn{display:block;text-align:center;padding:14px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;color:var(--ink);background:var(--bg);border:0}
 a[href^="tel:"]{color:var(--acc);text-decoration:none;font-weight:600;white-space:nowrap}
 .row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;min-height:44px;text-align:left}input::-webkit-date-and-time-value{text-align:left;margin:0}
 .btn{display:inline-block;border:0;border-radius:12px;padding:13px 16px;font:700 16px var(--f);background:var(--acc);color:var(--onacc);text-decoration:none;text-align:center;cursor:pointer}
 .btn.ghost{background:var(--acc2);color:var(--acc)}
 .btn.warn{background:var(--warnbg);color:var(--warn)}
@@ -1208,7 +1209,7 @@ function renderTrips(){
     <label for="f-name">1. Shoferi</label>${driverSelect("f-name",ntf.name)}
     <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Prishtinë")}
     <label for="f-destsel">3. Destinacioni i fundit</label>${destSelect()}<div id="f-destother" ${ntf.destOrder==="other"||!destOrders().length?"":"hidden"}>${addrField("f-dest",ntf.destOrder==="other"?ntf.dest:null,"P.sh. Dortmund")}</div>
-    <div class="row"><div><label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"></div><div><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}</div></div>
+    <label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}
     <div id="pickBox"><p class="mute">Duke ngarkuar porositë që presin…</p></div>
     <div id="carBox"></div>
     <button class="btn full" id="add">Krijo udhëtimin</button></div>
@@ -1322,7 +1323,7 @@ async function renderTrip(id){
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button>
     <h2 style="margin-top:10px">${esc(dateTxt(tr.date))}</h2><div class="mute">${esc(v.name)} · ${tr.start&&tr.dest?`${esc(cityOf(tr.start))} → ${esc(cityOf(tr.dest))}, kthim në ${esc(cityOf(s.base))}`:`nisja dhe kthimi: ${esc(s.base.label)}`}</div>
     <label for="t-drv">Shoferi</label>${driverSelect("t-drv",tr.name||"")}
-    <div class="row"><div><label for="t-date">Data e nisjes (ndryshoje ose shtyje)</label><input id="t-date" type="date" value="${tr.date||""}"><div style="display:flex;gap:6px;margin-top:6px"><button class="btn ghost small" type="button" data-shift="1">+1 ditë</button><button class="btn ghost small" type="button" data-shift="7">+1 javë</button></div></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
+    <div><div><label for="t-date">Data e nisjes (ndryshoje ose shtyje)</label><input id="t-date" type="date" value="${tr.date||""}"><div style="display:flex;gap:6px;margin-top:6px"><button class="btn ghost small" type="button" data-shift="1">+1 ditë</button><button class="btn ghost small" type="button" data-shift="7">+1 javë</button></div></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
     ${p.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
     <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
     <label>Hapësira ${num1(p.m3)} / ${num1(vanVol(v))} m³</label><div class="bar ${m3Pct>100?"over":""}"><i style="width:${Math.min(100,m3Pct)}%"></i></div>
