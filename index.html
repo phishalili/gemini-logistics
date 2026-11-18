@@ -958,7 +958,7 @@ function renderTrips(){
   const active=DB.trips.filter(t=>!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
   const hist=DB.trips.filter(isPast).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
   $("#app").innerHTML=`<div class="card"><h2>Udhëtim i ri</h2>
-    <label for="f-name">1. Shoferi</label><input id="f-name" list="drivers" value="${esc(ntf.name)}" placeholder="p.sh. Babai ose Vëllai">${driverList()}
+    <label for="f-name">1. Shoferi</label><input id="f-name" list="drivers" value="${esc(ntf.name)}" placeholder="p.sh. Maruf ose Krenar">${driverList()}
     <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Prishtinë")}
     <label>3. Destinacioni i fundit</label>${addrField("f-dest",ntf.dest,"P.sh. Dortmund")}
     <div class="row"><div><label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"></div><div><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}</div></div>
@@ -989,7 +989,7 @@ function waitingOrders(exceptTrip){
   return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
 }
 function tripLabel(id){const t=DB.trips.find(x=>x.id===id);return t?dateTxt(t.date)+(t.name?" · "+t.name:""):""}
-function driverList(){const n=[...new Set(["Babai","Vëllai",...DB.trips.map(t=>t.name).filter(Boolean)])];return `<datalist id="drivers">${n.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`}
+function driverList(){const n=[...new Set(["Maruf","Krenar",...DB.trips.map(t=>t.name).filter(x=>x&&!["Babai","Vëllai","SHEMBULL"].includes(x))])];return `<datalist id="drivers">${n.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`}
 // Porositë që presin, renditur sipas kostos shtesë për rrugën nisje → destinacion
 async function renderPick(){
   const box=$("#pickBox");if(!box)return;
@@ -1064,7 +1064,7 @@ async function renderTrip(id){
   const left=p.stops.filter(o=>o.status!=="delivered");
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button>
     <h2 style="margin-top:10px">${esc(dateTxt(tr.date))}</h2><div class="mute">${esc(v.name)} · ${tr.start&&tr.dest?`${esc(cityOf(tr.start))} → ${esc(cityOf(tr.dest))}, kthim në ${esc(cityOf(s.base))}`:`nisja dhe kthimi: ${esc(s.base.label)}`}</div>
-    <label for="t-drv">Shoferi</label><input id="t-drv" list="drivers" value="${esc(tr.name||"")}" placeholder="p.sh. Babai ose Vëllai">${driverList()}
+    <label for="t-drv">Shoferi</label><input id="t-drv" list="drivers" value="${esc(tr.name||"")}" placeholder="p.sh. Maruf ose Krenar">${driverList()}
     <div class="row"><div><label for="t-date">Data</label><input id="t-date" type="date" value="${tr.date||""}"></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
     ${p.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
     <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
