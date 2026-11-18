@@ -31,6 +31,10 @@ def eu_prices():
     print("EU candidate links:", cand[:5])
     if not cand:
         raise RuntimeError("no EU xlsx link found")
+    cand = [c for c in cand if "without" not in c.lower()] or cand
+    dated = lambda c: (re.findall(r"(20\d\d-\d\d-\d\d)", c) or ["0"])[-1]
+    cand.sort(key=dated, reverse=True)
+    print("EU file used:", cand[0])
     url = cand[0] if cand[0].startswith("http") else "https://energy.ec.europa.eu" + cand[0]
     wb = openpyxl.load_workbook(io.BytesIO(get(url, binary=True)), data_only=True)
     ws = wb.worksheets[0]
@@ -45,6 +49,9 @@ def eu_prices():
             break
     if col is None:
         raise RuntimeError("diesel column not found")
+    for r in rows[:6]:
+        print("EU header:", [str(c)[:40] for c in r[:8]])
+    print("EU diesel column:", col)
     out = {}
     for r in rows:
         name = next((c for c in r if isinstance(c, str)), "")
@@ -58,6 +65,7 @@ def eu_prices():
                 if v > 100:  # € për 1000 L
                     v = v / 1000
                 out[code] = round(v, 3)
+                print("EU row", code, [str(c)[:20] for c in r[:8]])
     return out
 
 
@@ -73,6 +81,8 @@ def gpp_price(country):
         x = get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
         rate = float(re.search(r"currency='USD' rate='([0-9.]+)'", x).group(1))
         return round(usd / rate, 3)
+    i = html.lower().find("per liter")
+    print(country, "snippet:", re.sub(r"<[^>]+>", " ", html[max(0, i - 400):i + 200])[:600] if i >= 0 else html[:300])
     raise RuntimeError("price not found for " + country)
 
 
