@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gemini Logistics</title>
+<meta name="theme-color" content="#1f3fa0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
+<style>
+details.more{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+details.more>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--acc);list-style:none}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸ ";}details.more[open]>summary::before{content:"▾ ";}
+.big3{display:flex;gap:8px;margin:8px 0}.big3>div{flex:1;background:var(--bg);border-radius:12px;padding:10px;text-align:center}.big3 b{display:block;font-size:16px;white-space:nowrap}.big3 span{font-size:12.5px;color:var(--mute)}
+/* Gemini Cars & Logistics: royal-blue G mark, Montserrat wordmark, dark-grey tagline */
+:root{--bg:#f2f4f9;--card:#fff;--ink:#1c2333;--mute:#646c80;--line:#dde2ee;--acc:#1f3fa0;--deep:#203471;--acc2:#e6ecfa;--onacc:#fff;--warn:#a1360f;--warnbg:#fff0e8;--good:#17733a;--goodbg:#e5f5eb;
+  --f:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0c1222;--card:#151d33;--ink:#e7ebf5;--mute:#9aa3ba;--line:#26304a;--acc:#7c9cff;--deep:#a9bcff;--acc2:#1d2a4d;--onacc:#0c1222;--warn:#ffb08a;--warnbg:#3b1f12;--good:#7fdca0;--goodbg:#13301f;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0c1222;--card:#151d33;--ink:#e7ebf5;--mute:#9aa3ba;--line:#26304a;--acc:#7c9cff;--deep:#a9bcff;--acc2:#1d2a4d;--onacc:#0c1222;--warn:#ffb08a;--warnbg:#3b1f12;--good:#7fdca0;--goodbg:#13301f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--f);padding-bottom:84px}
+body.client{padding-bottom:24px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;align-items:center;gap:10px}
+header .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.06em;color:var(--acc);font-size:17px}
+header .brand small{display:block;font-size:9px;letter-spacing:.14em;color:var(--mute);font-weight:700}
+header img{height:34px;width:auto}
+main{padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:720px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);z-index:5}
+nav button{flex:1;background:none;border:0;padding:10px 2px;font:600 11px var(--f);color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+h2{font-size:17px;margin:2px 0 10px;font-weight:800}
+h3{font-size:12px;margin:16px 0 6px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+label{display:block;font-size:12.5px;color:var(--mute);margin:9px 0 3px;font-weight:600}
+input,select,textarea{width:100%;font:500 15px var(--f);padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus,textarea:focus,.btn:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.cmenu{position:fixed;inset:0;background:#0006;z-index:50;display:flex;align-items:flex-end;justify-content:center}.cm-box{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}.cm-btn{display:block;text-align:center;padding:14px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;color:var(--ink);background:var(--bg);border:0}
+a[href^="tel:"]{color:var(--acc);text-decoration:none;font-weight:600;white-space:nowrap}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.btn{display:inline-block;border:0;border-radius:12px;padding:13px 16px;font:700 16px var(--f);background:var(--acc);color:var(--onacc);text-decoration:none;text-align:center;cursor:pointer}
+.btn.ghost{background:var(--acc2);color:var(--acc)}
+.btn.warn{background:var(--warnbg);color:var(--warn)}
+.btn.small{padding:7px 10px;font-size:13px}
+.btn.full{width:100%;margin-top:12px}
+.mute{color:var(--mute);font-size:13px}
+.price{font-size:34px;font-weight:800;color:var(--acc);letter-spacing:-.01em}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-child{text-align:right;white-space:nowrap;padding-left:8px;font-variant-numeric:tabular-nums}
+.sug{position:relative}
+.sug ul{position:absolute;left:0;right:0;top:100%;margin:2px 0 0;padding:0;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:10px;z-index:4;max-height:260px;overflow:auto;box-shadow:0 8px 24px rgba(10,20,60,.18)}
+.sug li{padding:10px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:99px;background:var(--acc2);color:var(--acc);font-weight:700}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.good{background:var(--goodbg);color:var(--good)}
+.stop{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.stop:last-child{border-bottom:0}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;font-weight:800;font-size:13px}
+.stop .grow{flex:1;min-width:0}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:4px 0 2px}.bar i{display:block;height:100%;background:var(--acc)}
+.bar.over i{background:var(--warn)}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--bg)}
+.item .top{display:flex;gap:8px;align-items:center}
+.item .top select{flex:1}
+.item .top input{width:70px;flex:0 0 70px}
+.item .x{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;padding:4px 6px;cursor:pointer}
+.item .dims{display:flex;gap:6px;margin-top:6px}.item .dims.lab{margin:6px 0 -3px}.item .dims.lab span{flex:1;min-width:0;font-size:11px;color:var(--mute);font-weight:600;padding-left:2px}.item .dims>input{flex:1}.item .dims input{min-width:0;padding:8px;font-size:14px}
+.totals{display:flex;gap:8px;margin-top:10px}.totals div{flex:1;background:var(--acc2);border-radius:10px;padding:8px;text-align:center}
+.totals b{display:block;font-size:16px;color:var(--acc)}.totals span{font-size:11px;color:var(--mute);font-weight:600}
+.hero{text-align:center;padding:18px 8px 6px}.hero img{width:170px;max-width:60%}
+.hero p{margin:6px 0 0;color:var(--mute)}
+[hidden]{display:none!important}
+.p3d{background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px;min-height:120px}
+#toast{position:fixed;left:16px;right:16px;bottom:96px;background:var(--ink);color:var(--bg);padding:12px;border-radius:10px;text-align:center;z-index:9;font-weight:600}
+</style>
+</head>
+<body>
+<header id="hdr"><div class="brand"><img src="mark.png" alt="Gemini"><div>GEMINI<small>CARS &amp; LOGISTICS</small></div></div><span class="mute" id="sub"></span></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="toast" hidden></div>
+<script src="three.min.js"></script>
+<script>
+"use strict";
+/* ===================== CILËSIMET FILLESTARE ===================== */
+const DEFAULTS = {
+  base:{label:"Prishtinë, Kosovë",lat:42.6629,lng:21.1655},
+  hub:{label:"München, Gjermani",lat:48.1374,lng:11.5755},
+  vans:[
+    {id:"A",name:"Furgoni A (rimorkio e gjatë)",lPer100:15,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.5,h:2.75}},
+    {id:"B",name:"Furgoni B",lPer100:18,totalKg:7000,emptyKg:3100,payloadKg:3900,cargo:{w:2.10,l:4.20,h:2.30},trailer:{w:2.20,l:5.0,h:2.50}}
+  ],
+  diesel:{XK:1.78,RS:2.01,HR:1.97,SI:1.90,AT:1.96,DE:2.22,HU:1.92}, dieselAuto:true, dieselUpdated:"",
+  fuelHomeShare:40, fuelAwayCountry:"DE",
+  tollsPerTrip:[{name:"Autostrada Serbi (vajtje-ardhje)",eur:70},{name:"Autostrada Kroaci (vajtje-ardhje)",eur:80},{name:"Gjermani / tjetër",eur:0}],
+  fixedYear:[{name:"Sigurimi (200 € × 4)",eur:800},{name:"Vinjeta Austri",eur:90},{name:"Tunelet Austri",eur:77},{name:"Vinjeta Slloveni",eur:240}],
+  tripsPerYear:24, daysPerTrip:5, driversPerVan:1, driverPerDay:40, wearPerKm:0.08,
+  returnShare:0, vat:18, carDocs:75, carsPerTrip:1, carBase:150, carPerKm:0.25, carHeavyKg:1800, carHeavyPct:20, carMin:300, loadFactor:80, handling:20, margin:25, minPrice:80, roadFactor:1.25,
+  densityKgM3:150,   // kur pesha nuk dihet: kg për m³
+  instagram:"https://www.instagram.com/geminilogistics.eu/",
+  presets:[ // emri, gjatësi × gjerësi × lartësi (cm), kg për copë
+    {name:"Kuzhinë (shkruaj gjatësinë në cm)",l:100,w:60,h:100,kg:80,rate:250,perM:true},
+    {name:"Divan 3-vendesh",l:220,w:95,h:85,kg:70,noTop:true},
+    {name:"Divan këndor",l:280,w:180,h:85,kg:110,noTop:true},
+    {name:"Kolltuk",l:90,w:90,h:85,kg:30,noTop:true},
+    {name:"Karrige",l:50,w:55,h:95,kg:7},
+    {name:"Tavolinë ngrënieje",l:180,w:90,h:76,kg:45},
+    {name:"Dollap (i paketuar)",l:210,w:60,h:40,kg:90},
+    {name:"Shtrat dopio (i paketuar)",l:210,w:170,h:40,kg:70},
+    {name:"Dyshek",l:200,w:160,h:25,kg:30},
+    {name:"Lavatriçe",l:60,w:60,h:85,kg:70,up:true},
+    {name:"Frigorifer",l:65,w:60,h:185,kg:75,up:true,noTop:true},
+    {name:"Kuti / pako",l:60,w:40,h:40,kg:15},
+    // pajisjet e kuzhinës (shfaqen si kutiza te kuzhina)
+    {name:"Shporet",l:60,w:60,h:85,kg:45,up:true,app:true},
+    {name:"Furrë inkaso",l:60,w:56,h:60,kg:35,app:true},
+    {name:"Pllakë gatimi",l:60,w:52,h:10,kg:10,app:true},
+    {name:"Lavastovilje",l:60,w:60,h:85,kg:45,up:true,app:true},
+    {name:"Aspirator",l:90,w:50,h:20,kg:12,app:true},
+    {name:"Mikrovalë",l:50,w:40,h:30,kg:15,app:true},
+    {name:"Lavaman + rubinet",l:80,w:50,h:25,kg:12,app:true}
+  ]
+};
+
+/* ===================== RUAJTJA ===================== */
+const KEY="gemini.logistics.v1";
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return d}catch(e){}return null}
+let DB=load()||{settings:structuredClone(DEFAULTS),orders:[],trips:[]};
+DB.settings=Object.assign(structuredClone(DEFAULTS),DB.settings);
+if(!DB.cars)DB.cars=[];DB.trips.forEach(t=>{if(!t.carIds)t.carIds=[]});
+// ngarkesa = pesha max totale (7 t me rimorkio) − pesha bosh e furgonit dhe rimorkios
+// 7000 kg = pesha totale (Sprinter + rimorkio + ngarkesa); ngarkesa = 7000 − pesha bosh
+function fixPayload(){DB.settings.vans.forEach(v=>{if(v.totalKg===undefined)v.totalKg=7000;if(!DB.gross7t&&!(+v.emptyKg))v.emptyKg=3100;v.emptyKg=+v.emptyKg||0;v.payloadKg=Math.max(0,v.totalKg-v.emptyKg)});DB.gross7t=true}
+fixPayload();
+DB.settings.presets.forEach(p=>{if(p.name==="Kuzhinë (për metër)")p.name="Kuzhinë (sasia = metra, në elemente)";if(p.rate===undefined)p.rate=p.name.startsWith("Kuzhinë")?250:0;const d=DEFAULTS.presets.find(x=>x.name===p.name);if(d){if(d.noTop)p.noTop=true;if(d.up)p.up=true}if(/^(Divan|Kolltuk|Frigorifer)/.test(p.name))p.noTop=true;if(/^(Frigorifer|Lavatri)/.test(p.name))p.up=true;if(p.name.startsWith("Kuzhinë")&&p.perM===undefined){p.perM=true;p.name="Kuzhinë (shkruaj gjatësinë në cm)"}});
+DEFAULTS.presets.filter(d=>d.app).forEach(d=>{if(!DB.settings.presets.some(p=>p.name===d.name))DB.settings.presets.push(structuredClone(d))});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast("Nuk u ruajt në këtë pajisje")}if(window.__syncPush)window.__syncPush()}
+const S=()=>DB.settings;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const eur=n=>(Math.round(n*100)/100).toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const km=n=>Math.round(n).toLocaleString("de-DE")+" km";
+const num1=n=>(Math.round(n*10)/10).toLocaleString("de-DE");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=s=>document.querySelector(s);
+function toast(m){const el=$("#toast");el.textContent=m;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,2500)}
+function twoTap(btn){if(btn.dataset.armed)return true;btn.dataset.armed=1;const o=btn.textContent;btn.textContent="Shtyp përsëri për ta konfirmuar";setTimeout(()=>{delete btn.dataset.armed;btn.textContent=o},3000);return false}
+
+/* ===================== HARTA / DISTANCAT ===================== */
+// Kërkimi i adresave: Photon (OpenStreetMap, falas). Kilometrat: OSRM (falas). Pa çelës API.
+const CITIES=[["Prishtinë",42.663,21.166,"Kosovë"],["Prizren",42.214,20.741,"Kosovë"],["Pejë",42.659,20.288,"Kosovë"],["Ferizaj",42.37,21.155,"Kosovë"],["Gjilan",42.464,21.469,"Kosovë"],["Gjakovë",42.38,20.431,"Kosovë"],["Mitrovicë",42.891,20.866,"Kosovë"],["Podujevë",42.91,21.193,"Kosovë"],["Vushtrri",42.823,20.968,"Kosovë"],["Suharekë",42.359,20.825,"Kosovë"],["Rahovec",42.399,20.654,"Kosovë"],["Drenas",42.625,20.893,"Kosovë"],["Lipjan",42.522,21.126,"Kosovë"],["Malishevë",42.483,20.746,"Kosovë"],["Kamenicë",42.578,21.58,"Kosovë"],["Viti",42.322,21.358,"Kosovë"],["Deçan",42.54,20.288,"Kosovë"],["Istog",42.781,20.488,"Kosovë"],["Klinë",42.622,20.578,"Kosovë"],["Skenderaj",42.747,20.789,"Kosovë"],["Dragash",42.062,20.653,"Kosovë"],["Fushë Kosovë",42.638,21.096,"Kosovë"],["Obiliq",42.687,21.077,"Kosovë"],["Kaçanik",42.232,21.258,"Kosovë"],["Shtime",42.433,21.04,"Kosovë"],["Junik",42.476,20.278,"Kosovë"],["Hani i Elezit",42.15,21.297,"Kosovë"],["Novobërdë",42.616,21.433,"Kosovë"],["Graçanicë",42.6,21.193,"Kosovë"],["Mamushë",42.325,20.727,"Kosovë"],["Zubin Potok",42.914,20.689,"Kosovë"],["Leposaviq",43.103,20.802,"Kosovë"],["Zveçan",42.907,20.84,"Kosovë"],["Shtërpcë",42.239,21.025,"Kosovë"],["Tiranë",41.328,19.818,"Shqipëri"],["Durrës",41.323,19.441,"Shqipëri"],["Shkodër",42.068,19.513,"Shqipëri"],["Elbasan",41.112,20.082,"Shqipëri"],["Vlorë",40.466,19.49,"Shqipëri"],["Korçë",40.618,20.781,"Shqipëri"],["Fier",40.725,19.556,"Shqipëri"],["Kukës",42.077,20.422,"Shqipëri"],["Shkup",41.998,21.425,"Maqedoni e Veriut"],["Tetovë",42.01,20.971,"Maqedoni e Veriut"],["Gostivar",41.796,20.909,"Maqedoni e Veriut"],["Kumanovë",42.132,21.714,"Maqedoni e Veriut"],["Ohër",41.117,20.802,"Maqedoni e Veriut"],["Strugë",41.178,20.678,"Maqedoni e Veriut"],["Manastir",41.031,21.334,"Maqedoni e Veriut"],["Podgoricë",42.441,19.263,"Mal i Zi"],["Ulqin",41.929,19.224,"Mal i Zi"],["Beograd",44.787,20.457,"Serbi"],["Novi Sad",45.267,19.833,"Serbi"],["Niš",43.32,21.896,"Serbi"],["Kragujevac",44.012,20.911,"Serbi"],["Subotica",46.1,19.666,"Serbi"],["Preshevë",42.309,21.649,"Serbi"],["Bujanoc",42.459,21.766,"Serbi"],["Medvegjë",42.843,21.585,"Serbi"],["Sarajevë",43.856,18.413,"Bosnjë e Hercegovinë"],["Banja Luka",44.773,17.191,"Bosnjë e Hercegovinë"],["Zagreb",45.815,15.982,"Kroaci"],["Split",43.508,16.44,"Kroaci"],["Rijeka",45.327,14.442,"Kroaci"],["Osijek",45.555,18.695,"Kroaci"],["Zadar",44.119,15.231,"Kroaci"],["Slavonski Brod",45.16,18.016,"Kroaci"],["Karlovac",45.487,15.548,"Kroaci"],["Varaždin",46.305,16.337,"Kroaci"],["Dubrovnik",42.65,18.094,"Kroaci"],["Lubjanë",46.056,14.506,"Slloveni"],["Maribor",46.555,15.646,"Slloveni"],["Celje",46.236,15.268,"Slloveni"],["Kranj",46.239,14.356,"Slloveni"],["Novo Mesto",45.804,15.169,"Slloveni"],["Koper",45.548,13.73,"Slloveni"],["Budapest",47.498,19.04,"Hungari"],["Szeged",46.253,20.141,"Hungari"],["Pécs",46.073,18.233,"Hungari"],["Győr",47.687,17.65,"Hungari"],["Debrecen",47.531,21.627,"Hungari"],["Bukuresht",44.426,26.102,"Rumani"],["Timișoara",45.748,21.208,"Rumani"],["Cluj-Napoca",46.771,23.624,"Rumani"],["Sofje",42.698,23.322,"Bullgari"],["Plovdiv",42.135,24.745,"Bullgari"],["Selanik",40.64,22.944,"Greqi"],["Athinë",37.984,23.728,"Greqi"],["Wien",48.208,16.373,"Austri"],["Graz",47.071,15.439,"Austri"],["Linz",48.306,14.286,"Austri"],["Salzburg",47.81,13.055,"Austri"],["Innsbruck",47.269,11.404,"Austri"],["Klagenfurt",46.625,14.305,"Austri"],["Villach",46.61,13.856,"Austri"],["Wels",48.166,14.027,"Austri"],["St. Pölten",48.204,15.626,"Austri"],["Dornbirn",47.413,9.742,"Austri"],["Bregenz",47.503,9.747,"Austri"],["Feldkirch",47.237,9.598,"Austri"],["Wiener Neustadt",47.812,16.244,"Austri"],["Leoben",47.382,15.091,"Austri"],["Steyr",48.042,14.419,"Austri"],["Kufstein",47.583,12.17,"Austri"],["Berlin",52.52,13.405,"Gjermani"],["Hamburg",53.551,9.994,"Gjermani"],["München",48.137,11.576,"Gjermani"],["Köln",50.938,6.96,"Gjermani"],["Frankfurt am Main",50.111,8.682,"Gjermani"],["Stuttgart",48.776,9.183,"Gjermani"],["Düsseldorf",51.228,6.774,"Gjermani"],["Dortmund",51.514,7.468,"Gjermani"],["Essen",51.456,7.012,"Gjermani"],["Leipzig",51.34,12.375,"Gjermani"],["Bremen",53.079,8.802,"Gjermani"],["Dresden",51.05,13.738,"Gjermani"],["Hannover",52.376,9.732,"Gjermani"],["Nürnberg",49.452,11.077,"Gjermani"],["Duisburg",51.435,6.762,"Gjermani"],["Bochum",51.482,7.216,"Gjermani"],["Wuppertal",51.256,7.151,"Gjermani"],["Bielefeld",52.03,8.532,"Gjermani"],["Bonn",50.737,7.098,"Gjermani"],["Münster",51.961,7.626,"Gjermani"],["Mannheim",49.487,8.466,"Gjermani"],["Karlsruhe",49.007,8.404,"Gjermani"],["Augsburg",48.371,10.898,"Gjermani"],["Wiesbaden",50.082,8.24,"Gjermani"],["Mönchengladbach",51.18,6.443,"Gjermani"],["Gelsenkirchen",51.518,7.086,"Gjermani"],["Aachen",50.776,6.084,"Gjermani"],["Braunschweig",52.269,10.521,"Gjermani"],["Kiel",54.323,10.123,"Gjermani"],["Chemnitz",50.828,12.921,"Gjermani"],["Halle (Saale)",51.483,11.97,"Gjermani"],["Magdeburg",52.121,11.628,"Gjermani"],["Freiburg im Breisgau",47.999,7.842,"Gjermani"],["Krefeld",51.339,6.586,"Gjermani"],["Mainz",49.993,8.247,"Gjermani"],["Lübeck",53.866,10.687,"Gjermani"],["Erfurt",50.978,11.029,"Gjermani"],["Oberhausen",51.47,6.852,"Gjermani"],["Rostock",54.092,12.099,"Gjermani"],["Kassel",51.312,9.48,"Gjermani"],["Hagen",51.367,7.463,"Gjermani"],["Saarbrücken",49.24,6.997,"Gjermani"],["Hamm",51.681,7.817,"Gjermani"],["Potsdam",52.391,13.065,"Gjermani"],["Ludwigshafen",49.477,8.445,"Gjermani"],["Oldenburg",53.144,8.214,"Gjermani"],["Leverkusen",51.046,7.002,"Gjermani"],["Osnabrück",52.279,8.047,"Gjermani"],["Solingen",51.165,7.067,"Gjermani"],["Heidelberg",49.398,8.672,"Gjermani"],["Darmstadt",49.873,8.651,"Gjermani"],["Regensburg",49.013,12.101,"Gjermani"],["Ingolstadt",48.766,11.426,"Gjermani"],["Würzburg",49.791,9.953,"Gjermani"],["Wolfsburg",52.423,10.787,"Gjermani"],["Ulm",48.401,9.987,"Gjermani"],["Heilbronn",49.142,9.219,"Gjermani"],["Pforzheim",48.892,8.695,"Gjermani"],["Göttingen",51.541,9.916,"Gjermani"],["Reutlingen",48.491,9.204,"Gjermani"],["Koblenz",50.356,7.594,"Gjermani"],["Trier",49.75,6.637,"Gjermani"],["Jena",50.927,11.589,"Gjermani"],["Siegen",50.875,8.024,"Gjermani"],["Esslingen am Neckar",48.74,9.311,"Gjermani"],["Ludwigsburg",48.894,9.192,"Gjermani"],["Sindelfingen",48.708,9.003,"Gjermani"],["Böblingen",48.685,9.011,"Gjermani"],["Göppingen",48.703,9.652,"Gjermani"],["Schwäbisch Gmünd",48.799,9.798,"Gjermani"],["Aalen",48.837,10.093,"Gjermani"],["Tübingen",48.52,9.057,"Gjermani"],["Konstanz",47.66,9.175,"Gjermani"],["Friedrichshafen",47.654,9.479,"Gjermani"],["Ravensburg",47.782,9.611,"Gjermani"],["Kempten",47.727,10.315,"Gjermani"],["Memmingen",47.984,10.181,"Gjermani"],["Rosenheim",47.856,12.128,"Gjermani"],["Landshut",48.537,12.152,"Gjermani"],["Passau",48.567,13.431,"Gjermani"],["Bamberg",49.898,10.902,"Gjermani"],["Bayreuth",49.946,11.578,"Gjermani"],["Erlangen",49.59,11.004,"Gjermani"],["Fürth",49.478,10.99,"Gjermani"],["Aschaffenburg",49.977,9.152,"Gjermani"],["Offenbach am Main",50.096,8.776,"Gjermani"],["Hanau",50.133,8.917,"Gjermani"],["Gießen",50.584,8.678,"Gjermani"],["Fulda",50.555,9.68,"Gjermani"],["Kaiserslautern",49.444,7.769,"Gjermani"],["Neuss",51.198,6.692,"Gjermani"],["Paderborn",51.718,8.757,"Gjermani"],["Recklinghausen",51.614,7.198,"Gjermani"],["Bottrop",51.524,6.929,"Gjermani"],["Remscheid",51.179,7.189,"Gjermani"],["Bergisch Gladbach",50.992,7.136,"Gjermani"],["Witten",51.443,7.335,"Gjermani"],["Iserlohn",51.376,7.7,"Gjermani"],["Lüdenscheid",51.219,7.627,"Gjermani"],["Gütersloh",51.906,8.378,"Gjermani"],["Minden",52.29,8.917,"Gjermani"],["Herford",52.115,8.674,"Gjermani"],["Hildesheim",52.152,9.951,"Gjermani"],["Salzgitter",52.15,10.333,"Gjermani"],["Celle",52.624,10.081,"Gjermani"],["Lüneburg",53.249,10.414,"Gjermani"],["Flensburg",54.794,9.446,"Gjermani"],["Neumünster",54.071,9.985,"Gjermani"],["Schwerin",53.635,11.401,"Gjermani"],["Cottbus",51.756,14.333,"Gjermani"],["Zwickau",50.718,12.496,"Gjermani"],["Plauen",50.495,12.138,"Gjermani"],["Gera",50.88,12.083,"Gjermani"],["Weimar",50.979,11.329,"Gjermani"],["Villingen-Schwenningen",48.062,8.493,"Gjermani"],["Offenburg",48.473,7.944,"Gjermani"],["Baden-Baden",48.761,8.24,"Gjermani"],["Rastatt",48.858,8.203,"Gjermani"],["Lörrach",47.615,7.661,"Gjermani"],["Singen",47.759,8.84,"Gjermani"],["Neu-Ulm",48.393,10.011,"Gjermani"],["Schweinfurt",50.049,10.233,"Gjermani"],["Straubing",48.882,12.574,"Gjermani"],["Deggendorf",48.84,12.962,"Gjermani"],["Traunstein",47.868,12.643,"Gjermani"],["Freising",48.403,11.749,"Gjermani"],["Dachau",48.26,11.434,"Gjermani"],["Erding",48.306,11.906,"Gjermani"],["Fürstenfeldbruck",48.178,11.255,"Gjermani"],["Garmisch-Partenkirchen",47.492,11.095,"Gjermani"],["Zürich",47.377,8.541,"Zvicër"],["Genève",46.204,6.143,"Zvicër"],["Basel",47.56,7.589,"Zvicër"],["Bern",46.948,7.447,"Zvicër"],["Lausanne",46.52,6.633,"Zvicër"],["Luzern",47.05,8.309,"Zvicër"],["St. Gallen",47.424,9.377,"Zvicër"],["Winterthur",47.5,8.724,"Zvicër"],["Lugano",46.004,8.951,"Zvicër"],["Biel/Bienne",47.137,7.247,"Zvicër"],["Thun",46.758,7.628,"Zvicër"],["Schaffhausen",47.697,8.634,"Zvicër"],["Chur",46.85,9.532,"Zvicër"],["Fribourg",46.806,7.162,"Zvicër"],["Neuchâtel",46.99,6.929,"Zvicër"],["Aarau",47.393,8.044,"Zvicër"],["Olten",47.35,7.903,"Zvicër"],["Zug",47.172,8.517,"Zvicër"],["Sion",46.233,7.36,"Zvicër"],["Vaduz",47.141,9.521,"Liechtenstein"],["Paris",48.857,2.352,"Francë"],["Marseille",43.296,5.37,"Francë"],["Lyon",45.764,4.836,"Francë"],["Toulouse",43.605,1.444,"Francë"],["Nice",43.71,7.262,"Francë"],["Nantes",47.218,-1.554,"Francë"],["Strasbourg",48.573,7.752,"Francë"],["Montpellier",43.611,3.877,"Francë"],["Bordeaux",44.838,-0.579,"Francë"],["Lille",50.629,3.057,"Francë"],["Rennes",48.117,-1.678,"Francë"],["Reims",49.258,4.032,"Francë"],["Le Havre",49.494,0.108,"Francë"],["Saint-Étienne",45.44,4.387,"Francë"],["Toulon",43.124,5.928,"Francë"],["Grenoble",45.188,5.724,"Francë"],["Dijon",47.322,5.041,"Francë"],["Angers",47.478,-0.563,"Francë"],["Nîmes",43.837,4.36,"Francë"],["Clermont-Ferrand",45.778,3.087,"Francë"],["Le Mans",48.006,0.199,"Francë"],["Aix-en-Provence",43.53,5.447,"Francë"],["Brest",48.39,-4.486,"Francë"],["Tours",47.394,0.685,"Francë"],["Amiens",49.895,2.302,"Francë"],["Limoges",45.834,1.261,"Francë"],["Annecy",45.9,6.129,"Francë"],["Perpignan",42.699,2.895,"Francë"],["Metz",49.12,6.176,"Francë"],["Besançon",47.238,6.024,"Francë"],["Orléans",47.903,1.909,"Francë"],["Rouen",49.443,1.099,"Francë"],["Mulhouse",47.75,7.336,"Francë"],["Caen",49.183,-0.371,"Francë"],["Nancy",48.692,6.184,"Francë"],["Colmar",48.079,7.358,"Francë"],["Avignon",43.949,4.806,"Francë"],["Poitiers",46.58,0.34,"Francë"],["Pau",43.296,-0.37,"Francë"],["La Rochelle",46.16,-1.151,"Francë"],["Calais",50.951,1.858,"Francë"],["Dunkerque",51.034,2.377,"Francë"],["Troyes",48.297,4.074,"Francë"],["Valence",44.933,4.892,"Francë"],["Chambéry",45.564,5.918,"Francë"],["Thionville",49.357,6.168,"Francë"],["Montbéliard",47.51,6.798,"Francë"],["Belfort",47.638,6.863,"Francë"],["Haguenau",48.816,7.79,"Francë"],["Saint-Louis",47.59,7.56,"Francë"],["Annemasse",46.193,6.234,"Francë"],["Cannes",43.552,7.017,"Francë"],["Antibes",43.58,7.125,"Francë"],["Bayonne",43.493,-1.475,"Francë"],["Versailles",48.805,2.12,"Francë"],["Argenteuil",48.947,2.248,"Francë"],["Saint-Denis",48.936,2.357,"Francë"],["Boulogne-Billancourt",48.84,2.24,"Francë"],["Créteil",48.79,2.455,"Francë"],["Nanterre",48.892,2.207,"Francë"],["Évry",48.633,2.443,"Francë"],["Cergy",49.036,2.076,"Francë"],["Meaux",48.96,2.879,"Francë"],["Melun",48.54,2.66,"Francë"],["Milano",45.464,9.19,"Itali"],["Roma",41.903,12.496,"Itali"],["Torino",45.07,7.687,"Itali"],["Napoli",40.852,14.268,"Itali"],["Bologna",44.495,11.343,"Itali"],["Firenze",43.77,11.256,"Itali"],["Verona",45.438,10.992,"Itali"],["Venezia",45.441,12.316,"Itali"],["Genova",44.405,8.946,"Itali"],["Bergamo",45.698,9.677,"Itali"],["Brescia",45.541,10.212,"Itali"],["Trieste",45.65,13.777,"Itali"],["Bolzano",46.498,11.355,"Itali"],["Trento",46.075,11.121,"Itali"],["Udine",46.063,13.243,"Itali"],["Padova",45.406,11.877,"Itali"],["Bari",41.117,16.872,"Itali"],["Bruxelles",50.85,4.352,"Belgjikë"],["Antwerpen",51.219,4.402,"Belgjikë"],["Gent",51.054,3.717,"Belgjikë"],["Liège",50.633,5.567,"Belgjikë"],["Charleroi",50.411,4.444,"Belgjikë"],["Namur",50.467,4.872,"Belgjikë"],["Luxembourg",49.612,6.13,"Luksemburg"],["Esch-sur-Alzette",49.496,5.981,"Luksemburg"],["Amsterdam",52.368,4.904,"Holandë"],["Rotterdam",51.924,4.478,"Holandë"],["Den Haag",52.07,4.3,"Holandë"],["Utrecht",52.091,5.122,"Holandë"],["Eindhoven",51.441,5.47,"Holandë"],["Maastricht",50.851,5.691,"Holandë"],["Venlo",51.37,6.172,"Holandë"],["Groningen",53.219,6.567,"Holandë"],["København",55.676,12.568,"Danimarkë"],["Aarhus",56.157,10.211,"Danimarkë"],["Stockholm",59.329,18.069,"Suedi"],["Göteborg",57.709,11.975,"Suedi"],["Malmö",55.605,13.004,"Suedi"],["Oslo",59.913,10.752,"Norvegji"],["Helsinki",60.17,24.938,"Finlandë"],["Warszawa",52.23,21.012,"Poloni"],["Kraków",50.065,19.945,"Poloni"],["Wrocław",51.108,17.039,"Poloni"],["Praha",50.076,14.438,"Çeki"],["Brno",49.195,16.607,"Çeki"],["Plzeň",49.738,13.373,"Çeki"],["Bratislava",48.149,17.107,"Sllovaki"],["Madrid",40.417,-3.704,"Spanjë"],["Barcelona",41.385,2.173,"Spanjë"],["Valencia",39.47,-0.376,"Spanjë"],["Bilbao",43.263,-2.935,"Spanjë"],["Lisboa",38.722,-9.139,"Portugali"],["Porto",41.158,-8.629,"Portugali"],["London",51.507,-0.128,"Mbretëri e Bashkuar"],["Birmingham",52.486,-1.89,"Mbretëri e Bashkuar"],["Manchester",53.481,-2.243,"Mbretëri e Bashkuar"],["Dublin",53.35,-6.26,"Irlandë"],["Istanbul",41.008,28.978,"Turqi"]];
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+function cityIn(q){const w=norm(q).split(/[ ,]+/).filter(x=>x.length>2);const c=CITIES.find(c=>w.some(x=>norm(c[0]).split(/[ (/-]/)[0]===x))||CITIES.find(c=>w.some(x=>norm(c[0]).startsWith(x)));return c?{lat:c[1],lng:c[2]}:null}
+async function searchAddress(q){
+  try{const r=await searchOnline(q);if(r.length)return r}catch(e){}
+  {const w=norm(q).split(/[ ,]+/).filter(x=>x.length>2);
+    return CITIES.filter(c=>w.some(x=>norm(c[0]).includes(x))).sort((a,b)=>w.some(x=>norm(b[0]).startsWith(x))-w.some(x=>norm(a[0]).startsWith(x))).slice(0,8)
+      .map(c=>({label:c[0]+", "+c[3]+" (qendra)",lat:c[1],lng:c[2],exact:"offline"}))}
+}
+async function searchOnline(q){
+  const r=await fetch("https://photon.komoot.io/api/?limit=6&lang=de&q="+encodeURIComponent(q));
+  const j=await r.json();
+  return j.features.map(f=>{const p=f.properties;
+    const parts=[p.name,[p.street,p.housenumber].filter(Boolean).join(" "),[p.postcode,p.city].filter(Boolean).join(" "),p.country].filter(Boolean);
+    return {label:[...new Set(parts)].join(", "),lat:f.geometry.coordinates[1],lng:f.geometry.coordinates[0],exact:!!p.housenumber}});
+}
+function hav(a,b){const R=6371,r=x=>x*Math.PI/180;const dLa=r(b.lat-a.lat),dLo=r(b.lng-a.lng);
+  const h=Math.sin(dLa/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+const matrixCache={};
+async function distMatrix(pts){
+  const key=pts.map(p=>p.lat.toFixed(4)+","+p.lng.toFixed(4)).join("|");
+  if(matrixCache[key])return matrixCache[key];
+  try{
+    const r=await fetch("https://router.project-osrm.org/table/v1/driving/"+pts.map(p=>p.lng+","+p.lat).join(";")+"?annotations=distance");
+    const j=await r.json(); if(j.code!=="Ok")throw 0;
+    const m=j.distances.map(row=>row.map(d=>d/1000)); m.real=true; return matrixCache[key]=m;
+  }catch(e){const m=pts.map(a=>pts.map(b=>hav(a,b)*S().roadFactor)); m.real=false; return m}
+}
+const navUrl=p=>"https://www.google.com/maps/dir/?api=1&travelmode=driving&destination="+(p.exact==="typed"||!p.lat?encodeURIComponent(p.label):p.lat+","+p.lng);
+const place=p=>p.exact==="typed"||!p.lat?encodeURIComponent(p.label):p.lat+","+p.lng;
+function routeUrl(stops){const d=stops[stops.length-1],w=stops.slice(0,-1).slice(0,8);
+  return "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination="+place(d)+(w.length?"&waypoints="+w.map(place).join("|"):"")}
+
+/* ===================== RRUGA MË E SHKURTËR ===================== */
+function bestOrder(M){
+  const n=M.length; if(n<=2)return {order:n===2?[1]:[],len:n===2?M[0][1]+M[1][0]:0};
+  let tour=[0],left=new Set([...Array(n).keys()].slice(1));
+  while(left.size){const last=tour[tour.length-1];let b=null,bd=1e18;for(const j of left)if(M[last][j]<bd){bd=M[last][j];b=j}tour.push(b);left.delete(b)}
+  tour.push(0);
+  const len=tr=>tr.reduce((s,v,i)=>i?s+M[tr[i-1]][v]:0,0);
+  let improved=true;
+  while(improved){improved=false;
+    for(let i=1;i<tour.length-2;i++)for(let k=i+1;k<tour.length-1;k++){
+      const nt=[...tour.slice(0,i),...tour.slice(i,k+1).reverse(),...tour.slice(k+1)];
+      if(len(nt)+1e-9<len(tour)){tour=nt;improved=true}}}
+  return {order:tour.slice(1,-1),len:len(tour)};
+}
+
+/* ===================== MALLRAT: VËLLIMI, PESHA, A HYN ===================== */
+const vol=d=>d.w*d.l*d.h;
+const vanVol=v=>vol(v.cargo)+vol(v.trailer);
+const vanById=id=>S().vans.find(v=>v.id===id)||S().vans[0];
+// "furgoni mesatar": për oferta, para se të vendoset cili furgon e merr porosinë
+function avgVan(){const V=S().vans,a=k=>V.reduce((x,v)=>x+(+v[k]||0),0)/V.length,ad=(p,k)=>V.reduce((x,v)=>x+v[p][k],0)/V.length;
+  return {id:"avg",name:"furgonit mesatar",lPer100:a("lPer100"),payloadKg:a("payloadKg"),cargo:{w:ad("cargo","w"),l:ad("cargo","l"),h:ad("cargo","h")},trailer:{w:ad("trailer","w"),l:ad("trailer","l"),h:ad("trailer","h")}}}
+// llogarit totalin e mallrave; pesha vlerësohet kur mungon
+function goods(items){
+  let m3=0,kg=0,est=false,pcs=0;
+  for(const it of items){const q=+it.qty||0;if(!q)continue;pcs+=q;
+    const v=(+it.l||0)*(+it.w||0)*(+it.h||0)/1e6; m3+=v*q;
+    if(+it.kg>0)kg+=it.kg*(perM(it)?units(it):q); else {kg+=v*S().densityKgM3*q; est=true}}
+  return {m3:Math.round(m3*100)/100,kg:Math.round(kg),est,pcs};
+}
+// a hyn copa në rimorkio ose në furgon (lejohet rrotullimi)
+// kuzhina: çmimi dhe pesha llogariten për metër gjatësi (vjen në elemente, pra s'ka kontroll "a hyn")
+const perM=it=>it.preset!=="x"&&!!S().presets[it.preset]?.perM;
+const units=it=>(+it.qty||0)*(perM(it)?(+it.l||0)/100:1);
+function fitsPiece(it,v){if(perM(it))return true;const p=[+it.l,+it.w,+it.h].map(x=>(x||0)/100).sort((a,b)=>a-b);
+  return [v.trailer,v.cargo].some(s=>{const q=[s.l,s.w,s.h].sort((a,b)=>a-b);return p.every((x,i)=>x<=q[i])})}
+function orderGoods(o){return o.items?goods(o.items):{m3:+o.m3||0,kg:+o.kg||0,est:false,pcs:o.pcs||1}}
+
+/* ===================== KOSTOT DHE ÇMIMI ===================== */
+function dieselPrice(){const s=S(),h=s.fuelHomeShare/100;return h*(s.diesel.XK||0)+(1-h)*(s.diesel[s.fuelAwayCountry]||0)}
+function perKm(v){return v.lPer100/100*dieselPrice()+S().wearPerKm}
+function fixedPerTrip(){const s=S();return s.fixedYear.reduce((a,b)=>a+(+b.eur||0),0)/Math.max(1,s.tripsPerYear)}
+function tripCostBreakdown(v,kmTotal){
+  const s=S(),L=kmTotal*v.lPer100/100;
+  const rows=[
+    ["Nafta ("+Math.round(L)+" L × "+eur(dieselPrice())+")",L*dieselPrice()],
+    ["Konsumimi & servisi ("+km(kmTotal)+" × "+eur(s.wearPerKm)+")",kmTotal*s.wearPerKm],
+    ["Autostradat / taksat",s.tollsPerTrip.reduce((a,b)=>a+(+b.eur||0),0)],
+    ["Sigurimi & vinjetat (pjesa për udhëtim)",fixedPerTrip()],
+    ["Shpenzimet e shoferit ("+s.daysPerTrip+" ditë)",s.daysPerTrip*s.driverPerDay*s.driversPerVan]];
+  const total=rows.reduce((a,r)=>a+r[1],0),ret=total*s.returnShare/100;
+  if(ret)rows.push(["E paguar nga veturat në kthim (−"+s.returnShare+"%)",-ret]);
+  return {rows,total:total-ret};
+}
+function shareOf(g,v){return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))}
+const vatR=()=>(+S().vat||0)/100;
+const netOf=(gross,on=true)=>(+gross||0)/(on?1+vatR():1);
+const netRec=x=>netOf(x.price,x.vatOn!==false);   // porosia/vetura: çmimi pa TVSH
+function priceFromCost(c){const s=S();return Math.max(s.minPrice,Math.ceil(c*(1+s.margin/100)/5)*5)}
+// Mallrat me çmim fiks (p.sh. kuzhina 250 €/m) + mallrat e llogaritur sipas hapësirës/peshës + shtesa për adresën
+const rateOf=it=>it.preset==="x"?0:(+S().presets[it.preset]?.rate||0);
+// Qyteti kryesor = qyteti i porosisë më të madhe që pret (s'ka qytet fiks). Rruga shtesë llogaritet nga rruga Kosovë ⇄ ai qytet.
+const sizeOf=g=>{const v=avgVan();return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))};
+function mainOrderOf(list){return list.filter(o=>o.addr&&o.addr.lat).reduce((b,o)=>!b||sizeOf(orderGoods(o))>sizeOf(orderGoods(b))?o:b,null)}
+function mainHub(g,addr,selfId){
+  const big=mainOrderOf(waitingOrders(null).filter(o=>o.id!==selfId));
+  if(big&&sizeOf(orderGoods(big))>sizeOf(g))return {addr:big.addr,why:"porosia më e madhe që pret: "+(big.customer||cityOf(big.addr)),self:false};
+  return {addr,why:"kjo është porosia më e madhe",self:true};
+}
+async function quote(g,addr,items=[],opt={}){ // çmimi kthehet ME TVSH; net = pa TVSH
+  const s=S(),v=avgVan(),mk=1+s.margin/100,hub=mainHub(g,addr,opt.selfId);
+  const M=await distMatrix([s.base,hub.addr,addr]);
+  const lineKm=M[0][1]+M[1][0];
+  const detourKm=Math.max(0,M[1][2]+M[2][0]-M[1][0]);
+  const trip=tripCostBreakdown(v,lineKm);
+  const share=shareOf(g,v), lineShare=Math.min(1,share/(s.loadFactor/100));
+  const detourCost=detourKm*perKm(v);
+  const cost=trip.total*lineShare+detourCost+s.handling+(+opt.docs||0); // kostoja jonë reale
+  const fixed=items.filter(i=>(+i.qty)&&rateOf(i)>0), calc=items.filter(i=>(+i.qty)&&!(rateOf(i)>0));
+  const fixedSum=fixed.reduce((a,i)=>a+units(i)*rateOf(i),0);
+  const gc=items.length?goods(calc):g, cShare=Math.min(1,shareOf(gc,v)/(s.loadFactor/100));
+  const calcPrice=(gc.m3||gc.kg)?(trip.total*cShare+s.handling)*mk:0;
+  const extra=detourCost*mk;
+  const vatOn=opt.vat!==false,docs=+opt.docs||0,vr=vatOn?vatR():0;
+  const netRaw=Math.max(s.minPrice,fixedSum+calcPrice+extra)+docs;
+  const price=Math.ceil(netRaw*(1+vr)/5)*5,net=price/(1+vr),vat=price-net;
+  return {hub,net,vat,vatOn,docs,v,lineKm,detourKm,trip,share,byWeight:(g.kg/v.payloadKg)>=(g.m3/vanVol(v)),lineShare,detourCost,cost,price,real:M.real,fixed,fixedSum,calcPrice,cShare,extra,hasCalc:!!(gc.m3||gc.kg)};
+}
+// Rruga: nga nisja → ndalesat (radha më e mirë) → destinacioni → kthim në shtëpi. Pa nisje/destinacion: rreth nga shtëpia.
+function bestPath(M){ // 0 = nisja, n-1 = destinacioni (fiks)
+  const n=M.length;if(n<=2)return {order:[],len:n===2?M[0][1]:0};
+  let tour=[0],left=new Set([...Array(n-1).keys()].slice(1));
+  while(left.size){const last=tour[tour.length-1];let b=null,bd=1e18;for(const j of left)if(M[last][j]<bd){bd=M[last][j];b=j}tour.push(b);left.delete(b)}
+  tour.push(n-1);
+  const len=tr=>tr.reduce((s,v,i)=>i?s+M[tr[i-1]][v]:0,0);
+  let improved=true;
+  while(improved){improved=false;
+    for(let i=1;i<tour.length-2;i++)for(let k=i+1;k<tour.length-1;k++){
+      const nt=[...tour.slice(0,i),...tour.slice(i,k+1).reverse(),...tour.slice(k+1)];
+      if(len(nt)+1e-9<len(tour)){tour=nt;improved=true}}}
+  return {order:tour.slice(1,-1),len:len(tour)};
+}
+function tripCars(trip){return (trip.carIds||[]).map(id=>DB.cars.find(c=>c.id===id)).filter(Boolean)}
+// Vajtja: nisja → porositë → destinacioni. Kthimi: destinacioni (ose ndalesa e fundit) → veturat → baza.
+async function routeOf(trip,orders,cars=tripCars(trip)){
+  const s=S();let order,outLen,E,real=true;
+  if(trip.start&&trip.dest){
+    const M=await distMatrix([trip.start,...orders.map(o=>o.addr),trip.dest]);real=M.real;
+    const bp=bestPath(M);order=bp.order.map(i=>orders[i-1]);outLen=bp.len;E=trip.dest;
+  }else{
+    const M=await distMatrix([s.base,...orders.map(o=>o.addr)]),b=bestOrder(M);real=M.real;
+    order=b.order.map(i=>orders[i-1]);
+    if(order.length){const li=orders.indexOf(order[order.length-1])+1;outLen=b.len-M[li][0];E=order[order.length-1].addr}else{outLen=0;E=s.base}
+  }
+  const R=await distMatrix([E,...cars.map(c=>c.from),s.base]);
+  const bp2=bestPath(R);
+  return {order,cars:bp2.order.map(i=>cars[i-1]),len:outLen+bp2.len,back:bp2.len,real:real&&R.real,end:E};
+}
+async function planTrip(trip){
+  const s=S(),v=vanById(trip.van);
+  const orders=trip.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
+  const r=await routeOf(trip,orders);
+  const costs=tripCostBreakdown(v,r.len);
+  const kg=orders.reduce((a,o)=>a+orderGoods(o).kg,0),m3=orders.reduce((a,o)=>a+orderGoods(o).m3,0);
+  const tc=tripCars(trip),sum=(a,f)=>a.reduce((t,x)=>t+f(x),0);
+  const carsIn=sum(tc,netRec),ordersIn=sum(orders,netRec),vatAmt=sum(tc,x=>+x.price||0)+sum(orders,x=>+x.price||0)-carsIn-ordersIn;
+  const docs=sum(tc,x=>+x.docs||0)+sum(orders,x=>+x.docs||0);
+  const revenue=ordersIn+carsIn+(+trip.returnIncome||0);
+  return {v,orders,stops:r.order,carStops:r.cars,carsIn,ordersIn,vatAmt,docs,back:r.back,kmTotal:r.len,costs,kg,m3,revenue,profit:revenue-costs.total-orders.length*s.handling-docs,real:r.real};
+}
+async function extraKm(trip,o){
+  const orders=trip.orderIds.map(id=>DB.orders.find(x=>x.id===id)).filter(Boolean);
+  return (await routeOf(trip,[...orders,o])).len-(await routeOf(trip,orders)).len;
+}
+
+/* ===================== NAFTA NË RRUGË ===================== */
+// Vendet që na interesojnë. "src": pikat me çmim për secilën pikë; pa src = vetëm çmimi i vendit.
+const CTRY=[["XK","🇽🇰","Kosovë"],["RS","🇷🇸","Serbi"],["HR","🇭🇷","Kroaci"],["SI","🇸🇮","Slloveni"],["AT","🇦🇹","Austri"],["DE","🇩🇪","Gjermani"],
+  ["CH","🇨🇭","Zvicër"],["IT","🇮🇹","Itali"],["FR","🇫🇷","Francë"],["LU","🇱🇺","Luksemburg"],["BE","🇧🇪","Belgjikë"],["NL","🇳🇱","Holandë"]];
+const CNAME=Object.fromEntries(CTRY.map(c=>[c[0],c]));
+// vendi i një adrese, nga emri i shtetit në adresë
+const CRX={XK:/kosov|kosova/i,RS:/serbi|srbija|serbien/i,HR:/kroaci|hrvatska|kroatien|croatia/i,SI:/slloveni|slovenija|slowenien|slovenia/i,AT:/austri|österreich|austria/i,
+  DE:/gjermani|deutschland|germany/i,CH:/zvic|schweiz|suisse|svizzera|switzerland/i,IT:/itali|italia|italien|italy/i,FR:/franc|frankreich|france/i,
+  LU:/luksemburg|luxemburg|luxembourg/i,BE:/belgj|belgien|belgique|belgium|belgië/i,NL:/holand|niederlande|nederland|netherlands/i};
+const countryOf=a=>Object.keys(CRX).find(c=>CRX[c].test(a?.label||""))||"";
+const STN_URL="https://phishalili.github.io/gemini-logistics/stations.json",STN_KEY="gemini.stations.v1";
+let STN=null;try{STN=JSON.parse(localStorage.getItem(STN_KEY)||"null")}catch(e){}
+async function syncStations(){
+  try{const r=await fetch(STN_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
+    if(Array.isArray(j.stations)&&j.stations.length){STN=j;try{localStorage.setItem(STN_KEY,JSON.stringify(j))}catch(e){}}}catch(e){}
+}
+function stationMap(x){const exact=x.c!=="DE"&&x.lat&&x.lng;
+  return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(exact?`${x.lat},${x.lng}`:[x.name,x.address,x.city].filter(Boolean).join(", "))}
+// Rruga e vërtetë (OSRM) si listë pikash; pa internet: vija të drejta mes ndalesave
+const geomCache={};
+async function routeGeom(pts){
+  pts=pts.filter(p=>p&&p.lat);const key=pts.map(p=>p.lat.toFixed(3)+","+p.lng.toFixed(3)).join("|");
+  if(geomCache[key])return geomCache[key];
+  try{const r=await fetch("https://router.project-osrm.org/route/v1/driving/"+pts.map(p=>p.lng+","+p.lat).join(";")+"?overview=full&geometries=geojson");
+    const j=await r.json();if(j.code!=="Ok")throw 0;
+    const c=j.routes[0].geometry.coordinates,out=[];let last=null;
+    for(const [lng,lat] of c){const q={lat,lng};if(!last||hav(last,q)>2){out.push(q);last=q}}
+    out.push({lat:c[c.length-1][1],lng:c[c.length-1][0]});
+    return geomCache[key]={line:out,real:true,km:j.routes[0].distance/1000};
+  }catch(e){const out=[];for(let i=0;i<pts.length;i++){if(i){const a=pts[i-1],b=pts[i],n=Math.max(1,Math.ceil(hav(a,b)/5));for(let k=1;k<=n;k++)out.push({lat:a.lat+(b.lat-a.lat)*k/n,lng:a.lng+(b.lng-a.lng)*k/n})}else out.push(pts[0])}
+    return {line:out,real:false,km:0}}
+}
+// Pikat afër rrugës (≤ maxKm), me kilometrin ku ndodhen
+function stationsAlong(line,maxKm=10){
+  const all=STN?.stations||[];if(!all.length||!line.length)return [];
+  const cum=[0];for(let i=1;i<line.length;i++)cum.push(cum[i-1]+hav(line[i-1],line[i]));
+  let la0=90,la1=-90,lo0=180,lo1=-180;line.forEach(p=>{la0=Math.min(la0,p.lat);la1=Math.max(la1,p.lat);lo0=Math.min(lo0,p.lng);lo1=Math.max(lo1,p.lng)});
+  const out=[];
+  for(const st of all){
+    if(st.lat<la0-.2||st.lat>la1+.2||st.lng<lo0-.3||st.lng>lo1+.3)continue;
+    const cl=Math.cos(st.lat*Math.PI/180);let best=1e9,at=0;
+    for(let i=0;i<line.length;i++){const dx=(line[i].lng-st.lng)*111*cl,dy=(line[i].lat-st.lat)*111;const d=dx*dx+dy*dy;if(d<best){best=d;at=i}}
+    const d=Math.sqrt(best);if(d<=(st.c==="DE"?25:maxKm))out.push({...st,off:d,at:cum[at]});
+  }
+  return out;
+}
+function tripPoints(p,tr){const s=S();return [tr.start||s.base,...p.stops.map(o=>o.addr),tr.dest,...p.carStops.map(c=>c.from),s.base].filter(a=>a&&a.lat)}
+async function tripFuel(p,tr){
+  const s=S(),pts=tripPoints(p,tr),g=await routeGeom(pts),st=stationsAlong(g.line);
+  const seen=new Set();const dedup=st.sort((a,b)=>a.at-b.at).filter(x=>{const k=x.c+x.name+x.address;if(seen.has(k))return false;seen.add(k);return true});
+  // vendet në rrugë: nga pikat + vendet e adresave + korridori Kosovë–Serbi
+  const order={};dedup.forEach(x=>{if(!(x.c in order))order[x.c]=x.at});
+  ["XK","RS"].forEach((c,i)=>{if(!(c in order))order[c]=i-2});
+  pts.forEach((a,i)=>{const c=countryOf(a);if(c&&!(c in order))order[c]=i*1e4});
+  const countries=Object.keys(order).filter(c=>CNAME[c]).sort((a,b)=>order[a]-order[b]);
+  return {g,pts,countries,list:dedup,top:[...dedup].sort((a,b)=>a.price-b.price).slice(0,3)};
+}
+const stRow=(x,mark)=>`<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b> · <b style="${mark?"color:var(--good)":""}">${eur(x.price)}</b>${CNAME[x.c]?" "+CNAME[x.c][1]:""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}${x.at!=null?` · km ${Math.round(x.at)} e rrugës`:""}${x.off>3?` · ${Math.round(x.off)} km larg rrugës`:""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`;
+// Në faqen e udhëtimit: vetëm një menu e mbyllur me 3 më të lirat
+function fuelDrop(tr){return `<div class="card"><details class="more" id="fuelDrop" style="border:0;margin:0;padding:0"><summary style="font-size:18px">⛽ Nafta në rrugë</summary><div id="fuelTop"><p class="mute">Duke kërkuar pikat në rrugë…</p></div>
+  <button class="btn ghost full" type="button" onclick="setTab('trips','fuel:${tr.id}')">Shiko të gjitha pikat sipas vendit →</button></details></div>`}
+async function fillFuelDrop(p,tr){
+  const el=$("#fuelTop");if(!el)return;
+  if(!STN)await syncStations();
+  const f=await tripFuel(p,tr);if(!$("#fuelTop"))return;
+  const cheapC=f.countries.map(c=>({c,v:S().diesel[c]})).filter(x=>x.v).sort((a,b)=>a.v-b.v)[0];
+  $("#fuelTop").innerHTML=f.top.length?`<p class="mute" style="margin:0 0 4px">3 pikat më të lira në rrugën tënde${cheapC?` · vendi më i lirë: ${CNAME[cheapC.c][1]} ${CNAME[cheapC.c][2]} ${eur(cheapC.v)}`:""}</p>${f.top.map(x=>stRow(x,true)).join("")}`
+    :`<p class="mute">${STN?"S'u gjetën pika me çmim afër kësaj rruge.":"Pikat shfaqen pasi app-i lidhet me internetin."}</p>`;
+}
+// Faqja e plotë: të gjitha pikat në rrugë, sipas vendit, me radhën e rrugës
+async function renderFuel(id){
+  const tr=DB.trips.find(x=>x.id===id);if(!tr)return setTab("trips");
+  $("#app").innerHTML=`<div class="card mute">Duke kërkuar pikat e karburantit në rrugë…</div>`;
+  if(!STN)await syncStations();
+  const p=await planTrip(tr),f=await tripFuel(p,tr),s=S();
+  if(TAB!=="trips"||VIEW!=="fuel:"+id)return;
+  const by={};f.list.forEach(x=>(by[x.c]=by[x.c]||[]).push(x));
+  const cheapest=new Set(f.top.map(x=>x.c+x.name+x.address));
+  const route=f.pts.map(a=>cityOf(a)).filter((c,i,a)=>c&&c!==a[i-1]);
+  $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips','${id}')">← Kthehu te udhëtimi</button>
+    <h2 style="margin-top:10px">⛽ Nafta në rrugë</h2>
+    <div class="mute">${esc(route.join(" → "))}${f.g.km?` · ${km(f.g.km)}`:""}${f.g.real?"":" · rruga e përafërt (pa internet)"}</div>
+    <p class="mute" style="margin:6px 0 0">${f.list.length} pika me çmim brenda ~10 km nga rruga. Të gjelbrat janë 3 më të lirat. ${STN?.updated?"Çmimet e "+esc(fmtDay(STN.updated))+".":""}</p></div>
+    ${f.countries.map(c=>{const [code,flag,name]=CNAME[c],l=(by[c]||[]),avg=s.diesel[c],min=l.length?Math.min(...l.map(x=>x.price)):null;
+      return `<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${l.length&&l.length<=6?"open":""}><summary style="font-size:18px">${flag} ${name} · ${min!=null?`nga <b>${eur(min)}</b>`:avg?`<b>${eur(avg)}</b>`:"pa të dhëna"}${l.length?` · ${l.length} pika`:""}</summary>
+        ${l.length?l.map(x=>stRow(x,cheapest.has(x.c+x.name+x.address))).join(""):`<p class="mute" style="margin:4px 0">${code==="XK"?"Mesatarja e kompanive (NaftaSot)":code==="RS"?"Çmimi maksimal i shtetit, njësoj në të gjitha pikat":code==="CH"?"Zvicra nuk publikon çmime falas për çdo pikë":"Mesatarja e vendit (buletini i BE-së)"}${avg?`: <b>${eur(avg)}</b>/L`:""}. Çmime për çdo pikë nuk ka falas.</p>`}
+        </details></div>`}).join("")}
+    <div class="card"><p class="mute" style="margin:0">Burimet: mzoe-gor.hr (HR), goriva.si (SI), E-Control (AT), clever-tanken.de (DE), prix-carburants.gouv.fr (FR), MIMIT (IT). Përditësohen çdo mëngjes.</p></div>`;
+}
+
+/* ===================== PJESË TË PËRBASHKËTA ===================== */
+const ICON={
+  quote:'<path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/>',
+  orders:'<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
+  trips:'<path d="M2 16V7h11v9M13 10h4l3 3v3h-7"/><circle cx="6" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  client:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>'};
+const TABS=[["quote","Çmimi"],["orders","Porositë"],["trips","Udhëtimet"],["settings","Cilësimet"]];
+let TAB="quote",VIEW=null;
+function setTab(tab,view=null){if(tab!==TAB){newTripSel=null;ntf=null}TAB=tab;VIEW=view;render();window.scrollTo(0,0)}
+function renderNav(){
+  $("#nav").innerHTML=TABS.map(([k,l])=>`<button class="${TAB===k?"on":""}" onclick="setTab('${k}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>${l}</button>`).join("");
+}
+function addrField(id,initial,ph="Shkruaj rrugën, qytetin…"){
+  return `<div class="sug"><input id="${id}" placeholder="${ph}" autocomplete="off" value="${esc(initial?.label||"")}"><ul hidden id="${id}-list"></ul></div>`;
+}
+function wireAddr(id,onPick){
+  const inp=$("#"+id),list=$("#"+id+"-list");let timer,results=[];
+  inp.addEventListener("input",()=>{clearTimeout(timer);onPick(null);
+    if(inp.value.trim().length<3){list.hidden=true;return}
+    timer=setTimeout(async()=>{
+      const q=inp.value.trim();
+      try{results=await searchAddress(q)}catch(e){results=[]}
+      // gjithmonë lejo adresën siç është shkruar; vendndodhja merret nga rezultati i parë ose nga qyteti
+      const near=results[0]||cityIn(q);
+      if(near)results.push({label:q,lat:near.lat,lng:near.lng,exact:"typed"});
+      list.innerHTML=results.length?results.map((r,i)=>`<li data-i="${i}">${r.exact==="typed"?`✎ <b>Përdor siç e shkrova:</b> `:""}${esc(r.label)}${r.exact===false?` <span class="pill warn">pa numër</span>`:""}</li>`).join(""):`<li class="mute">Nuk u gjet. Shkruaj edhe qytetin, p.sh. “Hauptstraße 5, Stuttgart”.</li>`;
+      list.hidden=false;
+    },350)});
+  list.addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(!li)return;const r=results[+li.dataset.i];inp.value=r.label;list.hidden=true;onPick(r)});
+}
+function vanSelect(sel){return `<select id="f-van">${S().vans.map(v=>`<option value="${v.id}" ${v.id===sel?"selected":""}>${esc(v.name)}</option>`).join("")}</select>`}
+
+/* --- redaktuesi i mallrave (përdoret nga kompania dhe klienti) --- */
+// Kutizat e pajisjeve te kuzhina: secila shtohet si mall më vete (çmimi sipas vëllimit)
+function kitchenApps(items){
+  const P=S().presets,apps=P.map((p,j)=>({p,j})).filter(x=>x.p.app||x.p.name==="Frigorifer");
+  const order=["Shporet","Furrë inkaso","Pllakë gatimi","Frigorifer","Lavastovilje","Aspirator","Mikrovalë","Lavaman + rubinet"];
+  apps.sort((a,b)=>(order.indexOf(a.p.name)+99)%99-(order.indexOf(b.p.name)+99)%99);
+  return `<div style="margin-top:8px"><div class="mute" style="font-size:13px;margin-bottom:4px">Me kuzhinën vijnë edhe:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${apps.map(({p,j})=>{const on=items.some(it=>it.preset===j);
+    return `<label style="display:flex;gap:5px;align-items:center;margin:0;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:${on?"var(--acc)":"var(--bg)"};color:${on?"var(--onacc)":"var(--ink)"}"><input type="checkbox" data-app="${j}" ${on?"checked":""} style="width:auto;margin:0">${esc(p.name)}</label>`}).join("")}</div></div>`;
+}
+function itemsEditor(items,showFit){
+  const P=S().presets;
+  return `<div id="items">${items.map((it,i)=>`<div class="item" data-i="${i}">
+    <div class="top"><select data-k="preset">${P.map((p,j)=>`<option value="${j}" ${it.preset==j?"selected":""}>${esc(p.name)}</option>`).join("")}<option value="x" ${it.preset==="x"?"selected":""}>Tjetër (shkruaj masat)</option></select>
+    <input type="number" inputmode="numeric" min="1" data-k="qty" value="${it.qty}" aria-label="Sasia"><button class="x" data-del="${i}" aria-label="Hiqe">×</button></div>
+    <div class="dims lab"><span>Gjatësia cm</span><span>Gjerësia cm</span><span>Lartësia cm</span><span>${P[it.preset]?.perM?"kg/metër":"kg/copë"}</span></div>
+    <div class="dims"><input type="number" inputmode="decimal" data-k="l" value="${it.l||""}" placeholder="Gjatësia cm"><input type="number" inputmode="decimal" data-k="w" value="${it.w||""}" placeholder="Gjerësia cm"><input type="number" inputmode="decimal" data-k="h" value="${it.h||""}" placeholder="Lartësia cm"><input type="number" inputmode="decimal" data-k="kg" value="${it.kg||""}" placeholder="kg/copë"></div>
+    <div class="mute linekg" style="font-size:13px;margin-top:4px"></div>
+    <div class="fitw" style="margin-top:6px" hidden><span class="pill warn">Kjo copë nuk hyn në furgon</span></div>
+    ${P[it.preset]?.perM?kitchenApps(items):""}
+  </div>`).join("")}</div>
+  <button class="btn ghost small" id="addItem" style="margin-top:10px">+ Shto mall</button>
+  <div class="totals" id="totals"></div>`;
+}
+function wireItems(state,rerender,onChange=()=>{}){
+  const box=$("#items");
+  const upd=()=>{const g=goods(state.items);
+    box.querySelectorAll(".item").forEach((el,i)=>{const it=state.items[i];const lk=el.querySelector(".linekg");if(lk&&it){const g1=goods([it]);lk.textContent=g1.kg?`Pesha e këtij rreshti: ${g1.est?"≈ ":""}${g1.kg.toLocaleString("de-DE")} kg`+(+it.kg>0?(perM(it)?` (${num1(units(it))} m × ${it.kg} kg)`:+it.qty>1?` (${it.qty} × ${it.kg} kg)`:""):" (e vlerësuar nga madhësia)"):""}el.querySelector(".fitw").hidden=!(it&&it.l&&it.w&&it.h&&!S().vans.some(v=>fitsPiece(it,v)))});$("#totals").innerHTML=`<div><b>${num1(g.m3)} m³</b><span>Vëllimi</span></div><div><b>${g.est?"≈ ":""}${g.kg} kg</b><span>${g.est?"Pesha e vlerësuar":"Pesha"}</span></div><div><b>${g.pcs}</b><span>Copë</span></div>`;onChange()};
+  box.addEventListener("input",e=>{const el=e.target;
+    if(el.dataset.app!==undefined){const j=+el.dataset.app;if(el.checked){const p=S().presets[j];state.items.push({preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg})}else{const x=state.items.findIndex(it=>it.preset===j);if(x>=0)state.items.splice(x,1)}rerender();return}
+    const i=+el.closest(".item").dataset.i,k=el.dataset.k,it=state.items[i];
+    if(k==="preset"){if(el.value==="x"){it.preset="x"}else{const p=S().presets[+el.value];Object.assign(it,{preset:+el.value,l:p.l,w:p.w,h:p.h,kg:p.kg})}rerender();return}
+    it[k]=parseFloat(String(el.value).replace(",","."))||0;upd()});
+  box.addEventListener("click",e=>{const d=e.target.dataset.del;if(d!==undefined){state.items.splice(+d,1);if(!state.items.length)state.items.push(newItem());rerender()}});
+  $("#addItem").onclick=()=>{state.items.push(newItem());rerender()};
+  upd();
+}
+function newItem(j=1){const p=S().presets[j];return {preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg}}
+
+/* ===================== NGARKIMI 3D ===================== */
+// Copat (cm). Kuzhina ndahet në elemente; çdo copë tjetër = sasia × L×W×H.
+const PCOL=["#3b6fe0","#e0883b","#2fa36b","#c4469a","#d4b72c","#5bb7d6","#8a5cd8","#d65b5b","#6f8a2f","#b08060"];
+function piecesFromItems(items,tag="",color0=0){
+  const P=S().presets,out=[];
+  items.forEach((it,j)=>{const q=+it.qty||0,L=+it.l||0,W=+it.w||0,H=+it.h||0;if(!q||!L||!W||!H)return;const color=tag?color0:j;
+    const name=it.preset==="x"?"Mall":(P[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,"");
+    const kgEach=+it.kg>0?+it.kg:L*W*H/1e6*S().densityKgM3,pr=it.preset==="x"?{}:(P[it.preset]||{}),fl={noTop:!!pr.noTop,up:!!pr.up};
+    if(perM(it)){const seg=Math.min(100,+P[it.preset].l||100);let total=units(it)*100,n=1;
+      while(total>0.5){const len=Math.min(seg,total);out.push({l:len,w:W,h:H,kg:kgEach*len/100,name:name+" "+n++,tag,color,elem:true});total-=len}}
+    else for(let k=0;k<q;k++)out.push({l:L,w:W,h:H,kg:kgEach,name:q>1?`${name} ${k+1}`:name,tag,color,...fl})});
+  return out;
+}
+// Hapësirat: rimorkioja dhe furgoni (cm). Mbushja nga përpara (x=0) drejt derës.
+function spacesOf(v){return [{key:"trailer",name:"Rimorkioja",L:v.trailer.l*100,W:v.trailer.w*100,H:v.trailer.h*100},{key:"van",name:"Furgoni",L:v.cargo.l*100,W:v.cargo.w*100,H:v.cargo.h*100}]}
+function packPieces(pieces,v,opt={}){
+  const spaces=spacesOf(v).map(s=>({...s,boxes:[],eps:[{x:0,y:0,z:0}]}));
+  const unplaced=[];
+  const ov=(a0,a1,b0,b1)=>Math.min(a1,b1)-Math.max(a0,b0);
+  for(const p of pieces){
+    const oris=[[p.l,p.w,p.h],[p.w,p.l,p.h]];
+    if(opt.tip&&!p.elem&&!p.up)oris.push([p.l,p.h,p.w],[p.h,p.l,p.w],[p.w,p.h,p.l],[p.h,p.w,p.l]);
+    let best=null;
+    for(const sp of spaces){
+      for(const e of sp.eps)for(const [l,w,h] of oris){
+        if(e.x+l>sp.L+0.01||e.y+w>sp.W+0.01||e.z+h>sp.H+0.01)continue;
+        let hit=false;for(const b of sp.boxes){if(ov(e.x,e.x+l,b.x,b.x+b.l)>0.01&&ov(e.y,e.y+w,b.y,b.y+b.w)>0.01&&ov(e.z,e.z+h,b.z,b.z+b.h)>0.01){hit=true;break}}
+        if(hit)continue;
+        if(e.z>0.01){let sup=0;for(const b of sp.boxes){if(Math.abs(b.z+b.h-e.z)<0.5){const a=ov(e.x,e.x+l,b.x,b.x+b.l),c=ov(e.y,e.y+w,b.y,b.y+b.w);if(a>0&&c>0)sup+=a*c}}
+          if(sup<0.75*l*w)continue;
+          // asgjë mbi divane, kolltukë, frigoriferë
+          if(sp.boxes.some(b=>b.noTop&&Math.abs(b.z+b.h-e.z)<0.5&&ov(e.x,e.x+l,b.x,b.x+b.l)>0&&ov(e.y,e.y+w,b.y,b.y+b.w)>0))continue;
+          // mos vër të rëndën mbi të lehtën
+          if(sp.boxes.some(b=>Math.abs(b.z+b.h-e.z)<0.5&&ov(e.x,e.x+l,b.x,b.x+b.l)>0&&ov(e.y,e.y+w,b.y,b.y+b.w)>0&&b.kg<p.kg*0.5))continue}
+        const score=(sp.key==="trailer"?0:1e9)+e.x*1e4+e.z*10+e.y; // rimorkio e para, pastaj përpara, poshtë, majtas
+        if(!best||score<best.score)best={sp,x:e.x,y:e.y,z:e.z,l,w,h,score}}}
+    if(!best){unplaced.push(p);continue}
+    const b={...p,x:best.x,y:best.y,z:best.z,l:best.l,w:best.w,h:best.h,step:0},sp=best.sp;
+    sp.boxes.push(b);
+    sp.eps=sp.eps.filter(e=>!(e.x>=b.x-0.01&&e.x<b.x+b.l-0.01&&e.y>=b.y-0.01&&e.y<b.y+b.w-0.01&&e.z>=b.z-0.01&&e.z<b.z+b.h-0.01));
+    for(const e of [{x:b.x+b.l,y:b.y,z:b.z},{x:b.x,y:b.y+b.w,z:b.z},{x:b.x,y:b.y,z:b.z+b.h},{x:b.x+b.l,y:0,z:b.z},{x:b.x,y:0,z:b.z+b.h},{x:0,y:b.y+b.w,z:b.z}])
+      if(!sp.eps.some(f=>Math.abs(f.x-e.x)<0.01&&Math.abs(f.y-e.y)<0.01&&Math.abs(f.z-e.z)<0.01))sp.eps.push(e);
+  }
+  let n=1;for(const sp of spaces)for(const b of sp.boxes)b.step=n++;
+  return {spaces,unplaced};
+}
+function posTxt(b,sp){const third=sp.L/3,c=b.x+b.l/2,m=b.y+b.w/2;
+  return `${c<third?"përpara":c<2*third?"në mes":"te dera"}, ${m<sp.W*0.4?"majtas":m>sp.W*0.6?"djathtas":"në qendër"}, ${b.z<1?"në dysheme":"sipër ("+Math.round(b.z)+" cm)"}`}
+
+// Pamja 3D me three.js (rrotullo me gisht/maus, zmadho me dy gishta/rrotë)
+const VIEWS={};
+function packView(elId,pieces,v,legend=[],opt={}){
+  const el=document.getElementById(elId);if(!el)return;
+  const res=packPieces(pieces,v,opt);
+  const used=res.spaces.map(sp=>{const vol=sp.boxes.reduce((a,b)=>a+b.l*b.w*b.h,0);return {sp,pct:vol/(sp.L*sp.W*sp.H)*100,len:sp.boxes.reduce((a,b)=>Math.max(a,b.x+b.l),0)}});
+  const kg=pieces.reduce((a,p)=>a+p.kg,0);
+  el.innerHTML=`<div class="p3d" id="${elId}-c"></div>
+    <div class="mute" style="margin-top:6px">Rrotullo me gisht · zmadho me dy gishta. Kabina e shoferit është majtas, dera e pasme djathtas.</div>
+    <div class="totals">${used.map(u=>`<div><b>${u.pct.toFixed(0)}%</b><span>${u.sp.name} · zë ${Math.round(u.len)}/${Math.round(u.sp.L)} cm</span></div>`).join("")}<div><b style="${kg>v.payloadKg?"color:var(--warn)":""}">${Math.round(kg)} kg</b><span>nga ${v.payloadKg}</span></div></div>
+    ${res.unplaced.length?`<p><span class="pill warn">Nuk hyjnë: ${res.unplaced.map(p=>esc(p.name)).join(", ")}</span></p>`:pieces.length?`<p><span class="pill good">Të gjitha hyjnë</span></p>`:""}
+    ${legend.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${legend.map(l=>`<span class="pill" style="background:${PCOL[l.color%PCOL.length]}22;color:var(--ink)"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${PCOL[l.color%PCOL.length]};margin-right:5px"></i>${esc(l.label)}</span>`).join("")}</div>`:""}
+    ${pieces.length?`<details style="margin-top:8px"><summary style="font-weight:700;cursor:pointer">Radha e ngarkimit hap pas hapi</summary><ol style="padding-left:20px;font-size:13.5px;margin:6px 0">${res.spaces.flatMap(sp=>sp.boxes.map(b=>`<li><b>${esc(b.name)}</b>${b.tag?` (${esc(b.tag)})`:""}: ${sp.name.toLowerCase()}, ${posTxt(b,sp)}${(b.l!==undefined)?` · ${Math.round(b.l)}×${Math.round(b.w)}×${Math.round(b.h)}`:""}</li>`)).join("")}</ol></details>`:""}`;
+  draw3d(elId+"-c",res,v);
+}
+function draw3d(cid,res,v,cars=[]){
+  const box=document.getElementById(cid);if(!box)return;
+  if(!window.THREE){box.innerHTML=`<p class="mute" style="padding:12px">Pamja 3D kërkon internet herën e parë.</p>`;return}
+  const T=THREE,W=box.clientWidth||340,H=Math.round(W*0.62);
+  const r=new T.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.setSize(W,H);box.appendChild(r.domElement);
+  const sc=new T.Scene(),cam=new T.PerspectiveCamera(35,W/H,0.1,200);
+  sc.add(new T.AmbientLight(0xffffff,0.75));const dl=new T.DirectionalLight(0xffffff,0.55);dl.position.set(-4,10,6);sc.add(dl);
+  const css=getComputedStyle(document.documentElement),ink=new T.Color(css.getPropertyValue("--mute").trim()||"#667");
+  const grp=new T.Group();sc.add(grp);
+  // rendi gjatë rrugës (metra): kabina, furgoni, tërheqësi, rimorkioja
+  const m=x=>x/100,vanL=v.cargo.l,gap=0.9;
+  const offs={van:0.9,trailer:0.9+vanL+gap};
+  const edge=(w,h,d,col,op)=>{const g=new T.BoxGeometry(w,h,d);const e=new T.LineSegments(new T.EdgesGeometry(g),new T.LineBasicMaterial({color:col,transparent:op<1,opacity:op}));return e};
+  // kabina
+  const cab=new T.Mesh(new T.BoxGeometry(0.85,1.6,v.cargo.w),new T.MeshLambertMaterial({color:0x9aa3b5}));cab.position.set(0.425,0.8+0.4,v.cargo.w/2);grp.add(cab);
+  for(const sp of res.spaces){const ox=offs[sp.key],L=m(sp.L),Wd=m(sp.W),Hh=m(sp.H);
+    const fl=new T.Mesh(new T.BoxGeometry(L,0.02,Wd),new T.MeshLambertMaterial({color:0x8d96a8,transparent:true,opacity:0.35}));fl.position.set(ox+L/2,0.39,Wd/2);grp.add(fl);
+    const fr=edge(L,Hh,Wd,ink,0.9);fr.position.set(ox+L/2,0.4+Hh/2,Wd/2);grp.add(fr);
+    // rrotat
+    for(const wx of (sp.key==="trailer"?[L/2-0.4,L/2+0.4]:[0.5,L-0.6]))for(const wz of [0,Wd]){const wh=new T.Mesh(new T.CylinderGeometry(0.33,0.33,0.2,20),new T.MeshLambertMaterial({color:0x333a48}));wh.rotation.x=Math.PI/2;wh.position.set(ox+wx,0.33,wz);grp.add(wh)}
+    for(const b of sp.boxes){const g=new T.BoxGeometry(m(b.l)-0.01,m(b.h)-0.01,m(b.w)-0.01);
+      const mesh=new T.Mesh(g,new T.MeshLambertMaterial({color:PCOL[b.color%PCOL.length]}));mesh.position.set(ox+m(b.x+b.l/2),0.4+m(b.z+b.h/2),m(b.y+b.w/2));grp.add(mesh);
+      const e=new T.LineSegments(new T.EdgesGeometry(g),new T.LineBasicMaterial({color:0x10182a,transparent:true,opacity:0.6}));e.position.copy(mesh.position);grp.add(e);
+      // numri i hapit sipër
+      const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.fillStyle="#fff";x.beginPath();x.arc(32,32,28,0,7);x.fill();x.fillStyle="#1c2333";x.font="bold 34px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(b.step,32,34);
+      const spr=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false}));spr.scale.set(0.28,0.28,1);spr.position.set(mesh.position.x,0.4+m(b.z+b.h)+0.12,mesh.position.z);grp.add(spr)}}
+  // veturat në rimorkio (forma sipas llojit: sedan, hatchback, SUV, kombi/furgon)
+  cars.forEach((c,i)=>{const L=m(c.l||430),Wc=m(c.w||180),Hc=m(c.h||148),tl=v.trailer.l,ox=offs.trailer+Math.max(0,(tl-L)/2)+i*0.05;
+    const car=carMesh(T,c,L,Wc,Hc,i);car.position.set(ox,0.42,v.trailer.w/2-Wc/2);grp.add(car)});
+  // tërheqësi
+  const bar=new T.Mesh(new T.BoxGeometry(gap,0.06,0.06),new T.MeshLambertMaterial({color:0x333a48}));bar.position.set(offs.van+vanL+gap/2,0.45,v.cargo.w/2);grp.add(bar);
+  const total=offs.trailer+v.trailer.l,center=new T.Vector3(total/2,1.5,v.trailer.w/2);
+  let th=-0.5,ph=1.0,rad=total*1.4;
+  const place=()=>{cam.position.set(center.x+rad*Math.sin(ph)*Math.sin(th),center.y+rad*Math.cos(ph),center.z+rad*Math.sin(ph)*Math.cos(th));cam.lookAt(center);r.render(sc,cam)};
+  place();
+  const pts=new Map();let last=null,pinch=null;
+  const cv=r.domElement;cv.style.touchAction="none";cv.style.width="100%";cv.style.height="auto";cv.style.borderRadius="12px";
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY})});
+  cv.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;const p=pts.get(e.pointerId);
+    if(pts.size===1){th-=(e.clientX-p.x)*0.01;ph=Math.min(1.5,Math.max(0.15,ph-(e.clientY-p.y)*0.01));}
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){const [a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)rad=Math.min(40,Math.max(3,rad*pinch/d));pinch=d}
+    place()});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{e.preventDefault();rad=Math.min(40,Math.max(3,rad*(1+Math.sign(e.deltaY)*0.1)));place()},{passive:false});
+  if(VIEWS[cid])VIEWS[cid].dispose();VIEWS[cid]=r;
+}
+// Lloji i karrocerisë nga modeli dhe masat
+function carBody(c){const t=" "+String(c.model||"").toLowerCase()+" ";
+  if(/ (caddy|touran|sharan|vito|viano|transit|berlingo|partner|kangoo|zafira|multivan|t5|t6|vivaro|trafic|doblo|scenic|espace|b-max|c-max|s-max|galaxy|alhambra|v-klasse|v class) /.test(t)||(c.h||0)>=175)return "van";
+  if(/ (tiguan|touareg|x1|x3|x5|x6|q3|q5|q7|ml|gle|glc|gla|rav4|sportage|tucson|qashqai|kuga|sorento|santa fe|duster|kodiaq|karoq|ateca|xc60|xc90|cr-v|cx-5|t-roc|captur|3008|5008|evoque|range|discovery|outlander|juke|x-trail|vitara) /.test(t)||(c.h||0)>=158)return "suv";
+  if(/ (golf|polo|corsa|clio|fiesta|focus|yaris|i20|i30|ceed|astra|fabia|ibiza|leon|a3|1er|a-klasse|a class|208|308|punto|micro|up|c3|megane|auris|civic|swift) /.test(t)||(c.l||0)<=430)return "hatch";
+  return "sedan"}
+const PROFILES={ // [x, y] si pjesë e gjatësisë/lartësisë; përpara = x 0 (nga furgoni)
+  sedan:[[0,.30],[0,.52],[.04,.60],[.30,.64],[.43,.97],[.68,1],[.84,.68],[1,.64],[1,.30]],
+  hatch:[[0,.30],[0,.52],[.04,.60],[.27,.64],[.42,.97],[.86,1],[.98,.85],[1,.55],[1,.30]],
+  suv:[[0,.30],[0,.58],[.04,.66],[.25,.70],[.38,.98],[.90,1],[.99,.92],[1,.55],[1,.30]],
+  van:[[0,.28],[0,.55],[.06,.62],[.16,.68],[.28,.98],[.95,1],[1,.95],[1,.28]]};
+const WINDOWS={sedan:[[.30,.66],[.43,.95],[.68,.98],[.83,.69]],hatch:[[.27,.66],[.42,.95],[.86,.98],[.97,.84]],suv:[[.25,.72],[.38,.96],[.90,.98],[.98,.91]],van:[[.16,.70],[.28,.96],[.95,.98],[.99,.93],[.99,.70]]};
+function carMesh(T,c,L,W,H,i){
+  const g=new T.Group(),type=carBody(c),clear=0.12,bodyH=H-clear;
+  const shape=pts=>{const sh=new T.Shape();pts.forEach(([x,y],k)=>k?sh.lineTo(x*L,clear+y*bodyH-0.3*bodyH*0):sh.moveTo(x*L,clear+y*bodyH));return sh};
+  const prof=PROFILES[type].map(([x,y])=>[x,(y-.30)/.70]);
+  const ext=(pts,depth,mat,z)=>{const geo=new T.ExtrudeGeometry(shape(pts),{depth,bevelEnabled:true,bevelThickness:0.03,bevelSize:0.03,bevelSegments:2});const me=new T.Mesh(geo,mat);me.position.z=z;g.add(me);return me};
+  const col=[0xc62828,0x1565c0,0x2e7d32,0x6a1b9a][i%4];
+  ext(prof,W-0.06,new T.MeshLambertMaterial({color:col}),0.03);
+  ext(WINDOWS[type].map(([x,y])=>[x,(y-.30)/.70]),W-0.02,new T.MeshLambertMaterial({color:0x1b2533,transparent:true,opacity:0.85}),0.01);
+  const wr=Math.min(0.33,H*0.22);
+  for(const wx of [0.18*L,0.82*L])for(const wz of [0.02,W-0.02]){const wh=new T.Mesh(new T.CylinderGeometry(wr,wr,0.2,18),new T.MeshLambertMaterial({color:0x222222}));wh.rotation.x=Math.PI/2;wh.position.set(wx,wr,wz);g.add(wh)}
+  return g}
+// Pamja 3D: si ngarkohet vetura/veturat në rimorkio, me hapësirën që mbetet
+function carLoadView(elId,cars,v){
+  const el=document.getElementById(elId);if(!el)return;
+  cars=cars.filter(c=>c&&c.l);
+  if(!cars.length){el.innerHTML=`<p class="mute">Shkruaj modelin dhe vitin e veturës që të dalin masat.</p>`;return}
+  const tl=v.trailer.l*100,tw=v.trailer.w*100,th=v.trailer.h*100,c=cars[0],fit=carFit(c,v);
+  el.innerHTML=`<div class="p3d" id="${elId}-c"></div>
+    <div class="mute" style="margin-top:6px">${esc(c.model||"Vetura")} (${carBody(c)==="suv"?"SUV":carBody(c)==="van"?"kombi/furgon":carBody(c)==="hatch"?"hatchback":"sedan"}) · ${carDims(c)}</div>
+    <div class="totals"><div><b style="${c.l>tl?"color:var(--warn)":""}">${Math.round((tl-c.l)/2)} cm</b><span>para & pas</span></div><div><b style="${c.w>tw?"color:var(--warn)":""}">${Math.round((tw-c.w)/2)} cm</b><span>anash</span></div><div><b style="${c.h>th?"color:var(--warn)":""}">${Math.round(th-c.h)} cm</b><span>sipër</span></div></div>
+    <p><span class="pill ${fit.ok?"good":"warn"}">${esc(fit.txt)}</span>${cars.length>1?` <span class="pill warn">Në rimorkio hyn vetëm 1 veturë; tjetra duhet në furgon ose udhëtim tjetër.</span>`:""}</p>
+    <p class="mute" style="margin:0">Forma vizatohet nga masat reale të modelit (gjatësi, gjerësi, lartësi), jo nga fotografia.</p>`;
+  const res=packPieces([],v);draw3d(elId+"-c",res,v,cars.slice(0,1));
+}
+const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
+
+/* ===================== ÇMIMI (KOMPANIA) ===================== */
+let draft=null;
+function renderQuote(){
+  if(!draft)draft={customer:"",phone:"",what:"",addr:null,items:[newItem(0)]};
+  $("#app").innerHTML=`${fuelBar()}<div class="card"><h2>Ofertë e re</h2>
+  <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(draft.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" placeholder="+383 …" value="${esc(draft.phone||"")}"></div></div>
+  <label>Adresa e dorëzimit</label>${addrField("f-addr",draft.addr)}
+  <h3>Mallrat</h3><p class="mute" style="margin:0">Zgjidh llojin, ose shkruaj masat. Nëse nuk e di peshën, lëre bosh: e vlerësojmë nga madhësia. Kuzhina: shkruaj gjatësinë totale te “Gjatësia cm” (p.sh. 550), sasia 1.</p>
+  ${itemsEditor(draft.items,true)}
+  <details class="more" id="q3d" ${draft.open3d?"open":""}><summary>Shiko si ngarkohet në furgon (3D)</summary>
+  <div class="row"><select id="pk-van">${S().vans.map(v=>`<option value="${v.id}" ${v.id===(draft.pkVan||"A")?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
+  <label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink);font-weight:500"><input type="checkbox" id="pk-tip" style="width:auto" ${draft.pkTip?"checked":""}>Lejo anash</label></div>
+  <div id="pack-q"></div></details>
+  <div class="row" style="align-items:flex-end;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="q-vat" style="width:auto" ${draft.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
+  <div><label for="q-docs">Dokumente / të tjera €</label><input id="q-docs" type="number" inputmode="decimal" value="${draft.docs||""}" placeholder="0"></div></div>
+  <button class="btn full" id="calc">Llogarit çmimin</button></div><div id="result"></div>`;
+  wireAddr("f-addr",r=>draft.addr=r);wireFuelBar();
+  $("#f-cust").oninput=e=>draft.customer=e.target.value;$("#f-phone").oninput=e=>draft.phone=e.target.value;
+  const repack=debounce(()=>packView("pack-q",piecesFromItems(draft.items).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h),vanById(draft.pkVan||"A"),draft.items.map((it,j)=>({color:j,label:it.qty+"× "+(it.preset==="x"?"Mall":(S().presets[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,""))})).filter(l=>!l.label.startsWith("0×")),{tip:draft.pkTip}),120);
+  $("#pk-van").onchange=e=>{draft.pkVan=e.target.value;repack()};
+  $("#q3d").ontoggle=e=>{draft.open3d=e.target.open;if(e.target.open)repack()};
+  $("#pk-tip").onchange=e=>{draft.pkTip=e.target.checked;repack()};
+  wireItems(draft,renderQuote,repack);
+  $("#calc").onclick=calcCompany;
+  const rq=()=>{if($("#saveOrder"))calcCompany()};
+  $("#q-vat").onchange=e=>{draft.vatOn=e.target.checked;rq()};
+  $("#q-docs").oninput=debounce(e=>{draft.docs=parseFloat($("#q-docs").value)||0;rq()},400);
+}
+async function calcCompany(){
+  const g=goods(draft.items);
+  if(!draft.addr)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Zgjidh adresën nga lista</span></div>`;
+  const notExact=draft.addr.exact===false;
+  if(!g.m3&&!g.kg)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Shto masat ose peshën e mallrave</span></div>`;
+  $("#result").innerHTML=`<div class="card mute">Duke llogaritur rrugën…</div>`;
+  const q=await quote(g,draft.addr,draft.items,{vat:draft.vatOn!==false,docs:draft.docs}),s=S();
+  const fits=await fitsOnTrips({...draft,...g});
+  $("#result").innerHTML=`<div class="card">
+    <div class="mute">Çmimi i sugjeruar (${q.vatOn?`me TVSH ${s.vat}%`:"pa TVSH"})</div><div class="price">${eur(q.price)}</div>
+    <div class="mute">${q.vatOn?`Pa TVSH ${eur(q.net)} · TVSH ${eur(q.vat)} · `:""}kostoja jonë ${eur(q.cost)} · fitimi ${eur(q.net-q.cost)}</div>
+    ${q.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
+    ${g.est?`<p><span class="pill">Pesha e vlerësuar nga madhësia: ≈ ${g.kg} kg</span></p>`:""}
+    ${notExact?`<p><span class="pill warn">Adresa pa numër shtëpie: çmimi është i përafërt</span></p>`:""}
+    <p><a class="btn ghost small" href="${navUrl(draft.addr)}" target="_blank" rel="noopener">Shiko adresën në Google Maps</a></p>
+    <details class="more"><summary>Si u llogarit çmimi dhe kostoja</summary>
+    <h3>Si llogaritet çmimi</h3><table>
+    ${q.fixed.map(i=>`<tr><td>${perM(i)?`Kuzhinë ${num1(units(i))} m`:`${i.qty} × ${esc(S().presets[i.preset].name)}`} × ${eur(rateOf(i))}${perM(i)?"/m":""} (çmim fiks)</td><td>${eur(units(i)*rateOf(i))}</td></tr>`).join("")}
+    ${q.hasCalc?`<tr><td>Mallrat e tjera: ${(q.cShare*100).toFixed(1)}% e udhëtimit Kosovë ⇄ ${esc(cityOf(q.hub.addr))} + ngarkim, + ${s.margin}% fitim</td><td>${eur(q.calcPrice)}</td></tr>`:""}
+    <tr><td>Qyteti kryesor i udhëtimit: <b>${esc(cityOf(q.hub.addr))}</b> (${esc(q.hub.why)})</td><td></td></tr>
+    <tr><td>Shtesa për adresën: ${q.hub.self?"0 km, ky është qyteti kryesor":`${km(q.detourKm)} rrugë shtesë nga rruga për në ${esc(cityOf(q.hub.addr))}`}, + ${s.margin}% fitim</td><td>${eur(q.extra)}</td></tr>
+    ${q.docs?`<tr><td>Dokumente / shpenzime të tjera</td><td>${eur(q.docs)}</td></tr>`:""}
+    ${q.vatOn?`<tr><td>Çmimi pa TVSH (min. ${eur(s.minPrice)})</td><td>${eur(q.net)}</td></tr>
+    <tr><td>TVSH ${s.vat}%</td><td>${eur(q.vat)}</td></tr>`:""}
+    <tr><td><b>Çmimi ${q.vatOn?"me TVSH":"pa TVSH"}</b> (rrumbullakuar në 5 €)</td><td><b>${eur(q.price)}</b></td></tr></table>
+    <h3>Kostoja jonë reale</h3><table>
+    <tr><td>Pesha ${g.kg} kg = ${(g.kg/q.v.payloadKg*100).toFixed(1)}% e ${Math.round(q.v.payloadKg)} kg · Hapësira ${num1(g.m3)} m³ = ${(g.m3/vanVol(q.v)*100).toFixed(1)}% e ${num1(vanVol(q.v))} m³ → përdoret më e madhja</td><td></td></tr>
+    <tr><td>Pjesa e udhëtimit (${km(q.lineKm)}, kosto e plotë ${eur(q.trip.total)}, furgoni ${s.loadFactor}% plot)</td><td>${eur(q.trip.total*q.lineShare)}</td></tr>
+    <tr><td>Rruga shtesë deri te adresa</td><td>${eur(q.detourCost)}</td></tr>
+    <tr><td>Ngarkim / shkarkim</td><td>${eur(s.handling)}</td></tr>
+    ${q.docs?`<tr><td>Dokumente / të tjera</td><td>${eur(q.docs)}</td></tr>`:""}
+    <tr><td><b>Kostoja</b> → fitimi (pa TVSH) ${eur(q.net-q.cost)}</td><td><b>${eur(q.cost)}</b></td></tr></table></details>
+    <label for="f-price">Çmimi i dakorduar (${q.vatOn?"me TVSH":"pa TVSH"})</label><input id="f-price" type="number" inputmode="decimal" value="${q.price}">
+    ${fits}
+    <button class="btn full" id="saveOrder">Ruaje si porosi</button></div>`;
+  $("#saveOrder").onclick=()=>{
+    const o={id:uid(),created:Date.now(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
+      what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,docs:q.docs};
+    DB.orders.unshift(o);
+    const pick=document.querySelector("input[name=fit]:checked");
+    if(pick&&pick.value){const tr=DB.trips.find(x=>x.id===pick.value);if(tr){tr.orderIds.push(o.id);o.tripId=tr.id}}
+    save();draft=null;toast("Porosia u ruajt");setTab("orders");
+  };
+}
+function itemsSummary(items){const P=S().presets;return items.filter(i=>i.qty).map(i=>i.qty+"× "+(i.preset==="x"?"mall":(P[i.preset]?.name||"mall").replace(/\s*\(shkruaj.*\)/,"")+(perM(i)?" "+num1(units(i))+" m":""))).join(", ")}
+async function fitsOnTrips(o){
+  const open=DB.trips.filter(tr=>tr.status!=="done");if(!open.length)return "";
+  const rows=[];
+  for(const tr of open){const p=await planTrip(tr),v=p.v,ex=await extraKm(tr,o);
+    rows.push({tr,ex,ok:p.kg+o.kg<=v.payloadKg&&p.m3+o.m3<=vanVol(v),cost:ex*perKm(v)})}
+  rows.sort((a,b)=>(b.ok-a.ok)||(a.ex-b.ex));
+  const opt=(v,checked,dis,html)=>`<label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;font-weight:500"><input type="radio" name="fit" value="${v}" style="width:auto" ${checked?"checked":""} ${dis?"disabled":""}><span>${html}</span></label>`;
+  return `<h3>Hyn në një udhëtim të planifikuar?</h3>`+rows.map((r,i)=>opt(r.tr.id,i===0&&r.ok,!r.ok,`<b>${esc(dateTxt(r.tr.date))}</b> +${km(r.ex)} rrugë shtesë (≈${eur(r.cost)}) ${r.ok?`<span class="pill good">hyn</span>`:`<span class="pill warn">plot</span>`}`)).join("")+opt("",!rows[0].ok,false,"Mos e shto ende në udhëtim");
+}
+
+/* ===================== KLIENTI ===================== */
+let cdraft=null;
+function renderClient(){
+  if(!cdraft)cdraft={addr:null,items:[newItem(0)]};
+  const company=!document.body.classList.contains("client");
+  $("#app").innerHTML=`${company?`<div class="card mute">Kjo është faqja që e shohin klientët. Linku për klientët: <b>${esc(clientLink())}</b> <button class="btn ghost small" id="copyLink">Kopjo</button></div>`:""}
+  <div class="hero"><img src="logo.png" alt="Gemini Cars &amp; Logistics"><p>Transport mallrash nga Kosova në Gjermani</p></div>
+  <div class="card"><h2>Llogarit çmimin e transportit</h2>
+  <label>Adresa e saktë e dorëzimit (rruga dhe numri)</label>${addrField("c-addr",cdraft.addr,"P.sh. Hauptstraße 5, 70173 Stuttgart")}
+  <h3>Çfarë dërgoni?</h3><p class="mute" style="margin:0">Zgjidhni mallin dhe sasinë. Masat dhe pesha plotësohen vetë; ndryshojini nëse i dini më saktë.</p>
+  ${itemsEditor(cdraft.items,true)}
+  <button class="btn full" id="ccalc">Shiko çmimin</button></div><div id="cresult"></div>`;
+  wireAddr("c-addr",r=>cdraft.addr=r);
+  wireItems(cdraft,renderClient);
+  if(company)$("#copyLink").onclick=()=>navigator.clipboard.writeText(clientLink()).then(()=>toast("Linku u kopjua"),()=>toast(clientLink()));
+  $("#ccalc").onclick=async()=>{
+    const g=goods(cdraft.items);
+    if(!cdraft.addr)return $("#cresult").innerHTML=`<div class="card"><span class="pill warn">Zgjidhni adresën nga lista</span></div>`;
+    if(cdraft.addr.exact===false||(cdraft.addr.exact==="typed"&&!/\d/.test(cdraft.addr.label)))return $("#cresult").innerHTML=`<div class="card"><span class="pill warn">Shkruani adresën e saktë me rrugë dhe numër shtëpie, pastaj zgjidheni nga lista</span></div>`;
+    if(!g.m3&&!g.kg)return $("#cresult").innerHTML=`<div class="card"><span class="pill warn">Shtoni të paktën një mall</span></div>`;
+    $("#cresult").innerHTML=`<div class="card mute">Duke llogaritur…</div>`;
+    const big=g.m3>vanVol(avgVan())||g.kg>avgVan().payloadKg;
+    const q=await quote(g,cdraft.addr,cdraft.items);
+    const text=`Përshëndetje Gemini Logistics! Dua ofertë: ${itemsSummary(cdraft.items)} (${num1(g.m3)} m³, ${g.est?"≈":""}${g.kg} kg) për në ${cdraft.addr.label}. Çmimi në aplikacion: ${eur(q.price)} me TVSH. Google Maps: ${navUrl(cdraft.addr)}`;
+    $("#cresult").innerHTML=`<div class="card" style="text-align:center">
+      <div class="mute">Çmimi final i transportit (përfshin TVSH ${S().vat}%)</div><div class="price">${eur(q.price)}</div>
+      <div class="mute">${num1(g.m3)} m³ · ${g.est?"≈ ":""}${g.kg} kg · deri në ${esc(cdraft.addr.label.split(",").slice(-2).join(",").trim())}</div>
+      ${big?`<p><span class="pill warn">Kjo ngarkesë është më e madhe se një furgon. Na kontaktoni.</span></p>`:""}
+      <p class="mute">Dorëzimi brenda javës. Përfshin ngarkimin dhe shkarkimin.</p>
+      <p><a class="btn ghost small" href="${navUrl(cdraft.addr)}" target="_blank" rel="noopener">Kontrolloni adresën në Google Maps</a></p>
+      <div class="row"><button class="btn ghost" id="copyMsg">Kopjo mesazhin</button><a class="btn" href="${esc(S().instagram)}" target="_blank" rel="noopener">Na shkruani në Instagram</a></div></div>`;
+    $("#copyMsg").onclick=()=>navigator.clipboard.writeText(text).then(()=>toast("Mesazhi u kopjua. Ngjiteni në Instagram."),()=>toast("Nuk u kopjua"));
+  };
+}
+function clientLink(){return location.href.split("#")[0]+"#klient"}
+
+/* ===================== POROSITË ===================== */
+function telLink(o){return o.phone?` · <a href="tel:${esc(o.phone.replace(/[^\d+]/g,""))}" onclick="event.preventDefault();event.stopPropagation();contactMenu(this.getAttribute('href').slice(4),this.textContent.slice(3))">📞 ${esc(o.phone)}</a>`:""}
+function intlNum(n){n=n.replace(/[^\d+]/g,"");if(n.startsWith("00"))n="+"+n.slice(2);else if(n.startsWith("0"))n="+383"+n.slice(1);else if(!n.startsWith("+"))n="+"+n;return n}
+function contactMenu(raw,label){
+  const n=intlNum(raw),d=n.slice(1);
+  document.querySelector(".cmenu")?.remove();
+  const m=document.createElement("div");m.className="cmenu";
+  m.innerHTML=`<div class="cm-box"><div class="mute" style="text-align:center;margin-bottom:8px">${esc(label||n)}</div>
+    <a class="cm-btn" href="tel:${n}">📞 Telefono</a>
+    <a class="cm-btn" style="background:#25d366;color:#fff" href="https://wa.me/${d}" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="cm-btn" style="background:#7360f2;color:#fff" href="viber://chat?number=%2B${d}">Viber</a>
+    <button class="cm-btn" style="background:var(--line)" type="button">Anulo</button></div>`;
+  m.onclick=e=>{if(e.target===m||e.target.tagName==="BUTTON"||e.target.tagName==="A")setTimeout(()=>m.remove(),50)};
+  document.body.appendChild(m);
+}
+function tripOptions(cur){
+  return `<option value="">— Pa udhëtim —</option>`+DB.trips.filter(t=>t.status!=="done"||t.id===cur).map(t=>`<option value="${t.id}" ${t.id===cur?"selected":""}>${esc(vanById(t.van).name.replace(/\s*\(.*\)/,""))} · ${t.date?t.date.slice(8,10)+"."+t.date.slice(5,7):"pa datë"}</option>`).join("")
+    +S().vans.map(v=>`<option value="new:${v.id}">+ Udhëtim i ri me ${esc(v.name)}</option>`).join("");
+}
+function assignOrder(oid,val){
+  const o=DB.orders.find(x=>x.id===oid);if(!o)return;
+  if(val.startsWith("new:")){const tr={id:uid(),date:new Date(Date.now()+864e5).toISOString().slice(0,10),name:"",van:val.slice(4),orderIds:[],carIds:[],status:"planned",returnIncome:0};DB.trips.unshift(tr);val=tr.id;toast("U krijua udhëtim i ri për nesër. Ndrysho datën te Udhëtimet.")}
+  DB.trips.forEach(t=>t.orderIds=t.orderIds.filter(x=>x!==oid));
+  if(val){DB.trips.find(t=>t.id===val).orderIds.push(oid);o.tripId=val}else o.tripId=null;
+  save();
+}
+function renderOrders(){
+  if(VIEW&&String(VIEW).startsWith("car:"))return renderCar(VIEW.slice(4));
+  if(VIEW)return renderOrder(VIEW);
+  const list=DB.orders;
+  const waitL=list.filter(o=>o.status!=="delivered"&&!onTrip(o)),tripL=list.filter(o=>o.status!=="delivered"&&onTrip(o)),doneL=list.filter(o=>o.status==="delivered");
+  const row=o=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default;flex-wrap:wrap">
+    <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
+    <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span> ${o.status==="delivered"?`<span class="pill good">dorëzuar</span>`:""}${onTrip(o)&&o.status!=="delivered"?` <span class="pill">në udhëtim: ${esc(tripLabel(o.tripId))}</span>`:""}<span id="rec-${o.id}"></span></div>
+    <div><b>${eur(o.price)}</b></div>
+    <div style="flex-basis:100%;display:flex;gap:6px;margin-top:4px">
+      <select data-assign="${o.id}" style="flex:1;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
+      <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
+      <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
+  $("#app").innerHTML=`<div class="card"><h2>Porositë që presin (${waitL.length})</h2>
+  ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
+  ${waitL.map(row).join("")}</div>
+  ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
+  ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
+  ${carsCard()}`;
+  document.querySelectorAll("[data-assign]").forEach(sel=>sel.onchange=()=>{assignOrder(sel.dataset.assign,sel.value);render()});
+  document.querySelectorAll("[data-delo]").forEach(btn=>btn.onclick=()=>{if(!twoTap(btn))return;const id=btn.dataset.delo;DB.orders=DB.orders.filter(x=>x.id!==id);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==id));save();toast("Porosia u fshi");render()});
+  const waiting=waitL;recommendOrders(waiting);
+  if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
+}
+// A është porosia në një udhëtim që ende s'ka përfunduar?
+function onTrip(o){const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);return !!t&&t.status!=="done"}
+// "Rekomandohet": për çdo porosi që pret, udhëtimi i ardhshëm ku hyn me më pak rrugë shtesë (dhe ka vend)
+async function recommendOrders(waiting){
+  if(!waiting.length)return;
+  const s=S(),trips=DB.trips.filter(t=>t.status!=="done"&&!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).slice(0,3);
+  const best={};
+  for(const t of trips){
+    const v=vanById(t.van),os=t.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
+    const pts=[t.start||s.base,...os.map(o=>o.addr),t.dest||mainOrderOf(os)?.addr||s.base].filter(a=>a&&a.lat),n=pts.length;
+    const M=await distMatrix([...pts,...waiting.map(o=>o.addr)]);
+    let len=0;for(let i=1;i<n;i++)len+=M[i-1][i];
+    const lim=Math.max(60,len*0.15),kg=os.reduce((a,o)=>a+orderGoods(o).kg,0),m3=os.reduce((a,o)=>a+orderGoods(o).m3,0);
+    waiting.forEach((o,k)=>{const j=n+k,g=orderGoods(o);let ex=1e9;
+      for(let a=0;a<n;a++)for(let b=0;b<n;b++)if(a!==b)ex=Math.min(ex,M[a][j]+M[j][b]-M[a][b]);
+      if(ex<=lim&&kg+g.kg<=v.payloadKg&&m3+g.m3<=vanVol(v)&&(!best[o.id]||ex<best[o.id].ex))best[o.id]={t,ex}});
+  }
+  if(TAB!=="orders"||VIEW)return;
+  waiting.forEach(o=>{const el=$("#rec-"+o.id),b=best[o.id];if(!el)return;
+    el.innerHTML=b?` <span class="pill good">rekomandohet → ${esc(tripLabel(b.t.id))} (+${km(b.ex)})</span> <button class="btn small" type="button" data-recadd="${o.id}" data-trip="${b.t.id}">Shto</button>`
+      :trips.length?` <span class="pill">s'ka vend ose është larg rrugës së udhëtimeve</span>`:` <span class="pill good">rekomandohet për udhëtimin e radhës</span>`});
+  document.querySelectorAll("[data-recadd]").forEach(btn=>btn.onclick=()=>{assignOrder(btn.dataset.recadd,btn.dataset.trip);toast("U shtua në udhëtim");render()});
+}
+// Plani automatik: radha më e mirë e dorëzimit + radha e ngarkimit (e fundit ngarkohet e para)
+async function renderPlan(waiting){
+  const s=S(),M=await distMatrix([s.base,...waiting.map(o=>o.addr)]),best=bestOrder(M);
+  const route=best.order.map(i=>waiting[i-1]);
+  const v=S().vans.reduce((a,b)=>vanVol(b)>vanVol(a)?b:a);
+  let kg=0,m3=0;const take=[],later=[];
+  for(const o of route){const g=orderGoods(o);if(kg+g.kg<=v.payloadKg&&m3+g.m3<=vanVol(v)){take.push(o);kg+=g.kg;m3+=g.m3}else later.push(o)}
+  const legs=[];let prev=0;for(const i of best.order){legs.push(M[prev][i]);prev=i}
+  if(TAB!=="orders"||VIEW||!$("#plan"))return;
+  $("#plan").innerHTML=`<h2>Plani për porositë që presin</h2>
+    <p class="mute">${take.length} porosi · ${Math.round(kg)} kg · ${num1(m3)} m³ · ${km(best.len)} vajtje-ardhje${M.real?"":" (përafërsisht)"}</p>
+    <h3>1. Radha e dorëzimit</h3>
+    ${take.map((o,i)=>`<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}<br><span class="mute">${esc(o.items?itemsSummary(o.items):o.what||"")} · +${km(legs[route.indexOf(o)])}</span></div><a class="btn ghost small" href="${navUrl(o.addr)}" target="_blank" rel="noopener">Harta</a></div>`).join("")}
+    <h3>2. Radha e ngarkimit në Kosovë</h3>
+    <p class="mute" style="margin:0 0 6px">Ngarko së pari atë që dorëzohet e fundit (në fund të rimorkios), kështu e para del e para.</p>
+    <ol style="margin:0;padding-left:20px;font-size:14px">${[...take].reverse().map(o=>`<li><b>${esc(o.customer||"")}</b> (${esc(cityOf(o.addr))}): ${esc(o.items?itemsSummary(o.items):o.what||"")}</li>`).join("")}</ol>
+    ${later.length?`<p><span class="pill warn">Nuk hyjnë në një furgon: ${later.map(o=>esc(cityOf(o.addr))).join(", ")}. Lëri për udhëtimin tjetër.</span></p>`:""}
+    <button class="btn full" id="mkTrip">Krijo udhëtim me këto ${take.length} porosi</button>`;
+  $("#mkTrip").onclick=()=>{const tr={id:uid(),date:new Date(Date.now()+864e5).toISOString().slice(0,10),name:"",van:v.id,orderIds:take.map(o=>o.id),carIds:[],status:"planned",returnIncome:0};
+    take.forEach(o=>o.tripId=tr.id);DB.trips.unshift(tr);save();toast("Udhëtimi u krijua. Ndrysho datën nëse duhet.");setTab("trips",tr.id)};
+}
+const CARSPECS=`VW Golf 4|golf,golf 4,golf iv|1997|2003|4149|1735|1444|1200
+VW Golf 5|golf,golf 5,golf v|2003|2008|4204|1759|1485|1250
+VW Golf 6|golf,golf 6,golf vi|2008|2012|4199|1779|1479|1250
+VW Golf 7|golf,golf 7,golf vii|2012|2019|4255|1799|1452|1250
+VW Golf 8|golf,golf 8,golf viii|2019|2026|4284|1789|1456|1300
+VW Passat B5|passat,b5|1996|2005|4675|1740|1460|1350
+VW Passat B6|passat,b6|2005|2010|4765|1820|1472|1450
+VW Passat B7|passat,b7|2010|2014|4769|1820|1470|1450
+VW Passat B8|passat,b8|2014|2026|4767|1832|1456|1500
+VW Polo 5|polo|2009|2017|3970|1682|1462|1050
+VW Polo 6|polo|2017|2026|4053|1751|1446|1100
+VW Tiguan 1|tiguan|2007|2016|4426|1809|1686|1550
+VW Tiguan 2|tiguan|2016|2026|4486|1839|1673|1600
+VW Touran 1|touran|2003|2015|4397|1794|1634|1500
+VW Touran 2|touran|2015|2026|4527|1829|1659|1500
+VW Touareg|touareg|2010|2018|4795|1940|1709|2100
+VW Caddy|caddy|2004|2020|4405|1794|1833|1450
+VW Transporter T5/T6|transporter,t5,t6,multivan|2003|2026|4892|1904|1990|1900
+Audi A3 8P|a3,8p|2003|2012|4214|1765|1421|1250
+Audi A3 8V|a3,8v|2012|2020|4237|1777|1421|1300
+Audi A4 B6/B7|a4,b6,b7|2000|2008|4586|1772|1427|1400
+Audi A4 B8|a4,b8|2007|2015|4703|1826|1427|1450
+Audi A4 B9|a4,b9|2015|2026|4726|1842|1427|1450
+Audi A6 C6|a6,c6|2004|2011|4916|1855|1459|1600
+Audi A6 C7|a6,c7|2011|2018|4915|1874|1455|1650
+Audi A6 C8|a6,c8|2018|2026|4939|1886|1457|1750
+Audi Q5|q5|2008|2016|4629|1880|1653|1800
+Audi Q5 (2)|q5|2016|2026|4663|1893|1659|1800
+Audi Q7|q7|2006|2015|5086|1983|1737|2300
+Audi Q7 (2)|q7|2015|2026|5052|1968|1741|2050
+BMW Seria 1 E87|seria 1,1er,e87,116,118,120|2004|2011|4227|1751|1430|1300
+BMW Seria 1 F20|seria 1,1er,f20,116,118,120|2011|2019|4324|1765|1421|1350
+BMW Seria 3 E46|seria 3,3er,e46,316,318,320,325,330|1998|2006|4471|1739|1415|1400
+BMW Seria 3 E90|seria 3,3er,e90,e91,316,318,320,325,330|2005|2012|4520|1817|1421|1450
+BMW Seria 3 F30|seria 3,3er,f30,f31,316,318,320,325,330|2012|2019|4624|1811|1429|1500
+BMW Seria 3 G20|seria 3,3er,g20,318,320,330|2019|2026|4709|1827|1442|1550
+BMW Seria 5 E60|seria 5,5er,e60,e61,520,525,530|2003|2010|4841|1846|1468|1600
+BMW Seria 5 F10|seria 5,5er,f10,f11,520,525,530|2010|2017|4899|1860|1464|1700
+BMW Seria 5 G30|seria 5,5er,g30,520,530|2017|2026|4936|1868|1479|1650
+BMW X3 F25|x3,f25|2010|2017|4648|1881|1661|1800
+BMW X5 E70|x5,e70|2006|2013|4854|1933|1766|2150
+BMW X5 F15|x5,f15|2013|2018|4886|1938|1762|2100
+Mercedes A W169|a klasse,a-klasse,a class,w169,a160,a180|2004|2012|3838|1764|1593|1250
+Mercedes A W176|a klasse,a-klasse,a class,w176,a180,a200|2012|2018|4292|1780|1433|1400
+Mercedes C W203|c klasse,c-klasse,c class,w203,c200,c220|2000|2007|4526|1728|1426|1450
+Mercedes C W204|c klasse,c-klasse,c class,w204,c200,c220,c250|2007|2014|4581|1770|1447|1500
+Mercedes C W205|c klasse,c-klasse,c class,w205,c200,c220|2014|2021|4686|1810|1442|1550
+Mercedes E W211|e klasse,e-klasse,e class,w211,e200,e220,e270,e320|2002|2009|4818|1822|1452|1650
+Mercedes E W212|e klasse,e-klasse,e class,w212,e200,e220,e250,e350|2009|2016|4868|1854|1474|1700
+Mercedes E W213|e klasse,e-klasse,e class,w213,e200,e220|2016|2026|4923|1852|1468|1700
+Mercedes ML W164|ml,w164,ml320,ml350|2005|2011|4780|1911|1815|2150
+Mercedes ML/GLE W166|ml,gle,w166|2011|2019|4804|1926|1796|2200
+Mercedes Vito|vito,viano|2003|2014|4748|1901|1880|1900
+Skoda Octavia 2|octavia|2004|2013|4569|1769|1462|1300
+Skoda Octavia 3|octavia|2012|2020|4659|1814|1461|1300
+Skoda Octavia 4|octavia|2020|2026|4689|1829|1470|1350
+Skoda Superb 2|superb|2008|2015|4838|1817|1462|1500
+Skoda Superb 3|superb|2015|2026|4861|1864|1468|1550
+Skoda Fabia|fabia|2007|2014|3992|1642|1498|1050
+Opel Astra H|astra|2004|2010|4249|1753|1460|1250
+Opel Astra J|astra|2009|2015|4419|1814|1510|1350
+Opel Astra K|astra|2015|2026|4370|1809|1485|1250
+Opel Corsa D|corsa|2006|2014|3999|1713|1488|1100
+Opel Insignia|insignia|2008|2017|4830|1856|1498|1550
+Opel Zafira B|zafira|2005|2014|4467|1801|1635|1500
+Ford Focus 2|focus|2004|2011|4342|1840|1497|1300
+Ford Focus 3|focus|2011|2018|4358|1823|1484|1300
+Ford Fiesta|fiesta|2008|2017|3950|1722|1481|1050
+Ford Mondeo 4|mondeo|2007|2014|4778|1886|1500|1550
+Renault Clio|clio|2005|2019|4062|1732|1448|1100
+Renault Megane 3|megane|2008|2016|4295|1808|1471|1300
+Peugeot 208|208|2012|2026|3962|1739|1460|1100
+Peugeot 308|308|2013|2021|4253|1804|1457|1250
+Toyota Yaris|yaris|2011|2020|3950|1695|1510|1050
+Toyota Corolla|corolla|2019|2026|4370|1790|1435|1350
+Toyota RAV4|rav4,rav 4|2013|2018|4570|1845|1705|1600
+Seat Leon|leon|2012|2020|4263|1816|1459|1250
+Seat Ibiza|ibiza|2008|2017|4052|1693|1445|1100
+Hyundai i30|i30|2012|2017|4300|1780|1470|1300
+Hyundai Tucson|tucson|2015|2020|4475|1850|1645|1550
+Kia Sportage|sportage|2016|2021|4480|1855|1645|1550
+Kia Ceed|ceed|2012|2018|4310|1780|1470|1300
+Dacia Duster|duster|2010|2017|4315|1822|1625|1250
+Dacia Logan|logan|2012|2020|4288|1733|1534|1100
+Dacia Sandero|sandero|2012|2020|4069|1733|1519|1050
+Fiat 500|500,cinquecento|2007|2026|3546|1627|1488|950
+Fiat Punto|punto|2005|2018|4065|1687|1490|1100
+Citroën C1|c1|2005|2022|3466|1615|1460|850
+Citroën C3 (2)|c3|2009|2016|3954|1728|1525|1050
+Citroën C3 (3)|c3|2016|2026|3996|1749|1474|1050
+Citroën C3 Aircross|c3 aircross|2017|2026|4154|1756|1637|1150
+Citroën C4 (2)|c4|2010|2018|4329|1789|1489|1250
+Citroën C4 (3)|c4|2020|2026|4360|1800|1525|1300
+Citroën C4 Picasso|c4 picasso,picasso,c4 spacetourer|2006|2022|4438|1826|1610|1450
+Citroën C5 (2)|c5|2008|2017|4779|1860|1451|1500
+Citroën C5 Aircross|c5 aircross|2018|2026|4500|1859|1670|1450
+Citroën Berlingo|berlingo|2008|2026|4380|1810|1801|1400
+Citroën Jumpy|jumpy|2007|2026|4956|1920|1940|1700
+Peugeot 207|peugeot 207,p207|2006|2014|4030|1720|1472|1100
+Peugeot 2008|peugeot 2008,p2008|2013|2026|4300|1770|1550|1200
+Peugeot 3008|peugeot 3008,p3008|2009|2026|4447|1841|1624|1400
+Peugeot 5008|peugeot 5008,p5008|2009|2026|4641|1844|1646|1500
+Peugeot 508|peugeot 508,p508|2011|2026|4750|1859|1403|1450
+Peugeot Partner|partner,rifter|2008|2026|4403|1848|1801|1400
+Renault Kangoo|kangoo|2008|2026|4282|1829|1810|1400
+Renault Scenic|scenic,scénic|2009|2022|4560|1845|1653|1450
+Renault Captur|captur|2013|2026|4228|1797|1576|1200
+Renault Laguna|laguna|2007|2015|4695|1811|1445|1450
+Renault Talisman|talisman|2015|2022|4848|1869|1463|1500
+Renault Master|master|2010|2026|5548|2070|2307|2000
+Renault Trafic|trafic|2014|2026|4999|1956|1971|1750
+Dacia Dokker|dokker|2012|2021|4363|1751|1814|1250
+Nissan Qashqai|qashqai|2007|2026|4394|1806|1595|1400
+Nissan Juke|juke|2010|2026|4211|1800|1595|1250
+Nissan X-Trail|x-trail,xtrail|2007|2026|4690|1830|1700|1600
+Nissan Micra|micra|2010|2026|3999|1743|1455|1000
+Mazda 3|mazda 3,mazda3|2009|2026|4460|1795|1450|1300
+Mazda 6|mazda 6,mazda6|2008|2026|4865|1840|1450|1450
+Mazda CX-5|cx-5,cx5|2012|2026|4550|1840|1680|1550
+Honda Civic|civic|2006|2026|4518|1799|1434|1300
+Honda CR-V|cr-v,crv|2007|2026|4600|1855|1689|1600
+Honda Jazz|jazz|2008|2026|4044|1694|1525|1100
+Volvo V40|v40|2012|2019|4369|1802|1445|1400
+Volvo V60|v60|2010|2026|4761|1850|1427|1600
+Volvo XC60|xc60|2008|2026|4688|1902|1658|1850
+Volvo XC90|xc90|2002|2026|4953|1958|1776|2100
+Mercedes B W246|b klasse,b-klasse,b class,b-class,w246,b 180,b 200|2011|2019|4359|1786|1557|1400
+Mercedes CLA|cla|2013|2026|4630|1777|1432|1400
+Mercedes GLC|glc|2015|2026|4656|1890|1639|1800
+Mercedes GLA|gla|2014|2026|4417|1804|1494|1450
+Mercedes Sprinter|sprinter|2006|2026|5932|1993|2700|2100
+BMW X1 E84/F48|x1|2009|2022|4439|1821|1598|1550
+BMW Seria 1 F40|f40,118,116,120|2019|2026|4319|1799|1434|1400
+BMW Seria 2 Active Tourer|active tourer,218|2014|2022|4342|1800|1555|1450
+BMW Seria 4|420,430,f32,f36,g22|2013|2026|4640|1825|1377|1550
+BMW X6|x6|2008|2026|4909|1989|1702|2100
+Audi A1|a1|2010|2026|3954|1740|1416|1100
+Audi A5|a5|2007|2026|4673|1846|1371|1500
+Audi Q3|q3|2011|2026|4388|1831|1608|1500
+Audi A8|a8|2010|2026|5172|1945|1473|1900
+VW Up|up!,up|2011|2023|3600|1641|1489|900
+VW Jetta|jetta|2010|2018|4659|1778|1453|1350
+VW Arteon|arteon|2017|2026|4862|1871|1450|1600
+VW T-Roc|t-roc,troc|2017|2026|4234|1819|1573|1300
+VW Sharan|sharan|2010|2022|4854|1904|1720|1750
+VW Scirocco|scirocco|2008|2017|4256|1810|1404|1300
+VW Golf Plus / Sportsvan|golf plus,sportsvan|2005|2020|4338|1807|1578|1350
+Skoda Kodiaq|kodiaq|2016|2026|4697|1882|1655|1600
+Skoda Karoq|karoq|2017|2026|4382|1841|1603|1400
+Skoda Rapid|rapid|2012|2019|4483|1706|1461|1150
+Skoda Roomster|roomster|2006|2015|4205|1684|1607|1200
+Seat Ateca|ateca|2016|2026|4363|1841|1601|1400
+Seat Alhambra|alhambra|2010|2020|4854|1904|1720|1750
+Seat Altea|altea|2004|2015|4280|1768|1569|1300
+Seat Arona|arona|2017|2026|4138|1780|1552|1200
+Ford Kuga|kuga|2008|2026|4524|1838|1689|1600
+Ford C-Max|c-max,cmax|2010|2019|4380|1828|1610|1400
+Ford S-Max|s-max,smax|2006|2023|4796|1916|1655|1700
+Ford Galaxy|galaxy|2006|2023|4848|1916|1747|1750
+Ford Transit Connect|transit connect,connect|2013|2026|4418|1835|1827|1450
+Ford Transit|transit|2014|2026|5531|2059|2550|2100
+Ford Ka|ka|2008|2020|3620|1658|1505|950
+Opel Mokka|mokka|2012|2026|4278|1774|1658|1300
+Opel Meriva|meriva|2010|2017|4288|1812|1615|1350
+Opel Vectra C|vectra|2002|2008|4596|1798|1460|1450
+Opel Vivaro|vivaro|2014|2026|4999|1956|1971|1750
+Opel Crossland / Grandland|crossland,grandland|2017|2026|4477|1856|1609|1300
+Toyota Auris|auris|2006|2018|4330|1760|1475|1300
+Toyota Avensis|avensis|2009|2018|4750|1810|1480|1450
+Toyota C-HR|c-hr,chr|2016|2026|4360|1795|1555|1400
+Toyota Aygo|aygo|2005|2022|3465|1615|1460|850
+Hyundai i10|i10|2008|2026|3665|1660|1500|950
+Hyundai i20|i20|2008|2026|4040|1775|1450|1100
+Hyundai ix35|ix35|2009|2015|4410|1820|1665|1550
+Hyundai Santa Fe|santa fe|2006|2026|4770|1890|1680|1850
+Hyundai Kona|kona|2017|2026|4165|1800|1565|1300
+Kia Rio|rio|2011|2026|4065|1725|1450|1100
+Kia Picanto|picanto|2011|2026|3595|1595|1485|900
+Kia Sorento|sorento|2009|2026|4800|1890|1690|1900
+Kia Niro|niro|2016|2026|4355|1805|1545|1450
+Fiat Doblo|doblo,doblò|2010|2022|4406|1832|1845|1450
+Fiat Tipo|tipo|2015|2026|4532|1792|1497|1250
+Fiat Panda|panda|2003|2026|3653|1643|1551|950
+Fiat Ducato|ducato|2006|2026|5998|2050|2522|2100
+Mitsubishi Outlander|outlander|2007|2026|4695|1810|1710|1600
+Suzuki Vitara|vitara|2015|2026|4175|1775|1610|1150
+Suzuki Swift|swift|2010|2026|3840|1735|1495|900
+Land Rover Range Rover Evoque|evoque|2011|2026|4371|1904|1649|1700
+Land Rover Discovery Sport|discovery sport|2014|2026|4597|1894|1724|1850
+Porsche Cayenne|cayenne|2010|2026|4918|1983|1696|2050
+Jeep Renegade|renegade|2014|2026|4236|1805|1667|1400
+Jeep Compass|compass|2017|2026|4394|1819|1629|1500
+Alfa Romeo Giulietta|giulietta|2010|2020|4351|1798|1465|1350
+Mini Cooper|mini,cooper|2006|2026|3821|1727|1414|1150
+Smart Fortwo|smart,fortwo|2007|2026|2695|1663|1555|900
+Tesla Model 3|model 3|2017|2026|4694|1849|1443|1650
+Lexus RX|rx|2009|2026|4890|1895|1690|2000`.split("\n").map(l=>{const [n,a,y1,y2,L,W,H,kg]=l.split("|");return {n,a:a.split(","),y1:+y1,y2:+y2,l:+L/10,w:+W/10,h:+H/10,kg:+kg}});
+// Sugjerimet gjatë shkrimit: "cit" → Citroën, "merc" → Mercedes, "vw"/"volks" → VW …
+const BRANDSYN={"VW":"volkswagen vw","Mercedes":"mercedes benz mercedes-benz mb","Citroën":"citroen citroën","Skoda":"skoda škoda","BMW":"bmw beemer","Opel":"opel vauxhall","Land":"land rover","Alfa":"alfa romeo"};
+function carSuggest(q){const tk=norm(q).split(/[ ,]+/).filter(Boolean);if(!tk.length||norm(q).trim().length<2)return [];
+  return CARSPECS.filter(c=>{const words=norm(c.n+" "+(BRANDSYN[c.n.split(" ")[0]]||"")+" "+c.a.join(" ")).split(/[ ,/()-]+/);
+    return tk.every(t=>words.some(w=>w.startsWith(t)))}).slice(0,10)}
+// Gjen veturën nga emri dhe viti. Kthen të dhënat ose null.
+function carLookup(model,year){
+  const t=" "+String(model||"").toLowerCase().replace(/[^a-z0-9äöüë\- ]/g," ").replace(/\b([a-z]{0,3}\d{3})[a-z]{1,3}\b/g,"$1").replace(/\s+/g," ")+" ";if(t.trim().length<2)return null;
+  const y=+year||+((String(model).match(/\b(19[89]\d|20[0-3]\d)\b/)||[])[1])||0;
+  let best=null,bs=0;
+  for(const c of CARSPECS){let sc=0;for(const a of c.a)if(t.includes(" "+a+" "))sc=Math.max(sc,a.length+(/\d|[ivx]$/.test(a)&&a.includes(" ")||/^[a-z]\d+$/.test(a)&&a.length>2?20:0));
+    if(!sc)continue;if(y)sc+=y>=c.y1&&y<=c.y2?50:-Math.min(40,Math.min(Math.abs(y-c.y1),Math.abs(y-c.y2)));
+    if(sc>bs){bs=sc;best=c}}
+  return best;
+}
+// A hyn vetura në rimorkio të furgonit (gjatësi, gjerësi, peshë)?
+function carFit(c,v){
+  if(!c||!c.l)return {ok:true,txt:""};
+  const L=v.trailer.l*100,W=v.trailer.w*100;const bad=[];
+  if(c.l>L)bad.push("e gjatë "+num1(c.l/100)+" m > "+num1(v.trailer.l)+" m");
+  if(c.w>W)bad.push("e gjerë");
+  if(c.h&&c.h>v.trailer.h*100)bad.push("e lartë");
+  if(c.kg&&c.kg>v.payloadKg)bad.push("e rëndë");
+  return {ok:!bad.length,txt:bad.length?"Nuk hyn në "+v.name+": "+bad.join(", "):"Hyn në rimorkion e "+v.name};
+}
+// Çmimi i veturës në kthim: bazë + €/km × km (nga marrja deri në Kosovë), +% për vetura të rënda, minimumi, rrumbullakuar lart në 5 €
+async function carQuote(c){ // c.vatOn, c.docs
+  const s=S();if(!c.from)return null;
+  const M=await distMatrix([c.from,s.base]);const kmH=M[0][1];
+  let p=s.carBase+s.carPerKm*kmH,heavy=false;
+  if(+c.kg>s.carHeavyKg){p*=1+s.carHeavyPct/100;heavy=true}
+  const vr=c.vatOn===false?0:vatR(),docs=+c.docs||0;
+  const net=Math.max(s.carMin,p)+docs,price=Math.ceil(net*(1+vr)/5)*5;
+  const cost=kmH*perKm(avgVan())*0.5+s.handling+docs;  // gjysma e kostos së kthimit (rruga bëhet gjithsesi) + ngarkimi
+  return {km:kmH,price,net:price/(1+vr),docs,vatOn:vr>0,heavy,cost,real:M.real};
+}
+function carDims(c){return c&&c.l?`${num1(c.l/100)} × ${num1(c.w/100)} × ${num1(c.h/100)} m · ${(+c.kg||0).toLocaleString("de-DE")} kg`:""}
+function carsCard(){
+  const w=DB.cars.filter(c=>c.status!=="home"),h=DB.cars.filter(c=>c.status==="home");
+  const row=c=>`<div class="stop" onclick="setTab('orders','car:${c.id}')"><div class="grow"><b>${esc(c.model||"Veturë")}</b> · ${esc(cityOf(c.from))}${c.tripId&&c.status!=="home"?` <span class="pill">${esc(tripLabel(c.tripId))}</span>`:""}<br>
+    <span class="mute">${c.year?esc(c.year)+" · ":""}${carDims(c)}</span><br><span class="mute">${esc(c.owner||"")}${telLink(c)}${c.to?" · për: "+esc(c.to):""}</span></div><div><b>${eur(c.price||0)}</b></div></div>`;
+  return `<div class="card"><h2>🚗 Veturat për në shtëpi (${w.length} presin)</h2>
+    <p class="mute" style="margin:0 0 6px">Veturat që i marrim në kthim. Te Udhëtimet të tregohet cila është më e leverdishme.</p>
+    ${w.map(row).join("")||`<p class="mute">S'ka vetura që presin.</p>`}
+    <button class="btn full" onclick="setTab('orders','car:new')">+ Shto veturë</button>
+    ${h.length?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Të sjella në shtëpi (${h.length})</summary>${h.map(row).join("")}</details>`:""}</div>`;
+}
+let vdraft=null;
+function renderCar(id){
+  const isNew=id==="new",c=isNew?{model:"",owner:"",phone:"",from:null,to:"",price:"",note:""}:DB.cars.find(x=>x.id===id);
+  if(!c)return setTab("orders");
+  if(!vdraft||vdraft.id!==id)vdraft={id,from:c.from};
+  $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="vdraft=null;setTab('orders')">← Kthehu</button>
+  <h2 style="margin-top:10px">${isNew?"Veturë e re për në shtëpi":"Ndrysho veturën"}</h2>
+  <div class="row"><div style="flex:2"><label for="c-model">Vetura (marka, modeli)</label><div class="sug"><input id="c-model" value="${esc(c.model)}" placeholder="p.sh. cit, golf, merc" autocomplete="off"><ul hidden id="c-model-list"></ul></div></div><div><label for="c-year">Viti</label><input id="c-year" type="number" inputmode="numeric" value="${esc(c.year||"")}" placeholder="2015"></div></div>
+  <div id="c-spec" class="mute" style="margin:6px 0"></div>
+  <div class="row"><div><label for="c-l">Gjatësia cm</label><input id="c-l" type="number" inputmode="decimal" value="${c.l||""}"></div><div><label for="c-w">Gjerësia cm</label><input id="c-w" type="number" inputmode="decimal" value="${c.w||""}"></div><div><label for="c-h">Lartësia cm</label><input id="c-h" type="number" inputmode="decimal" value="${c.h||""}"></div><div><label for="c-kg">Pesha kg</label><input id="c-kg" type="number" inputmode="decimal" value="${c.kg||""}"></div></div>
+  <div id="c-fit" style="margin:6px 0"></div>
+  <details class="more" id="c-3d"><summary>Shiko si ngarkohet në rimorkio (3D)</summary><select id="c-3dvan" style="margin:6px 0">${S().vans.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join("")}</select><div id="pack-c"></div></details>
+
+  <div class="row"><div><label for="c-owner">Klienti</label><input id="c-owner" value="${esc(c.owner||"")}"></div><div><label for="c-phone">Numri i telefonit</label><input id="c-phone" type="tel" inputmode="tel" value="${esc(c.phone||"")}"></div></div>
+  <label>Merret te (adresa në Gjermani)</label>${addrField("c-from",vdraft.from,"P.sh. Hauptstraße 5, Essen")}
+  <div class="row"><div><label for="c-to">Dorëzohet te (Kosovë)</label><input id="c-to" value="${esc(c.to||"")}" placeholder="p.sh. Prizren"></div><div><label for="c-price">Çmimi (€)</label><input id="c-price" type="number" inputmode="decimal" value="${c.price}"></div></div>
+  <div class="row" style="align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="c-vat" style="width:auto" ${c.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
+  <div><label for="c-docs">Dokumente / të tjera €</label><input id="c-docs" type="number" inputmode="decimal" value="${isNew?S().carDocs:(c.docs||"")}"></div></div>
+  <div id="c-q" class="mute" style="margin:6px 0"></div>
+  <label for="c-note">Shënime</label><textarea id="c-note" rows="2">${esc(c.note||"")}</textarea>
+  ${isNew?"":`<label for="c-trip">Udhëtimi</label><select id="c-trip"><option value="">— Pa udhëtim —</option>${DB.trips.filter(t=>t.status!=="done"||t.id===c.tripId).map(t=>`<option value="${t.id}" ${t.id===c.tripId?"selected":""}>${esc(tripLabel(t.id))} · ${esc(vanById(t.van).name)}</option>`).join("")}</select>
+  <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:500"><input type="checkbox" id="c-home" style="width:auto" ${c.status==="home"?"checked":""}>U soll në shtëpi</label>`}
+  <button class="btn full" id="c-save" style="margin-top:12px">Ruaj</button>
+  ${isNew?"":`<button class="btn warn full" id="c-del">Fshij veturën</button>`}</div>`;
+  if(vdraft.manual===undefined)vdraft.manual=!isNew&&!!c.priceManual;
+  const qp=debounce(async()=>{if(!vdraft||!$("#c-q"))return;const d={from:vdraft.from,kg:+$("#c-kg").value,vatOn:$("#c-vat").checked,docs:parseFloat($("#c-docs").value)||0};const q=await carQuote(d);if(!$("#c-q")||!vdraft)return;
+    if(!q){$("#c-q").innerHTML="Zgjidh adresën ku merret vetura dhe çmimi llogaritet vetë.";return}
+    const s=S();vdraft.auto=q.price;
+    if(!vdraft.manual)$("#c-price").value=q.price;
+    $("#c-q").innerHTML=`Çmimi i llogaritur: <b>${eur(q.price)}</b> = ${eur(s.carBase)} bazë + ${km(q.km)}${q.real?"":" (përafërsisht)"} × ${eur(s.carPerKm)}${q.heavy?` + ${s.carHeavyPct}% (mbi ${s.carHeavyKg} kg)`:""}${s.carBase+s.carPerKm*q.km<s.carMin?` → minimumi ${eur(s.carMin)}`:""}${q.docs?` + ${eur(q.docs)} dokumente`:""}${q.vatOn?` + TVSH ${s.vat}%`:" (pa TVSH)"}. Kostoja jonë ≈ ${eur(q.cost)}.
+      ${vdraft.manual?`<br><span class="pill">Çmim i ndryshuar me dorë</span> <button class="btn ghost small" type="button" id="c-auto">Kthe çmimin e llogaritur</button>`:""}`;
+    const b=$("#c-auto");if(b)b.onclick=()=>{vdraft.manual=false;qp()};},250);
+  $("#c-price").oninput=()=>{vdraft.manual=true;qp()};
+  $("#c-vat").onchange=qp;$("#c-docs").oninput=qp;
+  wireAddr("c-from",r=>{vdraft.from=r||null;qp()});
+  const cur=()=>({l:+$("#c-l").value,w:+$("#c-w").value,h:+$("#c-h").value,kg:+$("#c-kg").value});
+  const draw=()=>{if($("#c-3d")?.open)carLoadView("pack-c",[{...cur(),model:$("#c-model").value}],vanById($("#c-3dvan").value))};
+  $("#c-3d").ontoggle=draw;$("#c-3dvan").onchange=draw;
+  const fit=()=>{draw();const d=cur();$("#c-fit").innerHTML=d.l?S().vans.map(v=>{const f=carFit(d,v);return `<span class="pill ${f.ok?"good":"warn"}">${esc(f.txt)}</span>`}).join(" "):""};
+  let forced=null;
+  const look=()=>{const m=forced&&forced.n===$("#c-model").value?forced:carLookup($("#c-model").value,$("#c-year").value);
+    if(!m){$("#c-spec").innerHTML=$("#c-model").value.trim()?"Nuk e gjeta këtë model në listë. Shkruaj masat vetë.":"";fit();return}
+    $("#c-spec").innerHTML=`✓ <b>${esc(m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
+    $("#c-l").value=Math.round(m.l);$("#c-w").value=Math.round(m.w);$("#c-h").value=Math.round(m.h);$("#c-kg").value=m.kg;fit();qp()};
+  const lookD=debounce(look,300),ml=$("#c-model-list");let sugs=[];
+  $("#c-model").oninput=()=>{sugs=carSuggest($("#c-model").value);
+    ml.innerHTML=sugs.map((c,i)=>`<li data-i="${i}">${esc(c.n)} <span class="mute">${c.y1}–${c.y2>=2026?"sot":c.y2}</span></li>`).join("");ml.hidden=!sugs.length;lookD()};
+  ml.addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(!li)return;const c=sugs[+li.dataset.i];
+    $("#c-model").value=c.n;forced=c;ml.hidden=true;const y=+$("#c-year").value;if(!y||y<c.y1||y>c.y2)$("#c-year").value=Math.min(c.y2,Math.max(c.y1,y||c.y1));look()});
+  $("#c-year").oninput=lookD;
+  ["c-l","c-w","c-h","c-kg"].forEach(k=>$("#"+k).oninput=()=>{fit();qp()});
+  fit();qp();
+  $("#c-save").onclick=()=>{
+    if(!vdraft.from){toast("Zgjidh adresën ku merret vetura");return}
+    const o=isNew?{id:uid(),created:Date.now(),status:"waiting",tripId:null}:c;
+    Object.assign(o,{year:$("#c-year").value.trim(),...cur(),model:$("#c-model").value.trim(),owner:$("#c-owner").value.trim(),phone:$("#c-phone").value.trim(),from:vdraft.from,to:$("#c-to").value.trim(),price:parseFloat($("#c-price").value)||vdraft.auto||0,priceManual:!!vdraft.manual,vatOn:$("#c-vat").checked,docs:parseFloat($("#c-docs").value)||0,note:$("#c-note").value});
+    if(!isNew){o.status=$("#c-home").checked?"home":"waiting";const nt=$("#c-trip").value;if(nt!==(o.tripId||"")){DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==o.id));if(nt)DB.trips.find(t=>t.id===nt).carIds.push(o.id);o.tripId=nt||null}}
+    if(isNew)DB.cars.unshift(o);
+    save();vdraft=null;toast("Vetura u ruajt");setTab("orders");
+  };
+  if(!isNew)$("#c-del").onclick=()=>{if(!twoTap($("#c-del")))return;DB.cars=DB.cars.filter(x=>x!==c);DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==c.id));save();vdraft=null;setTab("orders")};
+}
+let odraft=null;
+function renderOrder(id){
+  const o=DB.orders.find(x=>x.id===id);if(!o)return setTab("orders");
+  if(!odraft||odraft.id!==id)odraft={id,addr:o.addr,items:structuredClone(o.items||[{preset:"x",qty:1,l:0,w:0,h:0,kg:o.kg}])};
+  $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="odraft=null;setTab('orders')">← Kthehu</button>
+  <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(o.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" value="${esc(o.phone||"")}"></div></div>
+  <label>Adresa</label>${addrField("f-addr",odraft.addr)}
+  <h3>Mallrat</h3>${itemsEditor(odraft.items,true)}
+  <div class="row" style="align-items:flex-end"><div><label for="f-price">Çmimi (€)</label><input id="f-price" type="number" value="${o.price}"></div>
+  <div><label for="f-docs">Dokumente / të tjera €</label><input id="f-docs" type="number" inputmode="decimal" value="${o.docs||""}" placeholder="0"></div></div>
+  <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="f-vat" style="width:auto" ${o.vatOn!==false?"checked":""}>Çmimi përfshin TVSH ${S().vat}%</label>
+  <label for="f-note">Shënime</label><textarea id="f-note" rows="2">${esc(o.note||"")}</textarea>
+  <label for="f-trip">Udhëtimi / furgoni</label><select id="f-trip">${tripOptions(o.tripId)}</select>
+  <div class="row" style="margin-top:12px"><a class="btn ghost" href="${navUrl(o.addr)}" target="_blank" rel="noopener">Hap në Google Maps</a><button class="btn" id="save">Ruaj</button></div>
+  <button class="btn warn full" id="del">Fshij porosinë</button></div>`;
+  wireAddr("f-addr",r=>odraft.addr=r||o.addr);
+  wireItems(odraft,()=>renderOrder(id));
+  $("#save").onclick=()=>{
+    Object.assign(o,{customer:$("#f-cust").value,phone:$("#f-phone").value,addr:odraft.addr||o.addr,items:odraft.items,what:itemsSummary(odraft.items),price:+$("#f-price").value,docs:parseFloat($("#f-docs").value)||0,vatOn:$("#f-vat").checked,note:$("#f-note").value});
+    delete o.kg;delete o.m3;
+    const nt=$("#f-trip").value;
+    if(nt!==(o.tripId||""))assignOrder(o.id,nt);
+    save();odraft=null;toast("U ruajt");setTab("orders");
+  };
+  $("#del").onclick=()=>{if(!twoTap($("#del")))return;DB.orders=DB.orders.filter(x=>x!==o);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==o.id));save();odraft=null;setTab("orders")};
+}
+
+/* ===================== UDHËTIMET ===================== */
+const cityOf=a=>{const parts=(a?.label||"").split(",").map(x=>x.trim());return (parts.find(x=>/\d{4,5}\s+\D/.test(x))||parts[1]||parts[0]||"").replace(/^\d{4,5}\s+/,"").replace(" (qendra)","")};
+const DITE=["E diel","E hënë","E martë","E mërkurë","E enjte","E premte","E shtunë"],MUAJ=["janar","shkurt","mars","prill","maj","qershor","korrik","gusht","shtator","tetor","nëntor","dhjetor"];
+const dateTxt=d=>{if(!d)return "Pa datë";const x=new Date(d+"T12:00");return DITE[x.getDay()]+", "+x.getDate()+" "+MUAJ[x.getMonth()]+" "+x.getFullYear()};
+function itemLines(o){const P=S().presets;return (o.items||[]).filter(i=>i.qty).map(i=>`<li>${i.qty} × ${esc(i.preset==="x"?"Mall":P[i.preset]?.name||"Mall")} <span class="mute">(${i.l}×${i.w}×${i.h} cm${+i.kg?", "+i.kg+" kg/copë":""})</span></li>`).join("")}
+let newTripSel=null,ntf=null;
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const isPast=t=>t.status==="done"||(t.date&&t.date<todayISO());
+function tripRow(tr){const os=tr.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);const cities=[...new Set(os.map(o=>cityOf(o.addr)))];
+  const title=tr.start&&tr.dest?cityOf(tr.start)+" → "+cityOf(tr.dest):(cities[cities.length-1]||"Udhëtim");const nc=(tr.carIds||[]).length;
+  return `<div class="stop" onclick="setTab('trips','${tr.id}')"><div class="grow"><b>${esc(title)}</b> ${tr.status==="done"?`<span class="pill good">përfunduar</span>`:""}<br>
+    <span class="mute">${esc(dateTxt(tr.date))}${tr.name?" · Shoferi: "+esc(tr.name):""} · ${esc(vanById(tr.van).name)} · ${os.length} porosi${nc?" · "+nc+" veturë në kthim":""}${cities.length?" · "+esc(cities.join(", ")):""}</span></div><div>›</div></div>`}
+function renderTrips(){
+  if(VIEW&&String(VIEW).startsWith("fuel:"))return renderFuel(VIEW.slice(5));
+  if(VIEW)return renderTrip(VIEW);
+  const s=S();
+  if(!ntf)ntf={name:"",start:s.base,dest:null,date:new Date(Date.now()+864e5).toISOString().slice(0,10),van:"A"};
+  const active=DB.trips.filter(t=>!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  const hist=DB.trips.filter(isPast).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
+  $("#app").innerHTML=`<div class="card"><h2>Udhëtim i ri</h2>
+    <label for="f-name">1. Shoferi</label>${driverSelect("f-name",ntf.name)}
+    <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Prishtinë")}
+    <label for="f-destsel">3. Destinacioni i fundit</label>${destSelect()}<div id="f-destother" ${ntf.destOrder==="other"||!destOrders().length?"":"hidden"}>${addrField("f-dest",ntf.destOrder==="other"?ntf.dest:null,"P.sh. Dortmund")}</div>
+    <div class="row"><div><label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"></div><div><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}</div></div>
+    <div id="pickBox"><p class="mute">Duke ngarkuar porositë që presin…</p></div>
+    <div id="carBox"></div>
+    <button class="btn full" id="add">Krijo udhëtimin</button></div>
+    <div class="card"><h2>Udhëtimet e ardhshme</h2>${active.length?"":`<p class="mute">S'ka udhëtime të planifikuara.</p>`}
+    ${active.slice(0,2).map(tripRow).join("")}
+    ${active.length>2?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Shfaq edhe ${active.length-2} të tjera</summary>${active.slice(2).map(tripRow).join("")}</details>`:""}</div>
+    <div class="card"><h2>Historia (${hist.length})</h2>${hist.length?hist.map(tripRow).join(""):`<p class="mute">Udhëtimet e kaluara dhe të përfunduara shfaqen këtu.</p>`}</div>`;
+  $("#f-name").onchange=e=>ntf.name=e.target.value;
+  const ds=$("#f-destsel");if(ds)ds.onchange=e=>{const v=e.target.value;ntf.destOrder=v;ntf._recDone=false;
+    if(v==="other"){ntf.dest=null;$("#f-destother").hidden=false}else{$("#f-destother").hidden=true;ntf.dest=DB.orders.find(o=>o.id===v)?.addr||null}renderPick()};
+  $("#f-date").onchange=e=>ntf.date=e.target.value;
+  $("#f-van").onchange=e=>{ntf.van=e.target.value;renderPick()};
+  wireAddr("f-start",r=>{if(r){ntf.start=r;renderPick()}});
+  wireAddr("f-dest",r=>{if(r){ntf.dest=r;ntf.destOrder="other";ntf._recDone=false;renderPick()}});
+  renderPick();
+  $("#add").onclick=()=>{
+    const ids=[...(newTripSel||[])].filter(id=>DB.orders.some(o=>o.id===id&&o.status!=="delivered"));
+    DB.trips.forEach(t=>t.orderIds=t.orderIds.filter(x=>!ids.includes(x)));
+    const tr={id:uid(),date:ntf.date,name:ntf.name.trim(),start:ntf.start,dest:ntf.dest,van:ntf.van,orderIds:ids,carIds:[],status:"planned",returnIncome:0};
+    ids.forEach(id=>{DB.orders.find(o=>o.id===id).tripId=tr.id});
+    tr.carIds=[...(ntf.cars||[])].filter(id=>DB.cars.some(c=>c.id===id));
+    DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>!tr.carIds.includes(x)));tr.carIds.forEach(id=>DB.cars.find(c=>c.id===id).tripId=tr.id);
+    DB.trips.unshift(tr);save();newTripSel=null;ntf=null;toast("Udhëtimi u krijua");setTab("trips",tr.id)};
+}
+// Porositë që presin dorëzimin: pa udhëtim, ose në një udhëtim tjetër që s'ka përfunduar
+function waitingOrders(exceptTrip){
+  return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
+}
+function tripLabel(id){const t=DB.trips.find(x=>x.id===id);return t?dateTxt(t.date)+(t.name?" · "+t.name:""):""}
+const DRIVERS=["Maruf","Krenar"];
+function driverSelect(id,cur){const list=[...DRIVERS,...(cur&&!DRIVERS.includes(cur)?[cur]:[])];
+  return `<select id="${id}"><option value="">— Zgjidh shoferin —</option>${list.map(n=>`<option ${n===cur?"selected":""}>${esc(n)}</option>`).join("")}</select>`}
+// Destinacioni i fundit: porositë që presin, e madhja e para (zgjidhet vetë)
+function destOrders(){return waitingOrders(null).filter(o=>o.addr&&o.addr.lat).sort((a,b)=>sizeOf(orderGoods(b))-sizeOf(orderGoods(a)))}
+function destSelect(){const os=destOrders();if(!os.length)return "";
+  if(!ntf.destOrder||(ntf.destOrder!=="other"&&!os.some(o=>o.id===ntf.destOrder))){ntf.destOrder=os[0].id;ntf.dest=os[0].addr;ntf._recDone=false}
+  return `<select id="f-destsel">${os.map((o,i)=>{const g=orderGoods(o);return `<option value="${o.id}" ${o.id===ntf.destOrder?"selected":""}>${esc(cityOf(o.addr))} · ${esc(o.customer||"")} · ${g.kg} kg, ${num1(g.m3)} m³${i===0?" (më e madhja)":""}</option>`}).join("")}<option value="other" ${ntf.destOrder==="other"?"selected":""}>Adresë tjetër…</option></select>`}
+function driverList(){const n=[...new Set(["Maruf","Krenar",...DB.trips.map(t=>t.name).filter(x=>x&&!["Babai","Vëllai","SHEMBULL"].includes(x))])];return `<datalist id="drivers">${n.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`}
+// Porositë që presin, renditur sipas kostos shtesë për rrugën nisje → destinacion
+async function renderPick(){
+  const box=$("#pickBox");if(!box)return;
+  const waiting=waitingOrders(null);
+  if(!waiting.length){box.innerHTML=`<p class="mute">S'ka porosi që presin. Shtoji te Çmimi dhe pastaj zgjidhi këtu.</p>`;return}
+  const mo=mainOrderOf(waiting),dest=ntf.dest||mo?.addr||ntf.start,D=!!(ntf.dest||mo);
+  const v=vanById(ntf.van),pk=perKm(v);
+  const M=await distMatrix([ntf.start,dest,...waiting.map(o=>o.addr)]);
+  if(TAB!=="trips"||VIEW||!$("#pickBox"))return;
+  const direct=M[0][1];
+  const rows=waiting.map((o,i)=>{const ex=Math.max(0,M[0][i+2]+M[i+2][1]-direct);return {o,ex,cost:ex*pk,g:orderGoods(o)}}).sort((a,b)=>a.cost-b.cost);
+  const lim=Math.max(60,direct*0.15);
+  let kg=0,m3=0;rows.forEach(r=>{r.rec=D&&!r.o.tripId&&r.ex<=lim&&kg+r.g.kg<=v.payloadKg&&m3+r.g.m3<=vanVol(v);if(r.rec){kg+=r.g.kg;m3+=r.g.m3}});
+  if(!newTripSel)newTripSel=new Set();
+  if(ntf.dest&&!ntf._recDone){rows.filter(r=>r.rec).forEach(r=>newTripSel.add(r.o.id))}
+  if(ntf.dest)ntf._recDone=true;
+  box.innerHTML=(D?`<h3>Porositë që presin (${rows.length}) · ${esc(cityOf(ntf.start))} → ${esc(cityOf(dest))}, ${km(direct)}${M.real?"":" përafërsisht"}</h3>
+    <p class="mute" style="margin:0 0 4px">Nga më e lira te më e shtrenjta. Të shënuarat “rekomandohet” janë afër rrugës dhe hyjnë në furgon.${ntf.dest?"":` Qyteti kryesor: <b>${esc(cityOf(mo.addr))}</b> (porosia më e madhe, ${esc(mo.customer||"")}).`}</p>`
+    :`<h3>Porositë që presin (${rows.length})</h3><p class="mute" style="margin:0 0 4px">Shëno ato që do i marrësh. Zgjidh destinacionin (3) dhe i rendis nga më e lira, me rekomandime.</p>`)+`
+    ${rows.map(r=>`<label style="display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-weight:500;font-size:14px;padding:8px 0;border-bottom:1px solid var(--line);margin:0">
+      <input type="checkbox" data-pick="${r.o.id}" ${newTripSel.has(r.o.id)?"checked":""} style="width:auto;margin-top:3px">
+      <span style="flex:1"><b>${esc(cityOf(r.o.addr))}</b> · ${esc(r.o.customer||"")} ${r.rec?`<span class="pill good">rekomandohet</span>`:""}${r.o.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.o.tripId))}</span>`:""}<br>
+      <span class="mute">${esc(r.o.items?itemsSummary(r.o.items):r.o.what||"")} · ${r.g.est?"≈":""}${r.g.kg} kg · ${num1(r.g.m3)} m³</span><br>
+      <span class="mute">${D?`+${km(r.ex)} rrugë shtesë ≈ <b>${eur(r.cost)}</b> kosto · `:""}çmimi ${eur(r.o.price)}</span></span></label>`).join("")}
+    <div class="totals" id="pickTot"></div>`;
+  const tot=()=>{const os=rows.filter(r=>newTripSel.has(r.o.id));const k=os.reduce((a,r)=>a+r.g.kg,0),m=os.reduce((a,r)=>a+r.g.m3,0);
+    $("#pickTot").innerHTML=`<div><b>${os.length}</b><span>Porosi</span></div><div><b style="${k>v.payloadKg?"color:var(--warn)":""}">${Math.round(k)} kg</b><span>nga ${v.payloadKg}</span></div><div><b style="${m>vanVol(v)?"color:var(--warn)":""}">${num1(m)} m³</b><span>nga ${num1(vanVol(v))}</span></div>`};
+  box.querySelectorAll("[data-pick]").forEach(c=>c.onchange=()=>{c.checked?newTripSel.add(c.dataset.pick):newTripSel.delete(c.dataset.pick);tot();renderCarPick()});
+  tot();renderCarPick();
+}
+// Veturat që presin të kthehen në shtëpi, renditur sipas kostos shtesë në kthim
+function waitingCars(exceptTrip){
+  return DB.cars.filter(c=>{if(c.status==="home"||c.tripId===exceptTrip)return false;const t=c.tripId&&DB.trips.find(x=>x.id===c.tripId);return !t||t.status==="done"});
+}
+async function rankCars(trip,cars,v){
+  const pk=perKm(v),orders=trip.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
+  const base=await routeOf(trip,orders,tripCars(trip).filter(c=>!cars.includes(c)));
+  const rows=[];for(const c of cars){const ex=Math.max(0,(await routeOf(trip,orders,[...tripCars(trip).filter(x=>!cars.includes(x)),c])).len-base.len);rows.push({c,ex,cost:ex*pk,net:netRec(c)-(+c.docs||0)-ex*pk})}
+  return rows.sort((a,b)=>b.net-a.net);
+}
+function carRowHtml(r,extra,v){const f=v?carFit(r.c,v):{ok:true};return `<span style="flex:1"><b>${esc(r.c.model||"Veturë")}</b>${r.c.year?" "+esc(r.c.year):""} · ${esc(cityOf(r.c.from))}${extra||""}${f.ok?"":` <span class="pill warn">${esc(f.txt)}</span>`}<br>
+  ${r.c.l?`<span class="mute">${carDims(r.c)}</span><br>`:""}
+  <span class="mute">${esc(r.c.owner||"")}${telLink(r.c)} · çmimi ${eur(r.c.price||0)}</span><br>
+  <span class="mute">+${km(r.ex)} në kthim ≈ ${eur(r.cost)} kosto · fitimi <b style="color:${r.net<0?"var(--warn)":"var(--good)"}">${eur(r.net)}</b></span></span>`}
+async function renderCarPick(){
+  const box=$("#carBox");if(!box)return;
+  const cars=waitingCars(null);
+  if(!cars.length){box.innerHTML=`<h3>Veturat në kthim</h3><p class="mute">S'ka vetura që presin. Shtoji te Porositë → Veturat për në shtëpi.</p>`;return}
+  const v=vanById(ntf.van),cap=S().carsPerTrip||1;
+  const tmp={start:ntf.start,dest:ntf.dest,orderIds:[...(newTripSel||[])],carIds:[]};
+  const rows=await rankCars(tmp,cars,v);
+  if(TAB!=="trips"||VIEW||!$("#carBox"))return;
+  const recIds=new Set(rows.filter(r=>carFit(r.c,v).ok).slice(0,cap).map(r=>r.c.id));
+  if(!ntf.cars||ntf._carAuto)ntf.cars=new Set(recIds),ntf._carAuto=true;
+  box.innerHTML=`<h3>Veturat në kthim (${cars.length} presin)</h3>
+    <p class="mute" style="margin:0 0 4px">Më e mira e para: çmimi minus kosto e rrugës shtesë. Merren ${cap} në udhëtim (ndryshohet te Cilësimet).</p>
+    ${rows.map((r,i)=>`<label style="display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-weight:500;font-size:14px;padding:8px 0;border-bottom:1px solid var(--line);margin:0">
+      <input type="checkbox" data-car="${r.c.id}" ${ntf.cars.has(r.c.id)?"checked":""} style="width:auto;margin-top:3px">
+      ${carRowHtml(r,(recIds.has(r.c.id)?` <span class="pill good">rekomandohet</span>`:"")+(r.c.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.c.tripId))}</span>`:""),v)}</label>`).join("")}
+    <p id="carNow" style="margin:8px 0 0"></p>`;
+  const now=()=>{const sel=rows.filter(r=>ntf.cars.has(r.c.id));$("#carNow").innerHTML=sel.length?`🚗 Merr në kthim: <b>${sel.map(r=>esc((r.c.model||"Veturë")+" nga "+cityOf(r.c.from))).join(", ")}</b>`:`<span class="mute">Pa veturë në kthim.</span>`};
+  box.querySelectorAll("[data-car]").forEach(c=>c.onchange=()=>{ntf._carAuto=false;c.checked?ntf.cars.add(c.dataset.car):ntf.cars.delete(c.dataset.car);now()});
+  now();
+}
+async function renderTrip(id){
+  const tr=DB.trips.find(x=>x.id===id);if(!tr)return setTab("trips");
+  $("#app").innerHTML=`<div class="card mute">Duke planifikuar rrugën më të mirë…</div>`;
+  const p=await planTrip(tr),v=p.v,s=S();
+  if(TAB!=="trips"||VIEW!==id)return;
+  const kgPct=p.kg/v.payloadKg*100,m3Pct=p.m3/vanVol(v)*100;
+  const loose=waitingOrders(id);
+  const left=p.stops.filter(o=>o.status!=="delivered");
+  $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button>
+    <h2 style="margin-top:10px">${esc(dateTxt(tr.date))}</h2><div class="mute">${esc(v.name)} · ${tr.start&&tr.dest?`${esc(cityOf(tr.start))} → ${esc(cityOf(tr.dest))}, kthim në ${esc(cityOf(s.base))}`:`nisja dhe kthimi: ${esc(s.base.label)}`}</div>
+    <label for="t-drv">Shoferi</label>${driverSelect("t-drv",tr.name||"")}
+    <div class="row"><div><label for="t-date">Data e nisjes (ndryshoje ose shtyje)</label><input id="t-date" type="date" value="${tr.date||""}"><div style="display:flex;gap:6px;margin-top:6px"><button class="btn ghost small" type="button" data-shift="1">+1 ditë</button><button class="btn ghost small" type="button" data-shift="7">+1 javë</button></div></div><div><label for="t-van">Furgoni</label><select id="t-van">${s.vans.map(x=>`<option value="${x.id}" ${x.id===tr.van?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
+    ${p.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
+    <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
+    <label>Hapësira ${num1(p.m3)} / ${num1(vanVol(v))} m³</label><div class="bar ${m3Pct>100?"over":""}"><i style="width:${Math.min(100,m3Pct)}%"></i></div>
+    ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
+  </div>
+  <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
+    ${p.stops.length?"":`<p class="mute">Ende s'ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
+    ${p.stops.map((o,i)=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}${telLink(o)}${o.status==="delivered"?` <span class="pill good">dorëzuar</span>`:""}<br><span class="mute">${esc(o.addr.label)}</span>
+      <ul style="margin:6px 0;padding-left:18px;font-size:14px">${itemLines(o)}</ul>
+      <span class="mute">Gjithsej ${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³ · çmimi ${eur(o.price)}</span>${o.note?`<br><span class="mute">Shënim: ${esc(o.note)}</span>`:""}
+      <div class="row" style="margin-top:6px"><a class="btn small" href="${navUrl(o.addr)}" target="_blank" rel="noopener">Harta</a>
+      <button class="btn ghost small" onclick="toggleDelivered('${o.id}','${tr.id}')">${o.status==="delivered"?"Anulo":"Dorëzuar ✓"}</button>
+      <button class="btn warn small" onclick="removeFromTrip('${o.id}','${tr.id}')">Hiqe</button></div></div></div>`}).join("")}
+    ${left.length?`<a class="btn ghost full" href="${routeUrl(left.map(o=>o.addr))}" target="_blank" rel="noopener">Hap gjithë rrugën në Google Maps</a><p class="mute">Telefoni tregon deri në ~9 ndalesa njëherësh; për udhëtime të gjata përdor “Ndalesa e radhës”.</p>`:""}
+  </div>
+  ${left.length>1?`<div class="card"><h2>Radha e ngarkimit</h2><p class="mute" style="margin:0 0 6px">Ngarko së pari ndalesën e fundit, në fund të rimorkios.</p>
+    <ol style="margin:0;padding-left:20px;font-size:14px">${[...left].reverse().map(o=>`<li><b>${esc(o.customer||"")}</b> (${esc(cityOf(o.addr))}): ${esc(o.items?itemsSummary(o.items):o.what||"")}</li>`).join("")}</ol></div>`:""}
+  <div class="card"><h2>🚗 Veturat në kthim · ${km(p.back)} kthimi</h2>
+    ${p.carStops.length?p.carStops.map((c,i)=>`<div class="stop" style="cursor:default"><div class="num">K${i+1}</div><div class="grow"><b>${esc(c.model||"Veturë")}</b>${c.year?" "+esc(c.year):""} · merret në ${esc(cityOf(c.from))}${carFit(c,v).ok?"":` <span class="pill warn">${esc(carFit(c,v).txt)}</span>`}${c.status==="home"?` <span class="pill good">në shtëpi</span>`:""}<br>
+      <span class="mute">${esc(c.from.label)}</span><br>${c.l?`<span class="mute">${carDims(c)}</span><br>`:""}<span class="mute">${esc(c.owner||"")}${telLink(c)} · ${eur(c.price||0)}${c.to?" · dorëzohet: "+esc(c.to):""}</span>
+      <div class="row" style="margin-top:6px"><a class="btn small" href="${navUrl(c.from)}" target="_blank" rel="noopener">Harta</a>
+      <button class="btn ghost small" onclick="toggleCarHome('${c.id}','${tr.id}')">${c.status==="home"?"Anulo":"Në shtëpi ✓"}</button>
+      <button class="btn warn small" onclick="carFromTrip('${c.id}','${tr.id}')">Hiqe</button></div></div></div>`).join(""):`<p class="mute">Ende s'ke zgjedhur veturë për kthim.</p>`}
+    ${p.carStops.length?`<details class="more" id="carLoad"><summary>Shiko si ngarkohet vetura (3D)</summary><div id="pack-car"></div></details>`:""}
+    <div id="carsLoose"></div></div>
+  <div class="card"><details class="more" id="t3d" style="border:0;margin:0;padding:0" ${tr.open3d?"open":""}><summary style="font-size:18px">Ngarkimi 3D</summary><p class="mute" style="margin:0">Ngarkohet së pari ndalesa e fundit (përpara), kështu e para del e para. Numrat = radha e ngarkimit.</p>
+    <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:500"><input type="checkbox" id="tk-tip" style="width:auto" ${tr.tip?"checked":""}>Lejo vendosjen anash (dyshekë, tavolina)</label>
+    <div id="pack-t"></div></details></div>
+  <div class="card"><h2>Paratë</h2>
+    <div class="big3"><div><b>${eur(p.revenue)}</b><span>Të hyrat (pa TVSH)</span></div><div><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b><span>Shpenzimet</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi</span></div></div>
+    <details class="more"><summary>Shiko të gjitha shpenzimet</summary><table>
+    ${p.costs.rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${eur(r[1])}</td></tr>`).join("")}
+    <tr><td>Ngarkim / shkarkim (${p.orders.length} × ${eur(s.handling)})</td><td>${eur(p.orders.length*s.handling)}</td></tr>
+    ${p.docs?`<tr><td>Dokumente / të tjera</td><td>${eur(p.docs)}</td></tr>`:""}
+    <tr><td><b>Kostoja totale</b></td><td><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b></td></tr>
+    <tr><td>Të hyrat nga porositë (pa TVSH)</td><td>${eur(p.ordersIn)}</td></tr>
+    <tr><td>Të hyrat nga veturat në kthim (${p.carStops.length}, pa TVSH)</td><td>${eur(p.carsIn)}</td></tr>
+    <tr><td class="mute">TVSH ${s.vat}% që mblidhet dhe paguhet</td><td class="mute">${eur(p.vatAmt)}</td></tr>
+    ${+tr.returnIncome?`<tr><td>Të hyra të tjera</td><td>${eur(+tr.returnIncome)}</td></tr>`:""}
+    <tr><td><b>Fitimi</b></td><td><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b></td></tr></table>
+    <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
+  </div>
+  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
+  ${fuelDrop(tr)}
+  <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
+  $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
+  $("#t-date").onchange=e=>{tr.date=e.target.value;save();toast("Data u ndryshua");renderTrip(id)};
+  document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{const d=new Date((tr.date||todayISO())+"T12:00:00");d.setDate(d.getDate()+ +b.dataset.shift);tr.date=d.toISOString().slice(0,10);save();toast("U shty për "+dateTxt(tr.date));renderTrip(id)});
+  $("#t-drv").onchange=e=>{tr.name=e.target.value.trim();save()};
+  if($("#carLoad"))$("#carLoad").ontoggle=e=>{if(e.target.open)carLoadView("pack-car",p.carStops,v)};
+  $("#fuelDrop").ontoggle=e=>{if(e.target.open)fillFuelDrop(p,tr)};
+  const stopsAll=[...p.stops];const tripPieces=[...stopsAll].reverse().flatMap(o=>{const i=stopsAll.indexOf(o);return piecesFromItems(o.items||[],(i+1)+". "+cityOf(o.addr),i).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h)});
+  const draw3=()=>packView("pack-t",tripPieces,v,stopsAll.map((o,i)=>({color:i,label:(i+1)+". "+cityOf(o.addr)+" · "+(o.customer||"")})),{tip:tr.tip});
+  if(tr.open3d)draw3();$("#t3d").ontoggle=e=>{tr.open3d=e.target.open;save();if(e.target.open)draw3()};
+  $("#tk-tip").onchange=e=>{tr.tip=e.target.checked;save();renderTrip(id)};
+  $("#t-van").onchange=e=>{tr.van=e.target.value;save();renderTrip(id)};
+  $("#done").onclick=()=>{tr.status=tr.status==="done"?"planned":"done";save();renderTrip(id)};
+  $("#del").onclick=()=>{if(!twoTap($("#del")))return;tr.orderIds.forEach(oid=>{const o=DB.orders.find(x=>x.id===oid);if(o)o.tripId=null});(tr.carIds||[]).forEach(cid=>{const c=DB.cars.find(x=>x.id===cid);if(c)c.tripId=null});DB.trips=DB.trips.filter(x=>x!==tr);save();setTab("trips")};
+  const lc=waitingCars(id);
+  if(lc.length){
+    const cr=await rankCars(tr,lc,v);
+    if(TAB!=="trips"||VIEW!==id)return;
+    const full=p.carStops.length>=(S().carsPerTrip||1);
+    $("#carsLoose").innerHTML=`<h3>Vetura që presin (${lc.length})</h3>${full?`<p class="mute">Udhëtimi ka arritur ${S().carsPerTrip||1} veturë. Mund të shtosh prapë nëse ka vend.</p>`:""}`+cr.map((r,i)=>`<div class="stop" style="cursor:default">${carRowHtml(r,(i===cr.findIndex(x=>carFit(x.c,v).ok)&&!full?` <span class="pill good">rekomandohet</span>`:"")+(r.c.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.c.tripId))}</span>`:""),v)}<button class="btn small" onclick="carToTrip('${r.c.id}','${tr.id}')">Merr</button></div>`).join("");
+  }else $("#carsLoose").innerHTML=`<p class="mute" style="margin-top:8px">S'ka vetura të tjera që presin. Shtoji te Porositë.</p>`;
+  if(loose.length){
+    const rows=[];for(const o of loose){const g=orderGoods(o);rows.push({o,ex:await extraKm(tr,o),ok:p.kg+g.kg<=v.payloadKg&&p.m3+g.m3<=vanVol(v)})}
+    rows.sort((a,b)=>a.ex-b.ex);
+    if(TAB!=="trips"||VIEW!==id)return;
+    $("#loose").innerHTML=`<p class="mute">Renditur sipas rrugës shtesë më të vogël.</p>`+rows.map(r=>`<div class="stop" style="cursor:default"><div class="grow"><b>${esc(r.o.customer||"")}</b> · ${esc(r.o.items?itemsSummary(r.o.items):r.o.what||"")}${r.o.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.o.tripId))}</span>`:""}<br><span class="mute">${esc(r.o.addr.label)}</span><br>
+      <span class="pill ${r.ok?"":"warn"}">+${km(r.ex)} · ≈${eur(r.ex*perKm(v))}${r.ok?"":" · plot"}</span></div><button class="btn small" onclick="addToTrip('${r.o.id}','${tr.id}')">Shto</button></div>`).join("");
+  }
+}
+function addToTrip(oid,tid){const o=DB.orders.find(x=>x.id===oid),tr=DB.trips.find(x=>x.id===tid);DB.trips.forEach(x=>x.orderIds=x.orderIds.filter(y=>y!==oid));tr.orderIds.push(oid);o.tripId=tid;save();renderTrip(tid)}
+function removeFromTrip(oid,tid){const o=DB.orders.find(x=>x.id===oid),tr=DB.trips.find(x=>x.id===tid);tr.orderIds=tr.orderIds.filter(y=>y!==oid);o.tripId=null;save();renderTrip(tid)}
+function carToTrip(cid,tid){const c=DB.cars.find(x=>x.id===cid),tr=DB.trips.find(x=>x.id===tid);DB.trips.forEach(x=>x.carIds=(x.carIds||[]).filter(y=>y!==cid));tr.carIds.push(cid);c.tripId=tid;save();renderTrip(tid)}
+function carFromTrip(cid,tid){const c=DB.cars.find(x=>x.id===cid),tr=DB.trips.find(x=>x.id===tid);tr.carIds=tr.carIds.filter(y=>y!==cid);c.tripId=null;save();renderTrip(tid)}
+function toggleCarHome(cid,tid){const c=DB.cars.find(x=>x.id===cid);c.status=c.status==="home"?"waiting":"home";save();renderTrip(tid)}
+function toggleDelivered(oid,tid){const o=DB.orders.find(x=>x.id===oid);o.status=o.status==="delivered"?"open":"delivered";save();renderTrip(tid)}
+
+/* ===================== CILËSIMET ===================== */
+function renderSettings(){
+  const s=S();
+  const get=path=>path.split(".").reduce((a,k)=>a?.[k],s);
+  const num=(path,label)=>`<div><label>${label}</label><input type="number" inputmode="decimal" step="any" data-path="${path}" value="${get(path)}"></div>`;
+  const list=(name,arr,lab)=>`<h3>${lab}</h3>`+arr.map((r,i)=>`<div class="row" style="margin-bottom:6px"><input data-list="${name}" data-i="${i}" data-k="name" value="${esc(r.name)}" style="flex:2"><input type="number" inputmode="decimal" data-list="${name}" data-i="${i}" data-k="eur" value="${r.eur}"></div>`).join("")+`<button class="btn ghost small" data-add="${name}">+ Shto rresht</button>`;
+  $("#app").innerHTML=syncCard()+`<div class="card"><h2>Çmimi dhe fitimi</h2>
+    <div class="row">${num("margin","Fitimi %")}${num("minPrice","Çmimi minimal €")}</div>
+    <div class="row">${num("handling","Ngarkim/shkarkim për porosi €")}${num("loadFactor","Furgoni zakonisht plot %")}</div>
+    <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
+    <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}${num("vat","TVSH %")}</div>
+    <p class="mute">“Furgoni zakonisht plot” e ndan koston: në 80%, një porosi që zë 10% të furgonit paguan 12,5% të udhëtimit. “Pesha e vlerësuar” përdoret kur pesha nuk dihet.</p></div></div>
+  <div class="card"><h2>🚗 Çmimi i veturave në kthim</h2>
+    <div class="row">${num("carBase","Bazë €")}${num("carPerKm","€ për km deri në Kosovë")}</div>
+    <div class="row">${num("carHeavyKg","Veturë e rëndë mbi kg")}${num("carHeavyPct","Shtesë për të rëndat %")}</div>
+    <div class="row">${num("carMin","Çmimi minimal €")}${num("carDocs","Dokumente për veturë € (fillestare)")}</div>
+    <p class="mute">Shembull: Dortmund → Prishtinë ≈ 1.900 km → 150 + 1.900 × 0,25 = 625 €. Çmimi mund të ndryshohet me dorë te çdo veturë.</p>
+  <div class="card"><h2>Nafta (€/L)</h2>
+    <div class="row">${["XK","RS","HR","SI"].map(c=>num("diesel."+c,c)).join("")}</div>
+    <div class="row">${["AT","DE","HU"].map(c=>num("diesel."+c,c)).join("")}</div>
+    <div class="row">${num("fuelHomeShare","% e blerë në Kosovë")}<div><label>Pjesa tjetër në</label><select data-path="fuelAwayCountry">${Object.keys(s.diesel).map(c=>`<option ${c===s.fuelAwayCountry?"selected":""}>${c}</option>`).join("")}</select></div></div>
+    <p class="mute">Çmimi që përdoret tani: <b>${eur(dieselPrice())}</b> për litër.</p>
+    <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="d-auto" style="width:auto" ${s.dieselAuto!==false?"checked":""}>Përditëso çmimet vetë çdo javë</label>
+    <p class="mute" style="margin:4px 0 8px">${s.dieselUpdated?`Përditësuar së fundi: ${esc(s.dieselUpdated)}.`:"Ende pa përditësim automatik."} Austria${s.dieselStations?.DE?" dhe Gjermania":""}: pika reale më e lirë në rrugë. Kosova: mesatarja e kompanive (naftasot). Serbia: çmimi maksimal i shtetit. Të tjerat: mesatarja e BE-së.</p>
+    ${Object.entries(s.dieselStations||{}).map(([c,l])=>`<h3>Pikat më të lira · ${c}</h3>${l.slice(0,4).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px"><span><b>${esc(x.name)}</b><br><span class="mute">${esc(x.address||"")}, ${esc(x.city||"")} (afër ${esc(x.near)})</span></span><b>${eur(x.price)}</b></div>`).join("")}`).join("")}
+    <button class="btn ghost small" id="d-sync" type="button">Kontrollo tani</button></div>
+  <div class="card"><h2>Shpenzimet e udhëtimit</h2>
+    <div class="row">${num("daysPerTrip","Ditë për udhëtim")}${num("tripsPerYear","Udhëtime në vit (për furgon)")}</div>
+    <div class="row">${num("driversPerVan","Shoferë për furgon")}${num("driverPerDay","Shoferi € në ditë")}</div>
+    ${num("wearPerKm","Konsumimi & servisi € për km")}
+    ${list("tollsPerTrip",s.tollsPerTrip,"Autostradat për udhëtim (vajtje-ardhje)")}
+    ${list("fixedYear",s.fixedYear,"Shpenzime fikse në vit për furgon")}
+    <p class="mute">Shpenzimet fikse për udhëtim: <b>${eur(fixedPerTrip())}</b></p></div>
+  ${s.vans.map((v,i)=>`<div class="card"><h2>${esc(v.name)}</h2>
+    <label>Emri</label><input data-path="vans.${i}.name" value="${esc(v.name)}">
+    <div class="row">${num(`vans.${i}.totalKg`,"Pesha max totale kg (furgon + rimorkio + ngarkesa)")}${num(`vans.${i}.emptyKg`,"Pesha bosh: Sprinter + rimorkio kg")}</div>
+    <div class="row">${num(`vans.${i}.lPer100`,"Litra / 100 km")}<div><label>Ngarkesa që mbetet</label><input value="${v.payloadKg} kg" disabled></div></div>
+    <label>Furgoni gjerësi × gjatësi × lartësi (m)</label><div class="row">${["w","l","h"].map(k=>`<input type="number" inputmode="decimal" data-path="vans.${i}.cargo.${k}" value="${v.cargo[k]}">`).join("")}</div>
+    <label>Rimorkioja gjerësi × gjatësi × lartësi (m)</label><div class="row">${["w","l","h"].map(k=>`<input type="number" inputmode="decimal" data-path="vans.${i}.trailer.${k}" value="${v.trailer[k]}">`).join("")}</div>
+    <p class="mute">Hapësira totale ${num1(vanVol(v))} m³ · kostoja për km tani ${eur(perKm(v))}</p></div>`).join("")}
+  <div class="card"><h2>Llojet e mallrave</h2><p class="mute">Masat në cm dhe pesha për copë. Këto i sheh edhe klienti.</p>
+    ${s.presets.map((p,i)=>`<div class="item"><input data-preset="${i}" data-k="name" value="${esc(p.name)}"><div class="dims">${["l","w","h","kg","rate"].map(k=>`<input type="number" inputmode="decimal" data-preset="${i}" data-k="${k}" value="${p[k]||0}" aria-label="${k}">`).join("")}</div></div>`).join("")}
+    <p class="mute">Radha: gjatësi, gjerësi, lartësi (cm), kg, çmim fiks € për copë/metër (0 = llogaritet nga hapësira dhe pesha). Fshi emrin për ta hequr.</p>
+    <button class="btn ghost small" id="addPreset">+ Shto lloj</button></div>
+  <div class="card"><h2>Vendet</h2><label>Nisja / shtëpia</label>${addrField("f-base",s.base)}<p class="mute" style="margin:6px 0 0">Qyteti kryesor i çdo udhëtimi është qyteti i porosisë më të madhe. Rruga shtesë për porositë e tjera llogaritet nga ajo rrugë.</p>
+    <label>Linku i Instagramit</label><input data-path="instagram" value="${esc(s.instagram)}"></div>
+  <div class="card"><h2>Kopje rezervë</h2><p class="mute">Të gjitha të dhënat ruhen në këtë telefon. Bëj kopje rezervë herë pas here.</p>
+    <div class="row"><button class="btn ghost" id="exp">Shkarko kopjen</button><label class="btn ghost" style="margin:0;color:var(--acc);font-size:15px">Rikthe<input type="file" id="imp" accept=".json" hidden></label></div>
+    <button class="btn warn full" id="reset">Kthe cilësimet në fillestare</button></div>`;
+  wireSync();
+  document.querySelectorAll("[data-path]").forEach(el=>el.addEventListener("change",()=>{
+    const ks=el.dataset.path.split(".");let o=s;ks.slice(0,-1).forEach(k=>o=o[k]);
+    o[ks.at(-1)]=el.type==="number"?(parseFloat(el.value)||0):el.value;fixPayload();save();render()}));
+  document.querySelectorAll("[data-list]").forEach(el=>el.addEventListener("change",()=>{
+    const arr=s[el.dataset.list],r=arr[+el.dataset.i];r[el.dataset.k]=el.dataset.k==="eur"?(parseFloat(el.value)||0):el.value;
+    if(el.dataset.k==="name"&&!el.value.trim())arr.splice(+el.dataset.i,1);save();render()}));
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{s[b.dataset.add].push({name:"I ri",eur:0});save();render()});
+  document.querySelectorAll("[data-preset]").forEach(el=>el.addEventListener("change",()=>{
+    const i=+el.dataset.preset,k=el.dataset.k;
+    if(k==="name"&&!el.value.trim()){s.presets.splice(i,1)}else s.presets[i][k]=k==="name"?el.value:(parseFloat(el.value)||0);save();render()}));
+  $("#d-auto").onchange=e=>{s.dieselAuto=e.target.checked;save();if(e.target.checked)syncPrices(true)};
+  $("#d-sync").onclick=()=>syncPrices(true);
+  $("#addPreset").onclick=()=>{s.presets.push({name:"Lloj i ri",l:100,w:50,h:50,kg:20,rate:0});save();render()};
+  wireAddr("f-base",r=>{if(r){s.base=r;save()}});
+  $("#exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,1)],{type:"application/json"}));a.download="gemini-kopje-"+new Date().toISOString().slice(0,10)+".json";a.click()};
+  $("#imp").onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!d.orders)throw 0;DB=d;save();render();toast("Kopja u rikthye")}catch(x){toast("Skedari nuk është kopje e vlefshme")}};
+  $("#reset").onclick=()=>{if(twoTap($("#reset"))){DB.settings=structuredClone(DEFAULTS);fixPayload();save();render();toast("Cilësimet u kthyen")}};
+}
+
+/* ===================== PASTRIMI I SHEMBUJVE (një herë) ===================== */
+if(!DB.examplesCleaned){
+  const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
+  DB.orders=DB.orders.filter(o=>!fake.has(o.id));
+  DB.cars=(DB.cars||[]).filter(c=>!/SHEMBULL/i.test((c.owner||"")+" "+(c.model||"")));
+  DB.trips=DB.trips.filter(t=>t.name!=="SHEMBULL");
+  DB.trips.forEach(t=>{t.orderIds=t.orderIds.filter(id=>!fake.has(id));t.carIds=(t.carIds||[]).filter(id=>DB.cars.some(c=>c.id===id))});
+  DB.orders.forEach(o=>{if(o.tripId&&!DB.trips.some(t=>t.id===o.tripId))o.tripId=null});
+  DB.cars.forEach(c=>{if(c.tripId&&!DB.trips.some(t=>t.id===c.tripId))c.tripId=null});
+  DB.examplesCleaned=true;DB.examplesShown=true;save();
+}
+
+/* ===================== SINKRONIZIMI MES TELEFONAVE (Firebase) ===================== */
+// Çdo porosi, udhëtim, veturë dhe cilësimet ruhen si dokument në Firestore (koleksioni "gemini").
+// Telefoni punon edhe pa internet; ndryshimet dërgohen kur kthehet interneti.
+const FB_CONFIG={projectId:"x"}; // vendoset pasi krijohet projekti Firebase
+const FB_V="10.12.2",SYNC={on:false,user:null,fs:null,known:{},ready:false,last:null,err:""};
+const LOCAL_ONLY=["diesel","dieselUpdated","dieselChecked","dieselStations","routeStations","dieselAuto"];
+try{SYNC.known=JSON.parse(localStorage.getItem(KEY+".known")||"{}")}catch(e){}
+const saveKnown=()=>{try{localStorage.setItem(KEY+".known",JSON.stringify(SYNC.known))}catch(e){}};
+function syncRecords(){
+  const m={};
+  DB.orders.forEach(o=>m["o_"+o.id]=JSON.stringify(o));DB.trips.forEach(t=>m["t_"+t.id]=JSON.stringify(t));DB.cars.forEach(c=>m["c_"+c.id]=JSON.stringify(c));
+  const st={...DB.settings};LOCAL_ONLY.forEach(k=>delete st[k]);m.settings=JSON.stringify(st);
+  return m;
+}
+function applyRemote(key,v,del){
+  const t=key.slice(0,2),id=key.slice(2),arr=t==="o_"?DB.orders:t==="t_"?DB.trips:t==="c_"?DB.cars:null;
+  if(key==="settings"){if(!del&&v){const keep={};LOCAL_ONLY.forEach(k=>keep[k]=DB.settings[k]);DB.settings=Object.assign(structuredClone(DEFAULTS),JSON.parse(v),keep)}return}
+  if(!arr)return;const i=arr.findIndex(x=>x.id===id);
+  if(del){if(i>=0)arr.splice(i,1)}else{const rec=JSON.parse(v);if(i>=0)arr[i]=rec;else arr.push(rec)}
+}
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function syncStart(){
+  if(!FB_CONFIG||SYNC.fs)return;
+  try{
+    for(const m of ["app","auth","firestore"])await loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}-compat.js`);
+    firebase.initializeApp(FB_CONFIG);
+    const fs=firebase.firestore();try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
+    SYNC.fs=fs;
+    firebase.auth().onAuthStateChanged(u=>{SYNC.user=u;if(u)syncListen();else{SYNC.on=false;if(SYNC.unsub)SYNC.unsub()}if(TAB==="settings")render()});
+  }catch(e){SYNC.err="Nuk u ngarkua (pa internet?)"}
+}
+function syncListen(){
+  if(SYNC.unsub)SYNC.unsub();
+  const col=SYNC.fs.collection("gemini");let first=true;
+  SYNC.unsub=col.onSnapshot({includeMetadataChanges:false},snap=>{
+    let changed=false;
+    if(first){first=false;
+      // hyrja e parë: çfarë s'është në server (p.sh. porositë e vjetra të këtij telefoni) ngarkohet; çfarë është në server vjen këtu
+      const remote={};snap.docs.forEach(d=>remote[d.id]=d.data());
+      SYNC.known={};
+      Object.entries(remote).forEach(([k,d])=>{if(d.del)applyRemote(k,null,true);else{applyRemote(k,d.v,false);SYNC.known[k]=d.v}changed=true});
+      SYNC.on=true;SYNC.ready=true;
+    }else{
+      snap.docChanges().forEach(ch=>{const d=ch.doc.data(),k=ch.doc.id;if(ch.doc.metadata.hasPendingWrites)return;
+        if(d.del){applyRemote(k,null,true);delete SYNC.known[k]}else if(SYNC.known[k]!==d.v){applyRemote(k,d.v,false);SYNC.known[k]=d.v}else return;
+        changed=true});
+    }
+    SYNC.last=new Date();
+    if(changed){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}saveKnown();softRender()}
+    syncPush();
+  },e=>{SYNC.err=e.code==="permission-denied"?"Ky email s'ka leje. Pyet Phis-in.":"Gabim: "+e.message;if(TAB==="settings")render()});
+}
+// Dërgon vetëm ndryshimet (krahasuar me atë që di serveri)
+function syncPush(){
+  if(!SYNC.on||!SYNC.fs||!SYNC.user)return;
+  const cur=syncRecords(),col=SYNC.fs.collection("gemini"),by=SYNC.user.email||"",u=Date.now();
+  let batch=SYNC.fs.batch(),n=0;const flush=()=>{if(n){batch.commit().catch(e=>{SYNC.err="Nuk u dërgua: "+e.message});batch=SYNC.fs.batch();n=0}};
+  for(const [k,v] of Object.entries(cur))if(SYNC.known[k]!==v){batch.set(col.doc(k),{v,u,by,del:false});SYNC.known[k]=v;if(++n>=400)flush()}
+  for(const k of Object.keys(SYNC.known))if(!(k in cur)){batch.set(col.doc(k),{v:"",u,by,del:true});delete SYNC.known[k];if(++n>=400)flush()}
+  flush();saveKnown();
+}
+const syncPushSoon=debounce(syncPush,600);window.__syncPush=syncPushSoon;
+// Rifresko ekranin kur vjen diçka nga telefoni tjetër, por jo kur je duke shkruar
+let pendingRender=false;
+function softRender(){const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=true;return}render();toast("U përditësua nga telefoni tjetër")}
+document.addEventListener("focusout",()=>{if(pendingRender){setTimeout(()=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=false;render()}},300)}});
+function syncCard(){
+  if(!FB_CONFIG)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">Së shpejti: porositë, udhëtimet dhe veturat do të shihen njësoj në telefonin tënd, të Marufit dhe të Krenarit.</p></div>`;
+  if(!SYNC.fs)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">${esc(SYNC.err||"Duke u lidhur…")}</p></div>`;
+  if(!SYNC.user)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0 0 6px">Hyr një herë në këtë telefon. Pastaj të gjitha porositë, udhëtimet dhe veturat ndahen me të tjerët.</p>
+    <label for="sy-email">Email</label><input id="sy-email" type="email" autocomplete="username">
+    <label for="sy-pass">Fjalëkalimi</label><input id="sy-pass" type="password" autocomplete="current-password">
+    <button class="btn full" id="sy-login" type="button" style="margin-top:8px">Hyr</button>${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}</div>`;
+  return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p style="margin:0">✓ I lidhur si <b>${esc(SYNC.user.email)}</b></p>
+    <p class="mute" style="margin:4px 0 8px">${SYNC.last?"Përditësuar "+SYNC.last.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"Duke sinkronizuar…"}${navigator.onLine===false?" · pa internet, dërgohet kur kthehet":""}</p>
+    ${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}<button class="btn ghost small" id="sy-out" type="button">Dil</button></div>`;
+}
+function wireSync(){
+  const b=$("#sy-login");if(b)b.onclick=async()=>{SYNC.err="";b.textContent="Duke hyrë…";
+    try{await firebase.auth().signInWithEmailAndPassword($("#sy-email").value.trim(),$("#sy-pass").value)}catch(e){SYNC.err=/password|credential|user/.test(e.code||"")?"Email ose fjalëkalim i gabuar":"Nuk u lidh: "+(e.code||e.message);render()}};
+  const o=$("#sy-out");if(o)o.onclick=()=>{firebase.auth().signOut()};
+}
+syncStart();
+
+/* ===================== NISJA ===================== */
+function render(){
+  const client=location.hash==="#klient";
+  document.body.classList.toggle("client",client);
+  $("#nav").hidden=client;
+  if(client){$("#sub").textContent="";return renderClient()}
+  renderNav();const sub=$("#sub");sub.textContent=DB.orders.filter(o=>o.status!=="delivered").length+" porosi të hapura ›";sub.style.cursor="pointer";sub.setAttribute("role","button");sub.onclick=()=>setTab("orders");
+  ({quote:renderQuote,orders:renderOrders,trips:renderTrips,client:renderClient,settings:renderSettings})[TAB]();
+}
+window.addEventListener("hashchange",render);
+render();
+// Çmimet e naftës përditësohen vetë çdo javë (GitHub: phishalili/gemini-logistics → prices.json)
+const PRICES_URL="https://phishalili.github.io/gemini-logistics/prices.json";
+async function syncPrices(manual){
+  const s=S();if(!manual&&s.dieselAuto===false)return;
+  try{const r=await fetch(PRICES_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();
+    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;if(Array.isArray(j.route))s.routeStations=j.route;
+    const ch=Object.entries(j.diesel||{}).filter(([k,v])=>+v>0.5&&+v<4&&+s.diesel[k]!==+v);
+    const was=s.dieselUpdated;s.dieselUpdated=j.updated||s.dieselChecked;
+    if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);save();toast("Çmimet e naftës u përditësuan ("+fmtDay(s.dieselUpdated)+")");render()}
+    else{save();if(manual)toast("Çmimet e naftës janë të fundit");if(manual||was!==s.dieselUpdated)refreshFuelBar()}
+  }catch(e){if(manual)toast("Nuk ka internet. Çmimet mbeten si ishin.");refreshFuelBar()}
+}
+function fmtDay(d){const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||"");return m?`${m[3]}.${m[2]}.${m[1]}`:(d||"")}
+function fuelBarInner(){const s=S(),on=navigator.onLine!==false;
+  return `<div style="flex:1;min-width:0"><div>⛽ Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
+function fuelBar(){return `<div class="card" id="fuelbar" style="display:flex;gap:10px;align-items:center;padding:10px 14px">${fuelBarInner()}</div>`}
+function wireFuelBar(){const b=$("#fuel-sync");if(b)b.onclick=()=>syncPrices(true)}
+function refreshFuelBar(){const el=$("#fuelbar");if(el){el.innerHTML=fuelBarInner();wireFuelBar()}}
+syncPrices(false);syncStations();
+addEventListener("online",()=>{refreshFuelBar();syncPrices(false)});addEventListener("offline",refreshFuelBar);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S().dieselChecked!==new Date().toISOString().slice(0,10))syncPrices(false)});
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

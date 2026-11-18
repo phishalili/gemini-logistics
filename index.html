@@ -138,7 +138,7 @@ function fixPayload(){DB.settings.vans.forEach(v=>{if(v.totalKg===undefined)v.to
 fixPayload();
 DB.settings.presets.forEach(p=>{if(p.name==="Kuzhinë (për metër)")p.name="Kuzhinë (sasia = metra, në elemente)";if(p.rate===undefined)p.rate=p.name.startsWith("Kuzhinë")?250:0;const d=DEFAULTS.presets.find(x=>x.name===p.name);if(d){if(d.noTop)p.noTop=true;if(d.up)p.up=true}if(/^(Divan|Kolltuk|Frigorifer)/.test(p.name))p.noTop=true;if(/^(Frigorifer|Lavatri)/.test(p.name))p.up=true;if(p.name.startsWith("Kuzhinë")&&p.perM===undefined){p.perM=true;p.name="Kuzhinë (shkruaj gjatësinë në cm)"}});
 DEFAULTS.presets.filter(d=>d.app).forEach(d=>{if(!DB.settings.presets.some(p=>p.name===d.name))DB.settings.presets.push(structuredClone(d))});
-function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast("Nuk u ruajt në këtë pajisje")}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast("Nuk u ruajt në këtë pajisje")}if(window.__syncPush)window.__syncPush()}
 const S=()=>DB.settings;
 const uid=()=>Math.random().toString(36).slice(2,9);
 const eur=n=>(Math.round(n*100)/100).toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
@@ -1400,7 +1400,7 @@ function renderSettings(){
   const get=path=>path.split(".").reduce((a,k)=>a?.[k],s);
   const num=(path,label)=>`<div><label>${label}</label><input type="number" inputmode="decimal" step="any" data-path="${path}" value="${get(path)}"></div>`;
   const list=(name,arr,lab)=>`<h3>${lab}</h3>`+arr.map((r,i)=>`<div class="row" style="margin-bottom:6px"><input data-list="${name}" data-i="${i}" data-k="name" value="${esc(r.name)}" style="flex:2"><input type="number" inputmode="decimal" data-list="${name}" data-i="${i}" data-k="eur" value="${r.eur}"></div>`).join("")+`<button class="btn ghost small" data-add="${name}">+ Shto rresht</button>`;
-  $("#app").innerHTML=`<div class="card"><h2>Çmimi dhe fitimi</h2>
+  $("#app").innerHTML=syncCard()+`<div class="card"><h2>Çmimi dhe fitimi</h2>
     <div class="row">${num("margin","Fitimi %")}${num("minPrice","Çmimi minimal €")}</div>
     <div class="row">${num("handling","Ngarkim/shkarkim për porosi €")}${num("loadFactor","Furgoni zakonisht plot %")}</div>
     <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
@@ -1443,6 +1443,7 @@ function renderSettings(){
   <div class="card"><h2>Kopje rezervë</h2><p class="mute">Të gjitha të dhënat ruhen në këtë telefon. Bëj kopje rezervë herë pas here.</p>
     <div class="row"><button class="btn ghost" id="exp">Shkarko kopjen</button><label class="btn ghost" style="margin:0;color:var(--acc);font-size:15px">Rikthe<input type="file" id="imp" accept=".json" hidden></label></div>
     <button class="btn warn full" id="reset">Kthe cilësimet në fillestare</button></div>`;
+  wireSync();
   document.querySelectorAll("[data-path]").forEach(el=>el.addEventListener("change",()=>{
     const ks=el.dataset.path.split(".");let o=s;ks.slice(0,-1).forEach(k=>o=o[k]);
     o[ks.at(-1)]=el.type==="number"?(parseFloat(el.value)||0):el.value;fixPayload();save();render()}));
@@ -1473,6 +1474,101 @@ if(!DB.examplesCleaned){
   DB.cars.forEach(c=>{if(c.tripId&&!DB.trips.some(t=>t.id===c.tripId))c.tripId=null});
   DB.examplesCleaned=true;DB.examplesShown=true;save();
 }
+
+/* ===================== SINKRONIZIMI MES TELEFONAVE (Firebase) ===================== */
+// Çdo porosi, udhëtim, veturë dhe cilësimet ruhen si dokument në Firestore (koleksioni "gemini").
+// Telefoni punon edhe pa internet; ndryshimet dërgohen kur kthehet interneti.
+// Konfigurimi publik i projektit Firebase (nuk është sekret; mbrojtja bëhet me rregullat e databazës dhe hyrjen)
+const FB_CONFIG={apiKey:"AIzaSyBCZyTajkzRC8kHUcATgKpkDjG1VeQ64Gs",authDomain:"gemini-logistics.firebaseapp.com",projectId:"gemini-logistics",storageBucket:"gemini-logistics.firebasestorage.app",messagingSenderId:"537288327864",appId:"1:537288327864:web:7cd70b04a5d6613c8b6a4d"};
+const TEAM=["fisnikhalili@gmail.com","marufhalili@gmail.com","halili.krenar@gmail.com"];
+const FB_V="10.12.2",SYNC={on:false,user:null,fs:null,known:{},ready:false,last:null,err:""};
+const LOCAL_ONLY=["diesel","dieselUpdated","dieselChecked","dieselStations","routeStations","dieselAuto"];
+try{SYNC.known=JSON.parse(localStorage.getItem(KEY+".known")||"{}")}catch(e){}
+const saveKnown=()=>{try{localStorage.setItem(KEY+".known",JSON.stringify(SYNC.known))}catch(e){}};
+function syncRecords(){
+  const m={};
+  DB.orders.forEach(o=>m["o_"+o.id]=JSON.stringify(o));DB.trips.forEach(t=>m["t_"+t.id]=JSON.stringify(t));DB.cars.forEach(c=>m["c_"+c.id]=JSON.stringify(c));
+  const st={...DB.settings};LOCAL_ONLY.forEach(k=>delete st[k]);m.settings=JSON.stringify(st);
+  return m;
+}
+function applyRemote(key,v,del){
+  const t=key.slice(0,2),id=key.slice(2),arr=t==="o_"?DB.orders:t==="t_"?DB.trips:t==="c_"?DB.cars:null;
+  if(key==="settings"){if(!del&&v){const keep={};LOCAL_ONLY.forEach(k=>keep[k]=DB.settings[k]);DB.settings=Object.assign(structuredClone(DEFAULTS),JSON.parse(v),keep)}return}
+  if(!arr)return;const i=arr.findIndex(x=>x.id===id);
+  if(del){if(i>=0)arr.splice(i,1)}else{const rec=JSON.parse(v);if(i>=0)arr[i]=rec;else arr.push(rec)}
+}
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function syncStart(){
+  if(!FB_CONFIG||SYNC.fs)return;
+  try{
+    for(const m of ["app","auth","firestore"])await loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}-compat.js`);
+    firebase.initializeApp(FB_CONFIG);
+    const fs=firebase.firestore();try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
+    SYNC.fs=fs;
+    firebase.auth().onAuthStateChanged(u=>{SYNC.user=u;if(u)syncListen();else{SYNC.on=false;if(SYNC.unsub)SYNC.unsub()}if(TAB==="settings")render()});
+  }catch(e){SYNC.err="Nuk u ngarkua (pa internet?)"}
+}
+function syncListen(){
+  if(SYNC.unsub)SYNC.unsub();
+  const col=SYNC.fs.collection("gemini");let first=true;
+  SYNC.unsub=col.onSnapshot({includeMetadataChanges:false},snap=>{
+    let changed=false;
+    if(first){first=false;
+      // hyrja e parë: çfarë s'është në server (p.sh. porositë e vjetra të këtij telefoni) ngarkohet; çfarë është në server vjen këtu
+      const remote={};snap.docs.forEach(d=>remote[d.id]=d.data());
+      SYNC.known={};
+      Object.entries(remote).forEach(([k,d])=>{if(d.del)applyRemote(k,null,true);else{applyRemote(k,d.v,false);SYNC.known[k]=d.v}changed=true});
+      SYNC.on=true;SYNC.ready=true;
+    }else{
+      snap.docChanges().forEach(ch=>{const d=ch.doc.data(),k=ch.doc.id;if(ch.doc.metadata.hasPendingWrites)return;
+        if(d.del){applyRemote(k,null,true);delete SYNC.known[k]}else if(SYNC.known[k]!==d.v){applyRemote(k,d.v,false);SYNC.known[k]=d.v}else return;
+        changed=true});
+    }
+    SYNC.last=new Date();
+    if(changed){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}saveKnown();softRender()}
+    syncPush();
+  },e=>{SYNC.err=e.code==="permission-denied"?"Ky email s'ka leje. Pyet Phis-in.":"Gabim: "+e.message;if(TAB==="settings")render()});
+}
+// Dërgon vetëm ndryshimet (krahasuar me atë që di serveri)
+function syncPush(){
+  if(!SYNC.on||!SYNC.fs||!SYNC.user)return;
+  const cur=syncRecords(),col=SYNC.fs.collection("gemini"),by=SYNC.user.email||"",u=Date.now();
+  let batch=SYNC.fs.batch(),n=0;const flush=()=>{if(n){batch.commit().catch(e=>{SYNC.err="Nuk u dërgua: "+e.message});batch=SYNC.fs.batch();n=0}};
+  for(const [k,v] of Object.entries(cur))if(SYNC.known[k]!==v){batch.set(col.doc(k),{v,u,by,del:false});SYNC.known[k]=v;if(++n>=400)flush()}
+  for(const k of Object.keys(SYNC.known))if(!(k in cur)){batch.set(col.doc(k),{v:"",u,by,del:true});delete SYNC.known[k];if(++n>=400)flush()}
+  flush();saveKnown();
+}
+const syncPushSoon=debounce(syncPush,600);window.__syncPush=syncPushSoon;
+// Rifresko ekranin kur vjen diçka nga telefoni tjetër, por jo kur je duke shkruar
+let pendingRender=false;
+function softRender(){const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=true;return}render();toast("U përditësua nga telefoni tjetër")}
+document.addEventListener("focusout",()=>{if(pendingRender){setTimeout(()=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=false;render()}},300)}});
+function syncCard(){
+  if(!FB_CONFIG)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">Së shpejti: porositë, udhëtimet dhe veturat do të shihen njësoj në telefonin tënd, të Marufit dhe të Krenarit.</p></div>`;
+  if(!SYNC.fs)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">${esc(SYNC.err||"Duke u lidhur…")}</p></div>`;
+  if(!SYNC.user)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0 0 6px">Hyr një herë në këtë telefon. Pastaj të gjitha porositë, udhëtimet dhe veturat ndahen me të tjerët.</p>
+    <label for="sy-email">Email</label><input id="sy-email" type="email" autocomplete="username">
+    <label for="sy-pass">Fjalëkalimi</label><input id="sy-pass" type="password" autocomplete="current-password">
+    <button class="btn full" id="sy-login" type="button" style="margin-top:8px">Hyr</button>
+    <div class="row" style="margin-top:6px"><button class="btn ghost small" id="sy-new" type="button">Herën e parë: krijo fjalëkalimin</button><button class="btn ghost small" id="sy-reset" type="button">Harrova fjalëkalimin</button></div>
+    <p class="mute" style="margin:6px 0 0">Vetëm Phis, Maruf dhe Krenar kanë leje (me email-at e tyre).</p>${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}</div>`;
+  return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p style="margin:0">✓ I lidhur si <b>${esc(SYNC.user.email)}</b></p>
+    <p class="mute" style="margin:4px 0 8px">${SYNC.last?"Përditësuar "+SYNC.last.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"Duke sinkronizuar…"}${navigator.onLine===false?" · pa internet, dërgohet kur kthehet":""}</p>
+    ${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}<button class="btn ghost small" id="sy-out" type="button">Dil</button></div>`;
+}
+function wireSync(){
+  const b=$("#sy-login");if(b)b.onclick=async()=>{SYNC.err="";b.textContent="Duke hyrë…";
+    try{await firebase.auth().signInWithEmailAndPassword($("#sy-email").value.trim(),$("#sy-pass").value)}catch(e){SYNC.err=/password|credential|user/.test(e.code||"")?"Email ose fjalëkalim i gabuar":"Nuk u lidh: "+(e.code||e.message);render()}};
+  const o=$("#sy-out");if(o)o.onclick=()=>{firebase.auth().signOut()};
+  const em=()=>($("#sy-email")?.value||"").trim().toLowerCase();
+  const nw=$("#sy-new");if(nw)nw.onclick=async()=>{const p=$("#sy-pass").value;SYNC.err="";
+    if(!TEAM.includes(em())){SYNC.err="Ky email nuk është në listën e ekipit";return render()}
+    if(p.length<6){SYNC.err="Fjalëkalimi duhet të ketë të paktën 6 shkronja";return render()}
+    try{await firebase.auth().createUserWithEmailAndPassword(em(),p);toast("Llogaria u krijua")}catch(e){SYNC.err=e.code==="auth/email-already-in-use"?"Ky email ka llogari. Shtyp “Hyr”.":"Nuk u krijua: "+(e.code||e.message);render()}};
+  const rs=$("#sy-reset");if(rs)rs.onclick=async()=>{if(!em()){SYNC.err="Shkruaj email-in";return render()}
+    try{await firebase.auth().sendPasswordResetEmail(em());toast("Të dërguam email për fjalëkalim të ri")}catch(e){SYNC.err="Nuk u dërgua: "+(e.code||e.message);render()}};
+}
+syncStart();
 
 /* ===================== NISJA ===================== */
 function render(){
