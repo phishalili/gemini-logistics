@@ -64,7 +64,11 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:4px 0 2px}.bar i{display:block;height:100%;background:var(--acc)}
 .bar.over i{background:var(--warn)}
 .item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--bg)}
-.item .top{display:flex;gap:8px;align-items:center}
+.item .top{display:flex;gap:8px;align-items:center;margin-top:8px}
+.item .ihead{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-weight:600;min-height:32px}.item .ihead::-webkit-details-marker{display:none}
+.item .ihead::after{content:"▾";color:var(--mute);font-size:14px;transition:transform .15s}.item:not([open]) .ihead::after{transform:rotate(-90deg)}
+.item .inum{flex:0 0 24px;height:24px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:13px}
+.item .ilab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
 .item .top select{flex:1}
 .item .top input{width:70px;flex:0 0 70px}
 .item .x{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;padding:4px 6px;cursor:pointer}
@@ -376,16 +380,16 @@ async function tripFuel(p,tr){
   const countries=Object.keys(order).filter(c=>CNAME[c]).sort((a,b)=>order[a]-order[b]);
   return {g,pts,countries,list:dedup,top:[...dedup].sort((a,b)=>a.price-b.price).slice(0,3)};
 }
-const stRow=(x,mark)=>`<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b> · <b style="${mark?"color:var(--good)":""}">${eur(x.price)}</b>${CNAME[x.c]?" "+CNAME[x.c][1]:""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}${x.at!=null?` · km ${Math.round(x.at)} e rrugës`:""}${x.off>3?` · ${Math.round(x.off)} km larg rrugës`:""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`;
+const stRow=(x,mark)=>`<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b> · <b style="${mark?"color:var(--good)":""}">${eur(x.price)}</b>${CNAME[x.c]?` <span class="mute">(${CNAME[x.c][2]})</span>`:""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}${x.at!=null?` · km ${Math.round(x.at)} e rrugës`:""}${x.off>3?` · ${Math.round(x.off)} km larg rrugës`:""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`;
 // Në faqen e udhëtimit: vetëm një menu e mbyllur me 3 më të lirat
-function fuelDrop(tr){return `<div class="card"><details class="more" id="fuelDrop" style="border:0;margin:0;padding:0"><summary style="font-size:18px">⛽ Nafta në rrugë</summary><div id="fuelTop"><p class="mute">Duke kërkuar pikat në rrugë…</p></div>
+function fuelDrop(tr){return `<div class="card"><details class="more" id="fuelDrop" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Nafta në rrugë</summary><div id="fuelTop"><p class="mute">Duke kërkuar pikat në rrugë…</p></div>
   <button class="btn ghost full" type="button" onclick="setTab('trips','fuel:${tr.id}')">Shiko të gjitha pikat sipas vendit →</button></details></div>`}
 async function fillFuelDrop(p,tr){
   const el=$("#fuelTop");if(!el)return;
   if(!STN)await syncStations();
   const f=await tripFuel(p,tr);if(!$("#fuelTop"))return;
   const cheapC=f.countries.map(c=>({c,v:S().diesel[c]})).filter(x=>x.v).sort((a,b)=>a.v-b.v)[0];
-  $("#fuelTop").innerHTML=f.top.length?`<p class="mute" style="margin:0 0 4px">3 pikat më të lira në rrugën tënde${cheapC?` · vendi më i lirë: ${CNAME[cheapC.c][1]} ${CNAME[cheapC.c][2]} ${eur(cheapC.v)}`:""}</p>${f.top.map(x=>stRow(x,true)).join("")}`
+  $("#fuelTop").innerHTML=f.top.length?`<p class="mute" style="margin:0 0 4px">3 pikat më të lira në rrugën tënde${cheapC?` · vendi më i lirë: ${CNAME[cheapC.c][2]} ${eur(cheapC.v)}`:""}</p>${f.top.map(x=>stRow(x,true)).join("")}`
     :`<p class="mute">${STN?"S'u gjetën pika me çmim afër kësaj rruge.":"Pikat shfaqen pasi app-i lidhet me internetin."}</p>`;
 }
 // Faqja e plotë: të gjitha pikat në rrugë, sipas vendit, me radhën e rrugës
@@ -399,11 +403,11 @@ async function renderFuel(id){
   const cheapest=new Set(f.top.map(x=>x.c+x.name+x.address));
   const route=f.pts.map(a=>cityOf(a)).filter((c,i,a)=>c&&c!==a[i-1]);
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips','${id}')">← Kthehu te udhëtimi</button>
-    <h2 style="margin-top:10px">⛽ Nafta në rrugë</h2>
+    <h2 style="margin-top:10px">Nafta në rrugë</h2>
     <div class="mute">${esc(route.join(" → "))}${f.g.km?` · ${km(f.g.km)}`:""}${f.g.real?"":" · rruga e përafërt (pa internet)"}</div>
     <p class="mute" style="margin:6px 0 0">${f.list.length} pika me çmim brenda ~10 km nga rruga. Të gjelbrat janë 3 më të lirat. ${STN?.updated?"Çmimet e "+esc(fmtDay(STN.updated))+".":""}</p></div>
     ${f.countries.map(c=>{const [code,flag,name]=CNAME[c],l=(by[c]||[]),avg=s.diesel[c],min=l.length?Math.min(...l.map(x=>x.price)):null;
-      return `<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${l.length&&l.length<=6?"open":""}><summary style="font-size:18px">${flag} ${name} · ${min!=null?`nga <b>${eur(min)}</b>`:avg?`<b>${eur(avg)}</b>`:"pa të dhëna"}${l.length?` · ${l.length} pika`:""}</summary>
+      return `<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${l.length&&l.length<=6?"open":""}><summary style="font-size:18px">${name} · ${min!=null?`nga <b>${eur(min)}</b>`:avg?`<b>${eur(avg)}</b>`:"pa të dhëna"}${l.length?` · ${l.length} pika`:""}</summary>
         ${l.length?l.map(x=>stRow(x,cheapest.has(x.c+x.name+x.address))).join(""):`<p class="mute" style="margin:4px 0">${code==="XK"?"Mesatarja e kompanive (NaftaSot)":code==="RS"?"Çmimi maksimal i shtetit, njësoj në të gjitha pikat":code==="CH"?"Zvicra nuk publikon çmime falas për çdo pikë":"Mesatarja e vendit (buletini i BE-së)"}${avg?`: <b>${eur(avg)}</b>/L`:""}. Çmime për çdo pikë nuk ka falas.</p>`}
         </details></div>`}).join("")}
     <div class="card"><p class="mute" style="margin:0">Burimet: mzoe-gor.hr (HR), goriva.si (SI), E-Control (AT), clever-tanken.de (DE), prix-carburants.gouv.fr (FR), MIMIT (IT). Përditësohen çdo mëngjes.</p></div>`;
@@ -454,29 +458,34 @@ function kitchenApps(items){
 }
 function itemsEditor(items,showFit){
   const P=S().presets;
-  return `<div id="items">${items.map((it,i)=>`<div class="item" data-i="${i}">
+  return `<div id="items">${items.map((it,i)=>`<details class="item" data-i="${i}" ${ITEM_CLOSED.has(it)?"":"open"}>
+    <summary class="ihead"><span class="inum">${i+1}</span><span class="ilab">${esc(itemLabel(it))}</span><button class="x" type="button" data-del="${i}" aria-label="Hiqe">×</button></summary>
     <div class="top"><select data-k="preset">${P.map((p,j)=>`<option value="${j}" ${it.preset==j?"selected":""}>${esc(p.name)}</option>`).join("")}<option value="x" ${it.preset==="x"?"selected":""}>Tjetër (shkruaj masat)</option></select>
-    <input type="number" inputmode="numeric" min="1" data-k="qty" value="${it.qty}" aria-label="Sasia"><button class="x" data-del="${i}" aria-label="Hiqe">×</button></div>
+    <input type="number" inputmode="numeric" min="1" data-k="qty" value="${it.qty}" aria-label="Sasia"></div>
     <div class="dims lab"><span>Gjatësia cm</span><span>Gjerësia cm</span><span>Lartësia cm</span><span>${P[it.preset]?.perM?"kg/metër":"kg/copë"}</span></div>
     <div class="dims"><input type="number" inputmode="decimal" data-k="l" value="${it.l||""}" placeholder="Gjatësia cm"><input type="number" inputmode="decimal" data-k="w" value="${it.w||""}" placeholder="Gjerësia cm"><input type="number" inputmode="decimal" data-k="h" value="${it.h||""}" placeholder="Lartësia cm"><input type="number" inputmode="decimal" data-k="kg" value="${it.kg||""}" placeholder="kg/copë"></div>
     <div class="mute linekg" style="font-size:13px;margin-top:4px"></div>
     <div class="fitw" style="margin-top:6px" hidden><span class="pill warn">Kjo copë nuk hyn në furgon</span></div>
     ${P[it.preset]?.perM?kitchenApps(items):""}
-  </div>`).join("")}</div>
+  </details>`).join("")}</div>
   <button class="btn ghost small" id="addItem" style="margin-top:10px">+ Shto mall</button>
   <div class="totals" id="totals"></div>`;
 }
+const ITEM_CLOSED=new WeakSet();
+function itemLabel(it){const P=S().presets,nm=it.preset==="x"?"Tjetër":(P[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,"");
+  const d=it.l&&it.w&&it.h?` · ${it.l}×${it.w}×${it.h} cm`:"";return `${nm}${perM(it)?` · ${num1(units(it))} m`:` · ${+it.qty||0} copë`}${d}`}
 function wireItems(state,rerender,onChange=()=>{}){
   const box=$("#items");
+  box.addEventListener("toggle",e=>{const el=e.target;if(!el.matches?.("details.item"))return;const it=state.items[+el.dataset.i];if(it){if(el.open)ITEM_CLOSED.delete(it);else ITEM_CLOSED.add(it)}},true);
   const upd=()=>{const g=goods(state.items);
-    box.querySelectorAll(".item").forEach((el,i)=>{const it=state.items[i];const lk=el.querySelector(".linekg");if(lk&&it){const g1=goods([it]);lk.textContent=g1.kg?`Pesha e këtij rreshti: ${g1.est?"≈ ":""}${g1.kg.toLocaleString("de-DE")} kg`+(+it.kg>0?(perM(it)?` (${num1(units(it))} m × ${it.kg} kg)`:+it.qty>1?` (${it.qty} × ${it.kg} kg)`:""):" (e vlerësuar nga madhësia)"):""}el.querySelector(".fitw").hidden=!(it&&it.l&&it.w&&it.h&&!S().vans.some(v=>fitsPiece(it,v)))});$("#totals").innerHTML=`<div><b>${num1(g.m3)} m³</b><span>Vëllimi</span></div><div><b>${g.est?"≈ ":""}${g.kg} kg</b><span>${g.est?"Pesha e vlerësuar":"Pesha"}</span></div><div><b>${g.pcs}</b><span>Copë</span></div>`;onChange()};
+    box.querySelectorAll(".item").forEach((el,i)=>{const it=state.items[i];const lb=el.querySelector(".ilab");if(lb&&it)lb.textContent=itemLabel(it);const lk=el.querySelector(".linekg");if(lk&&it){const g1=goods([it]);lk.textContent=g1.kg?`Pesha e këtij rreshti: ${g1.est?"≈ ":""}${g1.kg.toLocaleString("de-DE")} kg`+(+it.kg>0?(perM(it)?` (${num1(units(it))} m × ${it.kg} kg)`:+it.qty>1?` (${it.qty} × ${it.kg} kg)`:""):" (e vlerësuar nga madhësia)"):""}el.querySelector(".fitw").hidden=!(it&&it.l&&it.w&&it.h&&!S().vans.some(v=>fitsPiece(it,v)))});$("#totals").innerHTML=`<div><b>${num1(g.m3)} m³</b><span>Vëllimi</span></div><div><b>${g.est?"≈ ":""}${g.kg} kg</b><span>${g.est?"Pesha e vlerësuar":"Pesha"}</span></div><div><b>${g.pcs}</b><span>Copë</span></div>`;onChange()};
   box.addEventListener("input",e=>{const el=e.target;
     if(el.dataset.app!==undefined){const j=+el.dataset.app;if(el.checked){const p=S().presets[j];state.items.push({preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg})}else{const x=state.items.findIndex(it=>it.preset===j);if(x>=0)state.items.splice(x,1)}rerender();return}
     const i=+el.closest(".item").dataset.i,k=el.dataset.k,it=state.items[i];
     if(k==="preset"){if(el.value==="x"){it.preset="x"}else{const p=S().presets[+el.value];Object.assign(it,{preset:+el.value,l:p.l,w:p.w,h:p.h,kg:p.kg})}rerender();return}
     it[k]=parseFloat(String(el.value).replace(",","."))||0;upd()});
-  box.addEventListener("click",e=>{const d=e.target.dataset.del;if(d!==undefined){state.items.splice(+d,1);if(!state.items.length)state.items.push(newItem());rerender()}});
-  $("#addItem").onclick=()=>{state.items.push(newItem());rerender()};
+  box.addEventListener("click",e=>{const d=e.target.dataset.del;if(d!==undefined){e.preventDefault();state.items.splice(+d,1);if(!state.items.length)state.items.push(newItem());rerender()}});
+  $("#addItem").onclick=()=>{state.items.forEach(it=>ITEM_CLOSED.add(it));state.items.push(newItem());rerender()};
   upd();
 }
 function newItem(j=1){const p=S().presets[j];return {preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg}}
@@ -1544,15 +1553,15 @@ let pendingRender=false;
 function softRender(){const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=true;return}render();toast("U përditësua nga telefoni tjetër")}
 document.addEventListener("focusout",()=>{if(pendingRender){setTimeout(()=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=false;render()}},300)}});
 function syncCard(){
-  if(!FB_CONFIG)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">Së shpejti: porositë, udhëtimet dhe veturat do të shihen njësoj në telefonin tënd, të Marufit dhe të Krenarit.</p></div>`;
-  if(!SYNC.fs)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0">${esc(SYNC.err||"Duke u lidhur…")}</p></div>`;
-  if(!SYNC.user)return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p class="mute" style="margin:0 0 6px">Hyr një herë në këtë telefon. Pastaj të gjitha porositë, udhëtimet dhe veturat ndahen me të tjerët.</p>
+  if(!FB_CONFIG)return `<div class="card"><h2>Account</h2><p class="mute" style="margin:0">Së shpejti: porositë, udhëtimet dhe veturat do të shihen njësoj në telefonin tënd, të Marufit dhe të Krenarit.</p></div>`;
+  if(!SYNC.fs)return `<div class="card"><h2>Account</h2><p class="mute" style="margin:0">${esc(SYNC.err||"Duke u lidhur…")}</p></div>`;
+  if(!SYNC.user)return `<div class="card"><h2>Account</h2><p class="mute" style="margin:0 0 6px">Hyr një herë në këtë telefon. Pastaj të gjitha porositë, udhëtimet dhe veturat ndahen me të tjerët.</p>
     <label for="sy-email">Email</label><input id="sy-email" type="email" autocomplete="username">
     <label for="sy-pass">Fjalëkalimi</label><input id="sy-pass" type="password" autocomplete="current-password">
     <button class="btn full" id="sy-login" type="button" style="margin-top:8px">Hyr</button>
     <div class="row" style="margin-top:6px"><button class="btn ghost small" id="sy-new" type="button">Herën e parë: krijo fjalëkalimin</button><button class="btn ghost small" id="sy-reset" type="button">Harrova fjalëkalimin</button></div>
     <p class="mute" style="margin:6px 0 0">Vetëm Phis, Maruf dhe Krenar kanë leje (me email-at e tyre).</p>${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}</div>`;
-  return `<div class="card"><h2>🔄 Sinkronizimi mes telefonave</h2><p style="margin:0">✓ I lidhur si <b>${esc(SYNC.user.email)}</b></p>
+  return `<div class="card"><h2>Account</h2><p style="margin:0">✓ I lidhur si <b>${esc(SYNC.user.email)}</b></p>
     <p class="mute" style="margin:4px 0 8px">${SYNC.last?"Përditësuar "+SYNC.last.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"Duke sinkronizuar…"}${navigator.onLine===false?" · pa internet, dërgohet kur kthehet":""}</p>
     ${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}<button class="btn ghost small" id="sy-out" type="button">Dil</button></div>`;
 }
@@ -1595,7 +1604,7 @@ async function syncPrices(manual){
 }
 function fmtDay(d){const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||"");return m?`${m[3]}.${m[2]}.${m[1]}`:(d||"")}
 function fuelBarInner(){const s=S(),on=navigator.onLine!==false;
-  return `<div style="flex:1;min-width:0"><div>⛽ Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
+  return `<div style="flex:1;min-width:0"><div>Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
 function fuelBar(){return `<div class="card" id="fuelbar" style="display:flex;gap:10px;align-items:center;padding:10px 14px">${fuelBarInner()}</div>`}
 function wireFuelBar(){const b=$("#fuel-sync");if(b)b.onclick=()=>syncPrices(true)}
 function refreshFuelBar(){const el=$("#fuelbar");if(el){el.innerHTML=fuelBarInner();wireFuelBar()}}
