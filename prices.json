@@ -6,16 +6,41 @@
     "RS": 1.7,
     "HR": 1.974,
     "SI": 1.904,
-    "AT": 2.035,
+    "AT": 1.962,
     "DE": 2.215,
     "HU": 1.922
   },
   "sources": {
     "note": "Çmimet fillestare të vendosura me dorë; përditësohen çdo javë automatikisht.",
-    "AT": "EU Weekly Oil Bulletin 2026-11-18",
+    "AT": "E-Control (pika reale) 2026-11-18",
     "HR": "EU Weekly Oil Bulletin 2026-11-18",
     "DE": "EU Weekly Oil Bulletin 2026-11-18",
     "HU": "EU Weekly Oil Bulletin 2026-11-18",
     "SI": "EU Weekly Oil Bulletin 2026-11-18"
+  },
+  "stations": {
+    "AT": [
+      {
+        "name": "Turmöl Quick",
+        "address": "Eichfeld 64A",
+        "city": "Mureck",
+        "price": 1.962,
+        "near": "Spielfeld"
+      },
+      {
+        "name": "M3 Energy",
+        "address": "Karlauerstraße 42",
+        "city": "Graz",
+        "price": 1.978,
+        "near": "Graz"
+      },
+      {
+        "name": "Wildenhofer Diesel Tankstelle",
+        "address": "Gniglerstraße 5-7",
+        "city": "Salzburg",
+        "price": 2.026,
+        "near": "Salzburg"
+      }
+    ]
   }
 }
