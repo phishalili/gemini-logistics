@@ -159,6 +159,116 @@ def serbia_price():
     raise RuntimeError("serbia price not found")
 
 
+# ---- Pikat e karburantit përgjatë korridorit Kosovë → Gjermani (për çdo udhëtim) ----
+import math, time
+def _km(a, b):
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 6371 * 2 * math.asin(math.sqrt(h))
+
+HR_POINTS = {"Lipovac (kufiri)": (45.05, 19.08), "Slavonski Brod": (45.16, 18.02), "Nova Gradiška": (45.25, 17.38),
+             "Kutina": (45.48, 16.78), "Zagreb": (45.80, 15.98), "Bregana": (45.84, 15.69), "Krapina / Macelj": (46.16, 15.87)}
+SI_POINTS = {"Obrežje": (45.85, 15.69), "Novo Mesto": (45.80, 15.17), "Ljubljana": (46.05, 14.50), "Kranj": (46.24, 14.36),
+             "Jesenice / Karavanke": (46.44, 14.06), "Ptuj": (46.42, 15.87), "Maribor": (46.55, 15.65), "Šentilj": (46.68, 15.65)}
+AT_ROUTE = {"Spielfeld": (46.708, 15.633), "Graz": (47.070, 15.440), "Liezen": (47.57, 14.24), "Wels": (48.16, 14.03),
+            "Villach": (46.61, 13.85), "Salzburg": (47.810, 13.040)}
+DE_ROUTE = {"Rosenheim": (47.856, 12.128), "München": (48.137, 11.575), "Augsburg": (48.371, 10.898), "Ulm": (48.401, 9.987),
+            "Stuttgart": (48.776, 9.183), "Karlsruhe": (49.007, 8.404), "Mannheim": (49.487, 8.466), "Frankfurt": (50.110, 8.682),
+            "Würzburg": (49.792, 9.953), "Nürnberg": (49.452, 11.077), "Regensburg": (49.013, 12.102), "Saarbrücken": (49.240, 6.997),
+            "Köln": (50.938, 6.960), "Düsseldorf": (51.227, 6.773), "Dortmund": (51.514, 7.468), "Kassel": (51.312, 9.479),
+            "Hannover": (52.375, 9.732), "Hamburg": (53.551, 9.993), "Bremen": (53.079, 8.801), "Berlin": (52.520, 13.405),
+            "Leipzig": (51.340, 12.375), "Dresden": (51.050, 13.738)}
+
+def _best(lst, n=2):
+    lst = [x for x in lst if SANE[0] <= x["price"] <= SANE[1]]
+    return sorted(lst, key=lambda x: x["price"])[:n]
+
+def route_hr():
+    j = json.loads(get("https://mzoe-gor.hr/data.json"))
+    vrsta = {g["id"]: g.get("vrsta_goriva_id") for g in j.get("gorivos", [])}
+    comp = {o["id"]: o.get("naziv", "") for o in j.get("obvezniks", [])}
+    out = []
+    for town, pt in HR_POINTS.items():
+        near = []
+        for st in j.get("postajas", []):
+            try:
+                a, b = float(st["long"]), float(st["lat"])   # në këtë burim lat/long janë të ndërruara
+                la, lo = (a, b) if a > b else (b, a)
+            except Exception:
+                continue
+            if _km(pt, (la, lo)) > 8:
+                continue
+            pr = [c["cijena"] for c in st.get("cjenici", []) if vrsta.get(c.get("gorivo_id")) == 8 and c.get("cijena")] or \
+                 [c["cijena"] for c in st.get("cjenici", []) if vrsta.get(c.get("gorivo_id")) == 7 and c.get("cijena")]
+            if pr:
+                brand = re.sub(r"\s*d\.o\.o\.?|\s*d\.d\.?", "", comp.get(st.get("obveznik_id"), "")).strip()
+                near.append({"c": "HR", "name": (brand + " " + st.get("naziv", "")).strip(), "address": st.get("adresa", ""),
+                             "city": st.get("mjesto", ""), "lat": round(la, 5), "lng": round(lo, 5), "price": round(float(min(pr)), 3), "near": town})
+        out += _best(near)
+    return out
+
+def route_si():
+    out = []
+    for town, (la, lo) in SI_POINTS.items():
+        try:
+            d = json.loads(get(f"https://goriva.si/api/v1/search/?position={la},{lo}&radius=8000"))
+            near = [{"c": "SI", "name": x.get("name", "").title(), "address": (x.get("address") or "").title(), "city": "",
+                     "lat": x.get("lat"), "lng": x.get("lng"), "price": float(x["prices"]["dizel"]), "near": town}
+                    for x in d.get("results", []) if (x.get("prices") or {}).get("dizel")]
+            out += _best(near)
+        except Exception as e:
+            print("SI", town, "failed:", e, file=sys.stderr)
+        time.sleep(0.5)
+    return out
+
+def route_at():
+    out = []
+    for town, (la, lo) in AT_ROUTE.items():
+        try:
+            data = json.loads(get(f"https://api.e-control.at/sprit/1.0/search/gas-stations/by-address?latitude={la}&longitude={lo}&fuelType=DIE&includeClosed=false"))
+            near = []
+            for st in data:
+                pr = [p.get("amount") for p in st.get("prices", []) if p.get("fuelType") == "DIE" and p.get("amount")]
+                if pr:
+                    loc = st.get("location", {})
+                    near.append({"c": "AT", "name": st.get("name", ""), "address": loc.get("address", ""), "city": loc.get("city", ""),
+                                 "lat": loc.get("latitude", la), "lng": loc.get("longitude", lo), "price": round(float(pr[0]), 3), "near": town})
+            out += _best(near)
+        except Exception as e:
+            print("AT", town, "failed:", e, file=sys.stderr)
+        time.sleep(0.5)
+    return out
+
+def route_de():
+    """Gjermania: lista publike e clever-tanken.de (çmimet zyrtare MTS-K), pa regjistrim."""
+    import html as H
+    out = []
+    for town, (la, lo) in DE_ROUTE.items():
+        try:
+            d = get(f"https://www.clever-tanken.de/tankstelle_liste?lat={la}&lon={lo}&ort={urllib.request.quote(town)}&spritsorte=3&r=8")
+            near = []
+            for m in re.finditer(r"generateDygraph\(event, '\d+', 'hover', '((?:[^'\\]|\\.)*)', '((?:[^'\\]|\\.)*)' \)\">(.{0,600}?)<sup>(\d)</sup>", d, re.S):
+                pm = re.search(r"(\d)\.(\d\d)\s*$", re.sub(r"<[^>]+>", " ", m.group(3)).strip())
+                if not pm:
+                    continue
+                near.append({"c": "DE", "name": H.unescape(m.group(1)).replace("\\'", "'").title(), "address": H.unescape(m.group(2)).replace("\\'", "'"),
+                             "city": town, "lat": la, "lng": lo, "price": float(f"{pm.group(1)}.{pm.group(2)}{m.group(4)}"), "near": town})
+            out += _best(near)
+        except Exception as e:
+            print("DE", town, "failed:", e, file=sys.stderr)
+        time.sleep(1)
+    return out
+
+def route_stations():
+    out = []
+    for name, fn in (("HR", route_hr), ("SI", route_si), ("AT", route_at), ("DE", route_de)):
+        try:
+            r = fn(); print("route", name, len(r)); out += r
+        except Exception as e:
+            print("route", name, "failed:", e, file=sys.stderr)
+    return out
+
+
 def main():
     try:
         cur = json.load(open(OUT))
@@ -190,8 +300,11 @@ def main():
             stations[code] = sorted(st, key=lambda x: x["price"])
             diesel[code] = stations[code][0]["price"]   # pika më e lirë përgjatë rrugës
             src[code] = ("E-Control" if code == "AT" else "Tankerkönig") + " (pika reale) " + today
-    changed = diesel != cur.get("diesel") or stations != cur.get("stations", {})
-    out = {"updated": today if changed else cur.get("updated", today), "checked": today, "diesel": diesel, "sources": src, "stations": stations}
+    route = route_stations()
+    have = {x["c"] for x in route}
+    route += [x for x in cur.get("route", []) if x.get("c") not in have]   # vendi që dështoi mban listën e djeshme
+    changed = diesel != cur.get("diesel") or stations != cur.get("stations", {}) or route != cur.get("route", [])
+    out = {"updated": today if changed else cur.get("updated", today), "checked": today, "diesel": diesel, "sources": src, "stations": stations, "route": route}
     json.dump(out, open(OUT, "w"), indent=2, ensure_ascii=False)
     print(json.dumps(out, indent=2))
 
