@@ -8,7 +8,24 @@
     "SI": 1.798,
     "AT": 1.962,
     "DE": 2.069,
-    "HU": 1.922
+    "HU": 1.922,
+    "BE": 2.279,
+    "BG": 1.856,
+    "CZ": 1.818,
+    "DK": 2.368,
+    "FI": 2.564,
+    "FR": 2.123,
+    "GR": 2.038,
+    "IE": 2.114,
+    "IT": 2.21,
+    "LU": 1.987,
+    "NL": 2.294,
+    "PL": 1.676,
+    "PT": 2.078,
+    "RO": 2.004,
+    "SK": 1.893,
+    "ES": 1.837,
+    "SE": 1.91
   },
   "sources": {
     "note": "Çmimet fillestare të vendosura me dorë; përditësohen çdo javë automatikisht.",
@@ -18,7 +35,24 @@
     "HU": "EU Weekly Oil Bulletin 2026-11-18",
     "SI": "goriva.si (mediana e pikave në rrugë) 2026-11-18",
     "XK": "naftasot.com (mesatarja e kompanive) 2026-11-18",
-    "RS": "Çmimi maksimal shtetëror (danas.rs) 2026-11-18"
+    "RS": "Çmimi maksimal shtetëror (danas.rs) 2026-11-18",
+    "BE": "EU Weekly Oil Bulletin 2026-11-18",
+    "BG": "EU Weekly Oil Bulletin 2026-11-18",
+    "CZ": "EU Weekly Oil Bulletin 2026-11-18",
+    "DK": "EU Weekly Oil Bulletin 2026-11-18",
+    "FI": "EU Weekly Oil Bulletin 2026-11-18",
+    "FR": "EU Weekly Oil Bulletin 2026-11-18",
+    "GR": "EU Weekly Oil Bulletin 2026-11-18",
+    "IE": "EU Weekly Oil Bulletin 2026-11-18",
+    "IT": "EU Weekly Oil Bulletin 2026-11-18",
+    "LU": "EU Weekly Oil Bulletin 2026-11-18",
+    "NL": "EU Weekly Oil Bulletin 2026-11-18",
+    "PL": "EU Weekly Oil Bulletin 2026-11-18",
+    "PT": "EU Weekly Oil Bulletin 2026-11-18",
+    "RO": "EU Weekly Oil Bulletin 2026-11-18",
+    "SK": "EU Weekly Oil Bulletin 2026-11-18",
+    "ES": "EU Weekly Oil Bulletin 2026-11-18",
+    "SE": "EU Weekly Oil Bulletin 2026-11-18"
   },
   "stations": {
     "AT": [
@@ -373,7 +407,7 @@
       "city": "Wels",
       "lat": 48.165209,
       "lng": 14.043058,
-      "price": 2.01,
+      "price": 2.009,
       "near": "Wels"
     },
     {
@@ -383,7 +417,7 @@
       "city": "Wels",
       "lat": 48.15888,
       "lng": 13.98018,
-      "price": 2.01,
+      "price": 2.009,
       "near": "Wels"
     },
     {
@@ -418,13 +452,153 @@
     },
     {
       "c": "AT",
-      "name": "JET TANKSTELLE",
-      "address": "INNSBRUCKER BUNDESSTRASSE 65",
-      "city": "SALZBURG",
-      "lat": 47.801351,
-      "lng": 13.01488,
-      "price": 2.037,
+      "name": "dts Trading  GmbH",
+      "address": "Gnigler Strasse 52",
+      "city": "Salzburg",
+      "lat": 47.816757,
+      "lng": 13.059568,
+      "price": 2.039,
       "near": "Salzburg"
+    },
+    {
+      "c": "AT",
+      "name": "AVANTI - Linz Unionstraße 71a",
+      "address": "Unionstrasse 71a",
+      "city": "Linz",
+      "lat": 48.28312,
+      "lng": 14.28828,
+      "price": 2.014,
+      "near": "Linz"
+    },
+    {
+      "c": "AT",
+      "name": "PINK - so pink, so clever",
+      "address": "Pummererstraße 22",
+      "city": "Linz",
+      "lat": 48.3070145,
+      "lng": 14.3245113,
+      "price": 2.017,
+      "near": "Linz"
+    },
+    {
+      "c": "AT",
+      "name": "NNB BRUNNENTANKSTELLE",
+      "address": "Brunnengasse 4",
+      "city": "WIEN",
+      "lat": 48.20462,
+      "lng": 16.334813,
+      "price": 2.009,
+      "near": "Wien"
+    },
+    {
+      "c": "AT",
+      "name": "Turmöl Quick",
+      "address": "Währinger Gürtel 116",
+      "city": "Wien",
+      "lat": 48.2266238,
+      "lng": 16.3504673,
+      "price": 2.034,
+      "near": "Wien"
+    },
+    {
+      "c": "AT",
+      "name": "Diskont Tankstelle",
+      "address": "Hallerstrasse 93 (am HOFER Parkplatz)",
+      "city": "Innsbruck",
+      "lat": 47.27889,
+      "lng": 11.42069,
+      "price": 2.019,
+      "near": "Innsbruck"
+    },
+    {
+      "c": "AT",
+      "name": "DISK",
+      "address": "Andechsstraße (Langer Weg 8)",
+      "city": "Innsbruck",
+      "lat": 47.265578,
+      "lng": 11.425008,
+      "price": 2.039,
+      "near": "Innsbruck"
+    },
+    {
+      "c": "AT",
+      "name": "AVANTI - Kufstein Schubertstraße 20",
+      "address": "Schubertstrasse 20",
+      "city": "Kufstein",
+      "lat": 47.58636,
+      "lng": 12.16222,
+      "price": 2.033,
+      "near": "Kufstein"
+    },
+    {
+      "c": "AT",
+      "name": "INNTALER Logistik Park GmbH",
+      "address": "Endach 34",
+      "city": "Kufstein",
+      "lat": 47.565769,
+      "lng": 12.150235,
+      "price": 2.038,
+      "near": "Kufstein"
+    },
+    {
+      "c": "AT",
+      "name": "SOCAR Klagenfurt-St.Veiter-Straße",
+      "address": "St. Veiter Straße 94",
+      "city": "Klagenfurt",
+      "lat": 46.6359198,
+      "lng": 14.3126125,
+      "price": 2.014,
+      "near": "Klagenfurt"
+    },
+    {
+      "c": "AT",
+      "name": "Diskont Tankstelle",
+      "address": "Feldkirchner Strasse 221 (am HOFER Parkplatz)",
+      "city": "Klagenfurt",
+      "lat": 46.64932,
+      "lng": 14.28436,
+      "price": 2.014,
+      "near": "Klagenfurt"
+    },
+    {
+      "c": "AT",
+      "name": "BayWa Tankstelle",
+      "address": "Scheibenstraße 2",
+      "city": "Lauterach",
+      "lat": 47.46296,
+      "lng": 9.72747,
+      "price": 2.038,
+      "near": "Bregenz"
+    },
+    {
+      "c": "AT",
+      "name": "www.voegel-trans.at",
+      "address": "Säge 156",
+      "city": "Doren",
+      "lat": 47.49052893,
+      "lng": 9.85336304,
+      "price": 2.04,
+      "near": "Bregenz"
+    },
+    {
+      "c": "AT",
+      "name": "ENI - Oberscheider Car Wash St. Pölten ",
+      "address": "Mariazeller Straße 180",
+      "city": "St. Pölten",
+      "lat": 48.179623751030626,
+      "lng": 15.61437453087248,
+      "price": 1.999,
+      "near": "St. Pölten"
+    },
+    {
+      "c": "AT",
+      "name": "AVANTI - Sankt Pölten Mariazeller Straße 95",
+      "address": "Mariazeller Strasse 95",
+      "city": "Sankt Poelten",
+      "lat": 48.18769,
+      "lng": 15.61753,
+      "price": 2.001,
+      "near": "St. Pölten"
     },
     {
       "c": "DE",
@@ -858,13 +1032,453 @@
     },
     {
       "c": "DE",
-      "name": "Star",
-      "address": "Dohnaer Str. 184",
+      "name": "Hem",
+      "address": "Hansastr. 72",
       "city": "Dresden",
       "lat": 51.05,
       "lng": 13.738,
       "price": 2.089,
       "near": "Dresden"
+    },
+    {
+      "c": "DE",
+      "name": "Avia Xpress",
+      "address": "Am Roten Brühl 2",
+      "city": "Freiburg",
+      "lat": 47.999,
+      "lng": 7.842,
+      "price": 2.099,
+      "near": "Freiburg"
+    },
+    {
+      "c": "DE",
+      "name": "Shell",
+      "address": "Schwarzwaldstr. 42",
+      "city": "Freiburg",
+      "lat": 47.999,
+      "lng": 7.842,
+      "price": 2.109,
+      "near": "Freiburg"
+    },
+    {
+      "c": "DE",
+      "name": "Emova",
+      "address": "Gut-Dämme-Str. 22",
+      "city": "Aachen",
+      "lat": 50.776,
+      "lng": 6.084,
+      "price": 2.079,
+      "near": "Aachen"
+    },
+    {
+      "c": "DE",
+      "name": "Pm",
+      "address": "Stolberger Str. 46",
+      "city": "Aachen",
+      "lat": 50.776,
+      "lng": 6.084,
+      "price": 2.079,
+      "near": "Aachen"
+    },
+    {
+      "c": "DE",
+      "name": "Orlen",
+      "address": "Kaiserstr. 30 - 31",
+      "city": "Trier",
+      "lat": 49.75,
+      "lng": 6.637,
+      "price": 2.119,
+      "near": "Trier"
+    },
+    {
+      "c": "DE",
+      "name": "Aral",
+      "address": "Ostallee 22",
+      "city": "Trier",
+      "lat": 49.75,
+      "lng": 6.637,
+      "price": 2.149,
+      "near": "Trier"
+    },
+    {
+      "c": "DE",
+      "name": "Globus Markthalle",
+      "address": "Merkurstr. 57",
+      "city": "Kaiserslautern",
+      "lat": 49.444,
+      "lng": 7.769,
+      "price": 2.058,
+      "near": "Kaiserslautern"
+    },
+    {
+      "c": "DE",
+      "name": "Winkler 24H",
+      "address": "Mainzerstr. 110",
+      "city": "Kaiserslautern",
+      "lat": 49.444,
+      "lng": 7.769,
+      "price": 2.059,
+      "near": "Kaiserslautern"
+    },
+    {
+      "c": "DE",
+      "name": "Ed",
+      "address": "Industriestr. 1",
+      "city": "Koblenz",
+      "lat": 50.356,
+      "lng": 7.594,
+      "price": 2.049,
+      "near": "Koblenz"
+    },
+    {
+      "c": "DE",
+      "name": "Oil!",
+      "address": "Auf Der Lay 2",
+      "city": "Koblenz",
+      "lat": 50.356,
+      "lng": 7.594,
+      "price": 2.049,
+      "near": "Koblenz"
+    },
+    {
+      "c": "DE",
+      "name": "Star",
+      "address": "Westfalenstr. 186",
+      "city": "Münster",
+      "lat": 51.961,
+      "lng": 7.626,
+      "price": 2.089,
+      "near": "Münster"
+    },
+    {
+      "c": "DE",
+      "name": "Westfalen",
+      "address": "Westfalenstr. 124-126",
+      "city": "Münster",
+      "lat": 51.961,
+      "lng": 7.626,
+      "price": 2.099,
+      "near": "Münster"
+    },
+    {
+      "c": "DE",
+      "name": "Jet",
+      "address": "Herforder Str. 601",
+      "city": "Bielefeld",
+      "lat": 52.03,
+      "lng": 8.532,
+      "price": 2.039,
+      "near": "Bielefeld"
+    },
+    {
+      "c": "DE",
+      "name": "Markant",
+      "address": "Herforder Str. 110-114",
+      "city": "Bielefeld",
+      "lat": 52.03,
+      "lng": 8.532,
+      "price": 2.039,
+      "near": "Bielefeld"
+    },
+    {
+      "c": "DE",
+      "name": "Jet",
+      "address": "Bremer Str. 100",
+      "city": "Osnabrück",
+      "lat": 52.279,
+      "lng": 8.047,
+      "price": 2.059,
+      "near": "Osnabrück"
+    },
+    {
+      "c": "DE",
+      "name": "Jet",
+      "address": "Hannoversche Str. 25-27",
+      "city": "Osnabrück",
+      "lat": 52.279,
+      "lng": 8.047,
+      "price": 2.059,
+      "near": "Osnabrück"
+    },
+    {
+      "c": "DE",
+      "name": "Star",
+      "address": "Maschmühlenweg 50 a",
+      "city": "Göttingen",
+      "lat": 51.541,
+      "lng": 9.916,
+      "price": 2.009,
+      "near": "Göttingen"
+    },
+    {
+      "c": "DE",
+      "name": "Raiffeisen",
+      "address": "Lange Str. 20",
+      "city": "Göttingen",
+      "lat": 51.541,
+      "lng": 9.916,
+      "price": 2.009,
+      "near": "Göttingen"
+    },
+    {
+      "c": "DE",
+      "name": "Globus Markthalle",
+      "address": "Weimarische Str. 117",
+      "city": "Erfurt",
+      "lat": 50.978,
+      "lng": 11.029,
+      "price": 2.119,
+      "near": "Erfurt"
+    },
+    {
+      "c": "DE",
+      "name": "Hem",
+      "address": "Weimarische Str. 142",
+      "city": "Erfurt",
+      "lat": 50.978,
+      "lng": 11.029,
+      "price": 2.119,
+      "near": "Erfurt"
+    },
+    {
+      "c": "DE",
+      "name": "Shell",
+      "address": "Sperrwies 1",
+      "city": "Passau",
+      "lat": 48.567,
+      "lng": 13.431,
+      "price": 2.099,
+      "near": "Passau"
+    },
+    {
+      "c": "DE",
+      "name": "Shell",
+      "address": "Nikolastr. 4",
+      "city": "Passau",
+      "lat": 48.567,
+      "lng": 13.431,
+      "price": 2.099,
+      "near": "Passau"
+    },
+    {
+      "c": "DE",
+      "name": "Orlen Express",
+      "address": "Lilienthalstr. 54",
+      "city": "Ingolstadt",
+      "lat": 48.766,
+      "lng": 11.426,
+      "price": 2.069,
+      "near": "Ingolstadt"
+    },
+    {
+      "c": "DE",
+      "name": "Edeka Braun Tankstelle",
+      "address": "Lena-Christ-Str. 1",
+      "city": "Ingolstadt",
+      "lat": 48.766,
+      "lng": 11.426,
+      "price": 2.069,
+      "near": "Ingolstadt"
+    },
+    {
+      "c": "DE",
+      "name": "Tankstelle",
+      "address": "Ursulasrieder Str. 6",
+      "city": "Kempten",
+      "lat": 47.727,
+      "lng": 10.315,
+      "price": 2.139,
+      "near": "Kempten"
+    },
+    {
+      "c": "DE",
+      "name": "Gerhard Leger Gmbh - Freie Tankstelle",
+      "address": "Daimlerstr. 11",
+      "city": "Kempten",
+      "lat": 47.727,
+      "lng": 10.315,
+      "price": 2.139,
+      "near": "Kempten"
+    },
+    {
+      "c": "DE",
+      "name": "Esso",
+      "address": "Meersburger Str. 1",
+      "city": "Konstanz",
+      "lat": 47.66,
+      "lng": 9.175,
+      "price": 2.179,
+      "near": "Konstanz"
+    },
+    {
+      "c": "DE",
+      "name": "Burger 24H",
+      "address": "Konstanzer Str. 24",
+      "city": "Konstanz",
+      "lat": 47.66,
+      "lng": 9.175,
+      "price": 2.189,
+      "near": "Konstanz"
+    },
+    {
+      "c": "DE",
+      "name": "Avia Xpress",
+      "address": "Schloßstr. 2-4",
+      "city": "Heilbronn",
+      "lat": 49.142,
+      "lng": 9.219,
+      "price": 2.039,
+      "near": "Heilbronn"
+    },
+    {
+      "c": "DE",
+      "name": "Lenz Energie",
+      "address": "Eppinger Str. 28",
+      "city": "Heilbronn",
+      "lat": 49.142,
+      "lng": 9.219,
+      "price": 2.039,
+      "near": "Heilbronn"
+    },
+    {
+      "c": "DE",
+      "name": "Jet",
+      "address": "Okenstr. 76",
+      "city": "Offenburg",
+      "lat": 48.473,
+      "lng": 7.944,
+      "price": 2.159,
+      "near": "Offenburg"
+    },
+    {
+      "c": "DE",
+      "name": "Sb Tankstelle",
+      "address": "Schutterwälder Str. 5",
+      "city": "Offenburg",
+      "lat": 48.473,
+      "lng": 7.944,
+      "price": 2.159,
+      "near": "Offenburg"
+    },
+    {
+      "c": "DE",
+      "name": "Globus Baumarkt Betriebsstätte Fulda Petersberg",
+      "address": "Justus-Liebig-Str. 9",
+      "city": "Fulda",
+      "lat": 50.555,
+      "lng": 9.68,
+      "price": 2.049,
+      "near": "Fulda"
+    },
+    {
+      "c": "DE",
+      "name": "Raiffeisen",
+      "address": "Petersberger Str.  42",
+      "city": "Fulda",
+      "lat": 50.555,
+      "lng": 9.68,
+      "price": 2.059,
+      "near": "Fulda"
+    },
+    {
+      "c": "DE",
+      "name": "Greenline",
+      "address": "Olvenstedter Graseweg 37",
+      "city": "Magdeburg",
+      "lat": 52.121,
+      "lng": 11.628,
+      "price": 2.048,
+      "near": "Magdeburg"
+    },
+    {
+      "c": "DE",
+      "name": "M1",
+      "address": "Saalestr. 5",
+      "city": "Magdeburg",
+      "lat": 52.121,
+      "lng": 11.628,
+      "price": 2.049,
+      "near": "Magdeburg"
+    },
+    {
+      "c": "DE",
+      "name": "Famila",
+      "address": "Grot Steenbusch 35",
+      "city": "Kiel",
+      "lat": 54.323,
+      "lng": 10.123,
+      "price": 2.129,
+      "near": "Kiel"
+    },
+    {
+      "c": "DE",
+      "name": "Team",
+      "address": "Gutenbergstr. 15 - 19",
+      "city": "Kiel",
+      "lat": 54.323,
+      "lng": 10.123,
+      "price": 2.139,
+      "near": "Kiel"
+    },
+    {
+      "c": "DE",
+      "name": "Globus Markthalle",
+      "address": "Globusring 1",
+      "city": "Rostock",
+      "lat": 54.092,
+      "lng": 12.099,
+      "price": 1.978,
+      "near": "Rostock"
+    },
+    {
+      "c": "DE",
+      "name": "Avia",
+      "address": "Ahornring 1 b",
+      "city": "Rostock",
+      "lat": 54.092,
+      "lng": 12.099,
+      "price": 1.979,
+      "near": "Rostock"
+    },
+    {
+      "c": "DE",
+      "name": "Citti",
+      "address": "Herrenholz 14",
+      "city": "Lübeck",
+      "lat": 53.866,
+      "lng": 10.687,
+      "price": 2.049,
+      "near": "Lübeck"
+    },
+    {
+      "c": "DE",
+      "name": "Hoyer",
+      "address": "Ziegelstr. 232",
+      "city": "Lübeck",
+      "lat": 53.866,
+      "lng": 10.687,
+      "price": 2.059,
+      "near": "Lübeck"
+    },
+    {
+      "c": "DE",
+      "name": "Kuster Energy",
+      "address": "Homberger Str. 170",
+      "city": "Duisburg",
+      "lat": 51.435,
+      "lng": 6.762,
+      "price": 2.039,
+      "near": "Duisburg"
+    },
+    {
+      "c": "DE",
+      "name": "Markant",
+      "address": "Asberger Str. 188",
+      "city": "Duisburg",
+      "lat": 51.435,
+      "lng": 6.762,
+      "price": 2.039,
+      "near": "Duisburg"
     }
   ]
 }
