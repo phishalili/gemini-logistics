@@ -220,7 +220,7 @@ function goods(items){
   return {m3:Math.round(m3*100)/100,kg:Math.round(kg),est,pcs};
 }
 // a hyn copa në rimorkio ose në furgon (lejohet rrotullimi)
-// kuzhina: çmimi dhe pesha llogariten për metër gjatësi (vjen në elemente, pra nuk ka kontroll "a hyn")
+// kuzhina: çmimi dhe pesha llogariten për metër gjatësi (vjen në elemente, pra s'ka kontroll "a hyn")
 const perM=it=>it.preset!=="x"&&!!S().presets[it.preset]?.perM;
 const units=it=>(+it.qty||0)*(perM(it)?(+it.l||0)/100:1);
 function fitsPiece(it,v){if(perM(it))return true;const p=[+it.l,+it.w,+it.h].map(x=>(x||0)/100).sort((a,b)=>a-b);
@@ -250,7 +250,7 @@ const netRec=x=>netOf(x.price,x.vatOn!==false);   // porosia/vetura: çmimi pa T
 function priceFromCost(c){const s=S();return Math.max(s.minPrice,Math.ceil(c*(1+s.margin/100)/5)*5)}
 // Mallrat me çmim fiks (p.sh. kuzhina 250 €/m) + mallrat e llogaritur sipas hapësirës/peshës + shtesa për adresën
 const rateOf=it=>it.preset==="x"?0:(+S().presets[it.preset]?.rate||0);
-// Qyteti kryesor = qyteti i porosisë më të madhe që pret (nuk ka qytet fiks). Rruga shtesë llogaritet nga rruga Kosovë ⇄ ai qytet.
+// Qyteti kryesor = qyteti i porosisë më të madhe që pret (s'ka qytet fiks). Rruga shtesë llogaritet nga rruga Kosovë ⇄ ai qytet.
 const sizeOf=g=>{const v=avgVan();return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))};
 function mainOrderOf(list){return list.filter(o=>o.addr&&o.addr.lat).reduce((b,o)=>!b||sizeOf(orderGoods(o))>sizeOf(orderGoods(b))?o:b,null)}
 function mainHub(g,addr,selfId){
@@ -391,7 +391,7 @@ async function fillFuelDrop(p,tr){
   const f=await tripFuel(p,tr);if(!$("#fuelTop"))return;
   const cheapC=f.countries.map(c=>({c,v:S().diesel[c]})).filter(x=>x.v).sort((a,b)=>a.v-b.v)[0];
   $("#fuelTop").innerHTML=f.top.length?`<p class="mute" style="margin:0 0 4px">3 pikat më të lira në rrugën tënde${cheapC?` · vendi më i lirë: ${CNAME[cheapC.c][2]} ${eur(cheapC.v)}`:""}</p>${f.top.map(x=>stRow(x,true)).join("")}`
-    :`<p class="mute">${STN?"Nuk u gjetën pika me çmim afër kësaj rruge.":"Pikat shfaqen pasi app-i lidhet me internetin."}</p>`;
+    :`<p class="mute">${STN?"S'u gjetën pika me çmim afër kësaj rruge.":"Pikat shfaqen pasi app-i lidhet me internetin."}</p>`;
 }
 // Faqja e plotë: të gjitha pikat në rrugë, sipas vendit, me radhën e rrugës
 async function renderFuel(id){
@@ -799,7 +799,7 @@ function renderOrders(){
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
   $("#app").innerHTML=`<div class="card"><h2>Porositë që presin (${waitL.length})</h2>
-  ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende nuk ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
+  ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
   ${waitL.map(row).join("")}</div>
   ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
   ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
@@ -809,7 +809,7 @@ function renderOrders(){
   const waiting=waitL;recommendOrders(waiting);
   if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
 }
-// A është porosia në një udhëtim që ende nuk ka përfunduar?
+// A është porosia në një udhëtim që ende s'ka përfunduar?
 function onTrip(o){const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);return !!t&&t.status!=="done"}
 // "Rekomandohet": për çdo porosi që pret, udhëtimi i ardhshëm ku hyn me më pak rrugë shtesë (dhe ka vend)
 async function recommendOrders(waiting){
@@ -829,7 +829,7 @@ async function recommendOrders(waiting){
   if(TAB!=="orders"||VIEW)return;
   waiting.forEach(o=>{const el=$("#rec-"+o.id),b=best[o.id];if(!el)return;
     el.innerHTML=b?` <span class="pill good">rekomandohet → ${esc(tripLabel(b.t.id))} (+${km(b.ex)})</span> <button class="btn small" type="button" data-recadd="${o.id}" data-trip="${b.t.id}">Shto</button>`
-      :trips.length?` <span class="pill">nuk ka vend ose është larg rrugës së udhëtimeve</span>`:` <span class="pill good">rekomandohet për udhëtimin e radhës</span>`});
+      :trips.length?` <span class="pill">s'ka vend ose është larg rrugës së udhëtimeve</span>`:` <span class="pill good">rekomandohet për udhëtimin e radhës</span>`});
   document.querySelectorAll("[data-recadd]").forEach(btn=>btn.onclick=()=>{assignOrder(btn.dataset.recadd,btn.dataset.trip);toast("U shtua në udhëtim");render()});
 }
 // Plani automatik: radha më e mirë e dorëzimit + radha e ngarkimit (e fundit ngarkohet e para)
@@ -1093,7 +1093,7 @@ function carsCard(){
     <span class="mute">${c.year?esc(c.year)+" · ":""}${carDims(c)}</span><br><span class="mute">${esc(c.owner||"")}${telLink(c)}${c.to?" · për: "+esc(c.to):""}</span></div><div><b>${eur(c.price||0)}</b></div></div>`;
   return `<div class="card"><h2>🚗 Veturat për në shtëpi (${w.length} presin)</h2>
     <p class="mute" style="margin:0 0 6px">Veturat që i marrim në kthim. Te Udhëtimet të tregohet cila është më e leverdishme.</p>
-    ${w.map(row).join("")||`<p class="mute">Nuk ka vetura që presin.</p>`}
+    ${w.map(row).join("")||`<p class="mute">S'ka vetura që presin.</p>`}
     <button class="btn full" onclick="setTab('orders','car:new')">+ Shto veturë</button>
     ${h.length?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Të sjella në shtëpi (${h.length})</summary>${h.map(row).join("")}</details>`:""}</div>`;
 }
@@ -1234,7 +1234,7 @@ function renderTrips(){
     DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>!tr.carIds.includes(x)));tr.carIds.forEach(id=>DB.cars.find(c=>c.id===id).tripId=tr.id);
     DB.trips.unshift(tr);save();newTripSel=null;ntf=null;toast("Udhëtimi u krijua");setTab("trips",tr.id)};
 }
-// Porositë që presin dorëzimin: pa udhëtim, ose në një udhëtim tjetër që nuk ka përfunduar
+// Porositë që presin dorëzimin: pa udhëtim, ose në një udhëtim tjetër që s'ka përfunduar
 function waitingOrders(exceptTrip){
   return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
 }
@@ -1252,7 +1252,7 @@ function driverList(){const n=[...new Set(["Maruf","Krenar",...DB.trips.map(t=>t
 async function renderPick(){
   const box=$("#pickBox");if(!box)return;
   const waiting=waitingOrders(null);
-  if(!waiting.length){box.innerHTML=`<p class="mute">Nuk ka porosi që presin. Shtoji te Çmimi dhe pastaj zgjidhi këtu.</p>`;return}
+  if(!waiting.length){box.innerHTML=`<p class="mute">S'ka porosi që presin. Shtoji te Çmimi dhe pastaj zgjidhi këtu.</p>`;return}
   const mo=mainOrderOf(waiting),dest=ntf.dest||mo?.addr||ntf.start,D=!!(ntf.dest||mo);
   const v=vanById(ntf.van),pk=perKm(v);
   const M=await distMatrix([ntf.start,dest,...waiting.map(o=>o.addr)]);
@@ -1295,7 +1295,7 @@ function carRowHtml(r,extra,v){const f=v?carFit(r.c,v):{ok:true};return `<span s
 async function renderCarPick(){
   const box=$("#carBox");if(!box)return;
   const cars=waitingCars(null);
-  if(!cars.length){box.innerHTML=`<h3>Veturat në kthim</h3><p class="mute">Nuk ka vetura që presin. Shtoji te Porositë → Veturat për në shtëpi.</p>`;return}
+  if(!cars.length){box.innerHTML=`<h3>Veturat në kthim</h3><p class="mute">S'ka vetura që presin. Shtoji te Porositë → Veturat për në shtëpi.</p>`;return}
   const v=vanById(ntf.van),cap=S().carsPerTrip||1;
   const tmp={start:ntf.start,dest:ntf.dest,orderIds:[...(newTripSel||[])],carIds:[]};
   const rows=await rankCars(tmp,cars,v);
@@ -1330,7 +1330,7 @@ async function renderTrip(id){
     ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
   </div>
   <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
-    ${p.stops.length?"":`<p class="mute">Ende nuk ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
+    ${p.stops.length?"":`<p class="mute">Ende s'ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
     ${p.stops.map((o,i)=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}${telLink(o)}${o.status==="delivered"?` <span class="pill good">dorëzuar</span>`:""}<br><span class="mute">${esc(o.addr.label)}</span>
       <ul style="margin:6px 0;padding-left:18px;font-size:14px">${itemLines(o)}</ul>
       <span class="mute">Gjithsej ${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³ · çmimi ${eur(o.price)}</span>${o.note?`<br><span class="mute">Shënim: ${esc(o.note)}</span>`:""}
@@ -1346,7 +1346,7 @@ async function renderTrip(id){
       <span class="mute">${esc(c.from.label)}</span><br>${c.l?`<span class="mute">${carDims(c)}</span><br>`:""}<span class="mute">${esc(c.owner||"")}${telLink(c)} · ${eur(c.price||0)}${c.to?" · dorëzohet: "+esc(c.to):""}</span>
       <div class="row" style="margin-top:6px"><a class="btn small" href="${navUrl(c.from)}" target="_blank" rel="noopener">Harta</a>
       <button class="btn ghost small" onclick="toggleCarHome('${c.id}','${tr.id}')">${c.status==="home"?"Anulo":"Në shtëpi ✓"}</button>
-      <button class="btn warn small" onclick="carFromTrip('${c.id}','${tr.id}')">Hiqe</button></div></div></div>`).join(""):`<p class="mute">Ende nuk ke zgjedhur veturë për kthim.</p>`}
+      <button class="btn warn small" onclick="carFromTrip('${c.id}','${tr.id}')">Hiqe</button></div></div></div>`).join(""):`<p class="mute">Ende s'ke zgjedhur veturë për kthim.</p>`}
     ${p.carStops.length?`<details class="more" id="carLoad"><summary>Shiko si ngarkohet vetura (3D)</summary><div id="pack-car"></div></details>`:""}
     <div id="carsLoose"></div></div>
   <div class="card"><details class="more" id="t3d" style="border:0;margin:0;padding:0" ${tr.open3d?"open":""}><summary style="font-size:18px">Ngarkimi 3D</summary><p class="mute" style="margin:0">Ngarkohet së pari ndalesa e fundit (përpara), kështu e para del e para. Numrat = radha e ngarkimit.</p>
@@ -1366,7 +1366,7 @@ async function renderTrip(id){
     <tr><td><b>Fitimi</b></td><td><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b></td></tr></table>
     <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
   </div>
-  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">Nuk ka porosi që presin.</p>`}</div></div>
+  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
   ${fuelDrop(tr)}
   <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
@@ -1388,7 +1388,7 @@ async function renderTrip(id){
     if(TAB!=="trips"||VIEW!==id)return;
     const full=p.carStops.length>=(S().carsPerTrip||1);
     $("#carsLoose").innerHTML=`<h3>Vetura që presin (${lc.length})</h3>${full?`<p class="mute">Udhëtimi ka arritur ${S().carsPerTrip||1} veturë. Mund të shtosh prapë nëse ka vend.</p>`:""}`+cr.map((r,i)=>`<div class="stop" style="cursor:default">${carRowHtml(r,(i===cr.findIndex(x=>carFit(x.c,v).ok)&&!full?` <span class="pill good">rekomandohet</span>`:"")+(r.c.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.c.tripId))}</span>`:""),v)}<button class="btn small" onclick="carToTrip('${r.c.id}','${tr.id}')">Merr</button></div>`).join("");
-  }else $("#carsLoose").innerHTML=`<p class="mute" style="margin-top:8px">Nuk ka vetura të tjera që presin. Shtoji te Porositë.</p>`;
+  }else $("#carsLoose").innerHTML=`<p class="mute" style="margin-top:8px">S'ka vetura të tjera që presin. Shtoji te Porositë.</p>`;
   if(loose.length){
     const rows=[];for(const o of loose){const g=orderGoods(o);rows.push({o,ex:await extraKm(tr,o),ok:p.kg+g.kg<=v.payloadKg&&p.m3+g.m3<=vanVol(v)})}
     rows.sort((a,b)=>a.ex-b.ex);
@@ -1531,7 +1531,7 @@ function syncListen(){
   SYNC.unsub=col.onSnapshot({includeMetadataChanges:false},snap=>{
     let changed=false;
     if(first){first=false;
-      // hyrja e parë: çfarë nuk është në server (p.sh. porositë e vjetra të këtij telefoni) ngarkohet; çfarë është në server vjen këtu
+      // hyrja e parë: çfarë s'është në server (p.sh. porositë e vjetra të këtij telefoni) ngarkohet; çfarë është në server vjen këtu
       const remote={};snap.docs.forEach(d=>remote[d.id]=d.data());
       SYNC.known={};
       Object.entries(remote).forEach(([k,d])=>{if(d.del)applyRemote(k,null,true);else{applyRemote(k,d.v,false);SYNC.known[k]=d.v}changed=true});
@@ -1544,7 +1544,7 @@ function syncListen(){
     SYNC.last=new Date();
     if(changed){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}saveKnown();softRender()}
     syncPush();
-  },e=>{SYNC.err=e.code==="permission-denied"?"Ky email nuk ka leje. Pyet Phis-in.":"Gabim: "+e.message;if(TAB==="settings")render()});
+  },e=>{SYNC.err=e.code==="permission-denied"?"Ky email s'ka leje. Pyet Phis-in.":"Gabim: "+e.message;if(TAB==="settings")render()});
 }
 // Dërgon vetëm ndryshimet (krahasuar me atë që di serveri)
 function syncPush(){
