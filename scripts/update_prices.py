@@ -9,7 +9,9 @@ import io, json, re, sys, datetime, urllib.request
 
 OUT = "prices.json"
 UA = {"User-Agent": "Mozilla/5.0 (price-updater)"}
-EU = {"AT": "Austria", "DE": "Germany", "HR": "Croatia", "SI": "Slovenia", "HU": "Hungary"}
+EU = {"AT": "Austria", "DE": "Germany", "HR": "Croatia", "SI": "Slovenia", "HU": "Hungary", "FR": "France", "IT": "Italy",
+      "BE": "Belgium", "NL": "Netherlands", "LU": "Luxembourg", "ES": "Spain", "PT": "Portugal", "CZ": "Czech", "SK": "Slovakia",
+      "PL": "Poland", "DK": "Denmark", "SE": "Sweden", "FI": "Finland", "RO": "Romania", "BG": "Bulgaria", "GR": "Greece", "IE": "Ireland"}
 GPP = {"XK": "Kosovo", "RS": "Serbia"}
 SANE = (0.8, 3.0)  # €/L, çdo gjë jashtë këtij intervali injorohet
 
@@ -171,13 +173,20 @@ HR_POINTS = {"Lipovac (kufiri)": (45.05, 19.08), "Slavonski Brod": (45.16, 18.02
 SI_POINTS = {"Obrežje": (45.85, 15.69), "Novo Mesto": (45.80, 15.17), "Ljubljana": (46.05, 14.50), "Kranj": (46.24, 14.36),
              "Jesenice / Karavanke": (46.44, 14.06), "Ptuj": (46.42, 15.87), "Maribor": (46.55, 15.65), "Šentilj": (46.68, 15.65)}
 AT_ROUTE = {"Spielfeld": (46.708, 15.633), "Graz": (47.070, 15.440), "Liezen": (47.57, 14.24), "Wels": (48.16, 14.03),
-            "Villach": (46.61, 13.85), "Salzburg": (47.810, 13.040)}
+            "Villach": (46.61, 13.85), "Salzburg": (47.810, 13.040), "Linz": (48.306, 14.286), "Wien": (48.208, 16.373),
+            "Innsbruck": (47.269, 11.404), "Kufstein": (47.583, 12.170), "Klagenfurt": (46.625, 14.305), "Bregenz": (47.503, 9.747),
+            "St. Pölten": (48.204, 15.626)}
 DE_ROUTE = {"Rosenheim": (47.856, 12.128), "München": (48.137, 11.575), "Augsburg": (48.371, 10.898), "Ulm": (48.401, 9.987),
             "Stuttgart": (48.776, 9.183), "Karlsruhe": (49.007, 8.404), "Mannheim": (49.487, 8.466), "Frankfurt": (50.110, 8.682),
             "Würzburg": (49.792, 9.953), "Nürnberg": (49.452, 11.077), "Regensburg": (49.013, 12.102), "Saarbrücken": (49.240, 6.997),
             "Köln": (50.938, 6.960), "Düsseldorf": (51.227, 6.773), "Dortmund": (51.514, 7.468), "Kassel": (51.312, 9.479),
             "Hannover": (52.375, 9.732), "Hamburg": (53.551, 9.993), "Bremen": (53.079, 8.801), "Berlin": (52.520, 13.405),
-            "Leipzig": (51.340, 12.375), "Dresden": (51.050, 13.738)}
+            "Leipzig": (51.340, 12.375), "Dresden": (51.050, 13.738), "Freiburg": (47.999, 7.842), "Aachen": (50.776, 6.084),
+            "Trier": (49.750, 6.637), "Kaiserslautern": (49.444, 7.769), "Koblenz": (50.356, 7.594), "Münster": (51.961, 7.626),
+            "Bielefeld": (52.030, 8.532), "Osnabrück": (52.279, 8.047), "Göttingen": (51.541, 9.916), "Erfurt": (50.978, 11.029),
+            "Passau": (48.567, 13.431), "Ingolstadt": (48.766, 11.426), "Kempten": (47.727, 10.315), "Konstanz": (47.660, 9.175),
+            "Heilbronn": (49.142, 9.219), "Offenburg": (48.473, 7.944), "Fulda": (50.555, 9.680), "Magdeburg": (52.121, 11.628),
+            "Kiel": (54.323, 10.123), "Rostock": (54.092, 12.099), "Lübeck": (53.866, 10.687), "Duisburg": (51.435, 6.762)}
 
 def _best(lst, n=2):
     lst = [x for x in lst if SANE[0] <= x["price"] <= SANE[1]]
@@ -307,6 +316,11 @@ def main():
         med = statistics.median(x["price"] for x in route if x["c"] == c)
         route = [x for x in route if x["c"] != c or x["price"] >= 0.9 * med]
     have = {x["c"] for x in route}
+    try:
+        import europe_stations
+        europe_stations.build(route)
+    except Exception as e:
+        print("europe stations failed:", e, file=sys.stderr)
     # çmimi i vendit = mesatarja (mediana) e pikave reale në rrugë, që llogaritja të jetë realiste
     for c in have & {"HR", "SI", "DE"}:
         diesel[c] = round(statistics.median(x["price"] for x in route if x["c"] == c), 3)
