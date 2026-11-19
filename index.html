@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
 <style>
+details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}details.fold>summary::-webkit-details-marker{display:none}details.fold>summary h2{margin:0}details.fold>summary::after{content:"▸";color:var(--acc);font-weight:700}details.fold[open]>summary::after{content:"▾"}details.fold[open]>summary{margin-bottom:8px}
 details.more{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
 details.more>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--acc);list-style:none}
 details.more>summary::-webkit-details-marker{display:none}
@@ -1540,15 +1541,16 @@ async function carQuote(c){ // c.vatOn, c.docs
   return {km:kmH,price,net:price/(1+vr),docs,vatOn:c.vatOn!==false,rate,heavy,cost,real:M.real};
 }
 function carDims(c){return c&&c.l?`${num1(c.l/100)} × ${num1(c.w/100)} × ${num1(c.h/100)} m · ${(+c.kg||0).toLocaleString("de-DE")} kg`:""}
+let CARS_OPEN=false;
 function carsCard(){
   const w=DB.cars.filter(c=>c.status!=="home"),h=DB.cars.filter(c=>c.status==="home");
   const row=c=>`<div class="stop" onclick="setTab('orders','car:${c.id}')"><div class="grow"><b>${esc(c.model||"Veturë")}</b> · ${esc(cityOf(c.from))}${c.tripId&&c.status!=="home"?` <span class="pill">${esc(tripLabel(c.tripId))}</span>`:""}<br>
     <span class="mute">${c.year?esc(c.year)+" · ":""}${carDims(c)}</span><br><span class="mute">${esc(c.owner||"")}${telLink(c)}${c.to?" · për: "+esc(c.to):""}</span></div><div><b>${eur(c.price||0)}</b></div></div>`;
-  return `<div class="card"><h2>Veturat për në shtëpi (${w.length} presin)</h2>
+  return `<details class="card fold" id="carsFold" ${CARS_OPEN?"open":""} ontoggle="CARS_OPEN=this.open"><summary><h2>Veturat për në shtëpi (${w.length} presin)</h2></summary>
     <p class="mute" style="margin:0 0 6px">Veturat që i marrim në kthim. Te Udhëtimet të tregohet cila është më e leverdishme.</p>
     ${w.map(row).join("")||`<p class="mute">S'ka vetura që presin.</p>`}
     <button class="btn full" onclick="setTab('orders','car:new')">+ Shto veturë</button>
-    ${h.length?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Të sjella në shtëpi (${h.length})</summary>${h.map(row).join("")}</details>`:""}</div>`;
+    ${h.length?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Të sjella në shtëpi (${h.length})</summary>${h.map(row).join("")}</details>`:""}</details>`;
 }
 let vdraft=null;
 function renderCar(id){
