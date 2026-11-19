@@ -1673,6 +1673,7 @@ function tripRow(tr){const os=tr.orderIds.map(id=>DB.orders.find(o=>o.id===id)).
   const title=tr.start&&tr.dest?cityOf(tr.start)+" → "+cityOf(tr.dest):(cities[cities.length-1]||"Udhëtim");const nc=(tr.carIds||[]).length;
   return `<div class="stop" onclick="setTab('trips','${tr.id}')"><div class="grow"><b>${esc(title)}</b> ${tr.status==="done"?`<span class="pill good">përfunduar</span>`:tr.status==="onroad"?`<span class="pill road">në rrugë</span>`:""}<br>
     <span class="mute">${esc(dateTxt(tr.date))}${tr.name?" · Shoferi: "+esc(tr.name):""} · ${esc(vanById(tr.van).name)} · ${os.length} porosi${nc?" · "+nc+" veturë në kthim":""}${cities.length?" · "+esc(cities.join(", ")):""}</span></div><div>›</div></div>`}
+let NT_OPEN=false;
 function renderTrips(){
   if(VIEW==="near")return renderNear();
   if(VIEW&&String(VIEW).startsWith("fuel:"))return renderFuel(VIEW.slice(5));
@@ -1681,14 +1682,15 @@ function renderTrips(){
   if(!ntf)ntf={name:"",start:s.base,dest:null,date:new Date(Date.now()+864e5).toISOString().slice(0,10),van:"A"};
   const active=DB.trips.filter(t=>!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
   const hist=DB.trips.filter(isPast).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
-  $("#app").innerHTML=`${onTripCard()}<div class="card"><h2>Udhëtim i ri</h2>
+  const onr=DB.trips.some(t=>t.status==="onroad");
+  $("#app").innerHTML=`${onTripCard()}${onr?`<details class="card fold" ${NT_OPEN?"open":""} ontoggle="NT_OPEN=this.open"><summary><h2>Planifiko udhëtim tjetër</h2></summary>`:`<div class="card"><h2>Udhëtim i ri</h2>`}
     <label for="f-name">1. Shoferi</label>${driverSelect("f-name",ntf.name)}
     <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Ferizaj")}
     <label for="f-destsel">3. Destinacioni i fundit</label>${destSelect()}<div id="f-destother" ${ntf.destOrder==="other"||!destOrders().length?"":"hidden"}>${addrField("f-dest",ntf.destOrder==="other"?ntf.dest:null,"P.sh. Dortmund")}</div>
     <label for="f-date">Data e nisjes</label><input id="f-date" type="date" value="${ntf.date}"><label for="f-van">Furgoni</label>${vanSelect(ntf.van)}
     <div id="pickBox"><p class="mute">Duke ngarkuar porositë që presin…</p></div>
     <div id="carBox"></div>
-    <button class="btn full" id="add">Krijo udhëtimin</button></div>
+    <button class="btn full" id="add">Krijo udhëtimin</button>${onr?"</details>":"</div>"}
     <div class="card"><h2>Udhëtimet e ardhshme</h2>${active.length?"":`<p class="mute">Nuk ka udhëtime të planifikuara.</p>`}
     ${active.slice(0,2).map(tripRow).join("")}
     ${active.length>2?`<details><summary class="mute" style="cursor:pointer;padding:8px 0">Shfaq edhe ${active.length-2} të tjera</summary>${active.slice(2).map(tripRow).join("")}</details>`:""}</div>
