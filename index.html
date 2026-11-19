@@ -994,15 +994,66 @@ function buildOfferPdf(o){
   T((s.instagram||"").replace(/^https?:\/\/(www\.)?/,""),W-M,288,{size:8.5,c:mute,align:"right"});
   return doc;
 }
+// Raporti i udhëtimit (i brendshëm): ku ishim, çfarë u dorëzua, shpenzimet, fitimi
+function buildTripReport(tr,p){
+  const doc=new PDF.lib({unit:"mm",format:"a4"}),s=S(),W=210,M=16,blue=[31,63,160],deep=[32,52,113],ink=[28,35,51],mute=[100,108,128],light=[230,236,250],line=[221,226,238];
+  const T=(t,x,y,o2={})=>{doc.setFont("helvetica",o2.b?"bold":"normal");doc.setFontSize(o2.size||10);doc.setTextColor(...(o2.c||ink));doc.text(String(t),x,y,o2.align?{align:o2.align}:undefined)};
+  const fd=x=>x?new Date(x).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}):"-";
+  if(PDF.logo)doc.addImage(PDF.logo,"PNG",M,12,36,26.8);
+  T("RAPORTI I UDHËTIMIT",W-M,20,{b:1,size:18,c:blue,align:"right"});
+  T("Data e nisjes: "+fd((tr.date||"")+"T12:00:00"),W-M,27,{size:10,c:mute,align:"right"});
+  T("Shoferi: "+(tr.name||"-")+" · "+p.v.name,W-M,32,{size:10,c:mute,align:"right"});
+  T("Gjithsej: "+km(p.kmTotal)+" (me kthim)",W-M,37,{size:10,c:mute,align:"right"});
+  doc.setDrawColor(...blue);doc.setLineWidth(0.8);doc.line(M,44,W-M,44);
+  let y=52;
+  const need=h=>{if(y+h>272){doc.addPage();y=20}};
+  const table=(title,cols,rows)=>{need(20);T(title,M,y,{b:1,size:11,c:blue});y+=4;
+    const tw=cols.reduce((a,c)=>a+c.w,0);doc.setFillColor(...blue);doc.rect(M,y,tw,7,"F");
+    let x=M;cols.forEach(c=>{T(c.t,c.a?x+c.w-2:x+2,y+5,{b:1,size:9,c:[255,255,255],align:c.a});x+=c.w});y+=7;
+    if(!rows.length){T("-",M+2,y+5,{size:9.5,c:mute});y+=9}
+    rows.forEach((r,i)=>{const cell=r.map((v,k)=>doc.splitTextToSize(String(v??"-"),cols[k].w-4));const h=Math.max(7,Math.max(...cell.map(c=>c.length))*4.3+3);
+      need(h);if(i%2)doc.setFillColor(...light),doc.rect(M,y,tw,h,"F");
+      x=M;cols.forEach((c,k)=>{cell[k].forEach((l,j)=>T(l,c.a?x+c.w-2:x+2,y+5+j*4.3,{size:9.5,align:c.a}));x+=c.w});
+      y+=h;doc.setDrawColor(...line);doc.setLineWidth(0.2);doc.line(M,y,M+tw,y)});
+    y+=8};
+  table("Ku ishim dhe çfarë u dorëzua",[{t:"Nr.",w:9},{t:"Klienti / adresa",w:70},{t:"Malli",w:52},{t:"Dorëzuar",w:22},{t:"Çmimi",w:25,a:"right"}],
+    p.stops.map((o,i)=>[i+1,(o.customer||"-")+"\n"+(o.addr?.label||""),o.full?"Transport i plotë"+(o.fullDesc?": "+o.fullDesc:""):(o.items?itemsSummary(o.items):o.what||""),o.status==="delivered"?fd(o.deliveredAt):"Jo",eur(+o.price||0)]).map(r=>{r[1]=r[1];return r}));
+  if(p.carStops.length)table("Veturat në kthim",[{t:"Nr.",w:9},{t:"Vetura",w:60},{t:"Merret në",w:84},{t:"Çmimi",w:25,a:"right"}],
+    p.carStops.map((c,i)=>["K"+(i+1),(c.model||"Veturë")+(c.year?" "+c.year:"")+(c.owner?"\n"+c.owner:""),c.from?.label||"",eur(+c.price||0)]));
+  const fl=(DB.fills||[]).filter(f=>f.tripId===tr.id);
+  if(fl.length)table("Mbushjet me naftë",[{t:"Data",w:24},{t:"Pika",w:84},{t:"Litra",w:22,a:"right"},{t:"€/L",w:22,a:"right"},{t:"Shuma",w:26,a:"right"}],
+    fl.map(f=>[fd(f.date),[f.station,CNAME[f.c]?.[2]].filter(Boolean).join(", ")||"-",+f.liters?num1(f.liters):"-",eur(f.price),+f.liters?eur(f.price*f.liters):"-"]));
+  const ex=tripExp(tr),cn=c=>(EXPCATS.find(x=>x[0]===c)||[0,"Të tjera"])[1],exT=ex.reduce((a,e)=>a+(+e.eur||0),0);
+  table("Shpenzimet shtesë",[{t:"Data",w:24},{t:"Lloji",w:40},{t:"Shënim",w:88},{t:"Shuma",w:26,a:"right"}],ex.map(e=>[fd(e.date),cn(e.cat),[e.note,e.by?"("+e.by+")":""].filter(Boolean).join(" "),eur(+e.eur||0)]));
+  need(46);const costs=p.costs.total+p.orders.length*s.handling+p.docs;
+  const sum=[["Të hyrat (pa doganë)",p.revenue],["Shpenzimet e udhëtimit",costs-exT],["Shpenzimet shtesë",exT],["Fitimi final",p.profit]];
+  doc.setFillColor(...light);doc.roundedRect(W-M-100,y,100,sum.length*8+6,3,3,"F");
+  sum.forEach(([l,v],i)=>{const last=i===sum.length-1;T(l,W-M-95,y+9+i*8,{b:last,size:last?11:10,c:last?deep:ink});T(eur(v),W-M-5,y+9+i*8,{b:last,size:last?12:10,c:last?(v<0?[190,40,40]:[30,130,80]):ink,align:"right"})});
+  doc.setDrawColor(...line);doc.setLineWidth(0.3);doc.line(M,282,W-M,282);
+  T("Gemini Cars & Logistics · raport i brendshëm",M,288,{size:8.5,c:mute});T("Krijuar më "+fd(Date.now()),W-M,288,{size:8.5,c:mute,align:"right"});
+  return doc;
+}
+function reportCard(tr,p){
+  const del=p.stops.filter(o=>o.status==="delivered"),ex=tripExp(tr),exT=ex.reduce((a,e)=>a+(+e.eur||0),0);
+  return `<div class="card" style="border:2px solid #2fa36b"><h2>Raporti i udhëtimit</h2>
+    <p class="mute" style="margin:0 0 6px">Të gjitha porositë u dorëzuan. Ja përmbledhja.</p>
+    <ol style="margin:0;padding-left:22px">${del.map(o=>`<li style="margin:4px 0"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")} · ${eur(+o.price||0)}<br><span class="mute">${esc(o.full?"Transport i plotë":(o.items?itemsSummary(o.items):o.what||""))}${o.deliveredAt?" · dorëzuar "+esc(fmtDay(o.deliveredAt)):""}</span></li>`).join("")}</ol>
+    ${p.carStops.length?`<p class="mute" style="margin:6px 0 0">Veturat në kthim: ${p.carStops.map(c=>esc(c.model||"Veturë")).join(", ")}</p>`:""}
+    <p style="margin:8px 0 0">${km(p.kmTotal)} · shpenzime shtesë <b>${eur(exT)}</b>${ex.length?` (${ex.length})`:""}</p>
+    <div class="big3" style="margin-top:8px"><div><b>${eur(p.revenue)}</b><span>Të hyrat</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi final</span></div></div>
+    <button class="btn green full big" type="button" id="tripPdf" style="margin-top:10px">Krijo PDF të raportit</button></div>`;
+}
 async function shareOfferPdf(o,btn){
+  return sharePdf(()=>buildOfferPdf(o),"Oferta-Gemini-"+(o.customer||"klient")+"-"+offerNo(o).slice(3),"Oferta e transportit",btn)}
+async function sharePdf(build,base,title,btn){
   const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent="Duke krijuar PDF…"}
   try{
     if(!PDF.lib)await preloadPdf();
-    const doc=buildOfferPdf(o),blob=doc.output("blob");
-    const name=("Oferta-Gemini-"+(o.customer||"klient")).normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+"-"+offerNo(o).slice(3)+".pdf";
+    const doc=build(),blob=doc.output("blob");
+    const name=base.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+".pdf";
     const file=new File([blob],name,{type:"application/pdf"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:"Oferta e transportit"});return}catch(e){if(e.name==="AbortError")return}
+      try{await navigator.share({files:[file],title});return}catch(e){if(e.name==="AbortError")return}
     }
     const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(u),60000);toast("PDF u ruajt në telefon");
@@ -1733,7 +1784,8 @@ async function fillOnTrip(){for(const el of document.querySelectorAll("[data-ont
   try{const p=await planTrip(t);if(!el.isConnected)return;
     el.innerHTML=p.stops.length?`<ol style="margin:8px 0 0;padding-left:22px">${p.stops.map(o=>`<li style="margin:4px 0${o.status==="delivered"?";color:var(--mute);text-decoration:line-through":""}"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}<br><span class="mute">${esc(o.addr.label)}</span></li>`).join("")}</ol>`
       +(p.carStops.length?`<p class="mute" style="margin:6px 0 0">Në kthim: ${p.carStops.map(c=>esc((c.model||"Veturë")+" ("+cityOf(c.from)+")")).join(", ")}</p>`:""):`<p class="mute">Nuk ka porosi në këtë udhëtim.</p>`}catch(e){el.innerHTML=""}}}
-function driverSelect(id,cur){const list=[...DRIVERS,...(cur&&!DRIVERS.includes(cur)?[cur]:[])];
+const NOT_DRIVER=["Fisnik","Phis"];
+function driverSelect(id,cur){if(NOT_DRIVER.includes(cur))cur="";const list=[...DRIVERS,...(cur&&!DRIVERS.includes(cur)?[cur]:[])];
   return `<select id="${id}"><option value="">— Zgjidh shoferin —</option>${list.map(n=>`<option ${n===cur?"selected":""}>${esc(n)}</option>`).join("")}</select>`}
 // Destinacioni i fundit: porositë që presin, e madhja e para (zgjidhet vetë)
 function destOrders(){return waitingOrders(null).filter(o=>o.addr&&o.addr.lat).sort((a,b)=>sizeOf(orderGoods(b))-sizeOf(orderGoods(a)))}
@@ -1823,6 +1875,7 @@ async function renderTrip(id){
     ${tr.status==="done"?`<p><span class="pill good">Udhëtimi ka përfunduar</span></p>`:tr.status==="onroad"?`<p style="margin:10px 0 0"><span class="pill road" style="font-size:14px">Në rrugë</span> <button class="btn ghost small" type="button" id="tStop">Ktheje në planifikim</button></p>`:`<button class="btn yellow full big" type="button" id="tStart" style="margin-top:10px">Nisu: fillo udhëtimin</button>`}
     ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
   </div>
+  ${p.stops.length&&!left.length?reportCard(tr,p):""}
   <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
     ${p.stops.length?"":`<p class="mute">Ende s'ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
     ${p.stops.map((o,i)=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}${telLink(o)}${o.status==="delivered"?` <span class="pill good">dorëzuar</span>`:""}<br><span class="mute">${esc(o.addr.label)}</span>
@@ -1883,6 +1936,7 @@ async function renderTrip(id){
       const c=countryAt(pos),near=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pos,x)})).sort((a,b)=>a.d-b.d)[0];
       pre={...pre,lat:pos.lat,lng:pos.lng,c,...(near&&near.d<0.4?{station:[near.x.name,near.x.city].filter(Boolean).join(", "),price:near.x.price}:{price:+dieselOf(c).toFixed(3)||""})}}catch(e){}
     fillForm(pre,()=>renderTrip(id))};
+  if($("#tripPdf")){preloadPdf().catch(()=>{});$("#tripPdf").onclick=e=>sharePdf(()=>buildTripReport(tr,p),["Raporti-Gemini",tr.date,tr.name].filter(Boolean).join("-"),"Raporti i udhëtimit",e.currentTarget)}
   if($("#addExp"))$("#addExp").onclick=()=>{const v=parseFloat(String($("#ex-eur").value).replace(",","."));if(!(v>0))return toast("Shkruaj shumën");
     if(!Array.isArray(tr.exp))tr.exp=[];tr.exp.push({id:uid(),cat:$("#ex-cat").value,eur:Math.round(v*100)/100,note:$("#ex-note").value.trim(),date:new Date().toISOString(),by:whoAmI()});
     save();toast("Shpenzimi u shtua");renderTrip(id).then(()=>$("#expCard")?.scrollIntoView({block:"center"}))};
@@ -1909,7 +1963,7 @@ function removeFromTrip(oid,tid){const o=DB.orders.find(x=>x.id===oid),tr=DB.tri
 function carToTrip(cid,tid){const c=DB.cars.find(x=>x.id===cid),tr=DB.trips.find(x=>x.id===tid);DB.trips.forEach(x=>x.carIds=(x.carIds||[]).filter(y=>y!==cid));tr.carIds.push(cid);c.tripId=tid;save();renderTrip(tid)}
 function carFromTrip(cid,tid){const c=DB.cars.find(x=>x.id===cid),tr=DB.trips.find(x=>x.id===tid);tr.carIds=tr.carIds.filter(y=>y!==cid);c.tripId=null;save();renderTrip(tid)}
 function toggleCarHome(cid,tid){const c=DB.cars.find(x=>x.id===cid);c.status=c.status==="home"?"waiting":"home";save();renderTrip(tid)}
-function toggleDelivered(oid,tid){const o=DB.orders.find(x=>x.id===oid);o.status=o.status==="delivered"?"open":"delivered";save();renderTrip(tid)}
+function toggleDelivered(oid,tid){const o=DB.orders.find(x=>x.id===oid);o.status=o.status==="delivered"?"open":"delivered";if(o.status==="delivered")o.deliveredAt=new Date().toISOString();save();renderTrip(tid)}
 
 /* ===================== CILËSIMET ===================== */
 function renderSettings(){
@@ -1986,6 +2040,7 @@ function migrateSettings(st){if(!st)return false;let ch=false;
 if(migrateSettings(DB.settings))save();
 if(!Array.isArray(DB.fills))DB.fills=[];
 if(!DB.settings.duty){DB.settings.duty=structuredClone(DEFAULTS.duty);save()}
+if(DB.trips.some(t=>["Fisnik","Phis"].includes(t.name))){DB.trips.forEach(t=>{if(["Fisnik","Phis"].includes(t.name))t.name=""});save()}
 if(DB.settings.fullMargin==null){DB.settings.fullMargin=DEFAULTS.fullMargin;save()}
 if(!DB.examplesCleaned){
   const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
