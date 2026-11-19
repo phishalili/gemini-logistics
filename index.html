@@ -253,10 +253,19 @@ function tripCostBreakdown(v,kmTotal,tr){
     ["Autostradat / taksat",s.tollsPerTrip.reduce((a,b)=>a+(+b.eur||0),0)],
     ["Sigurimi & vinjetat (pjesa për udhëtim)",fixedPerTrip()],
     ["Shpenzimet e shoferit ("+s.daysPerTrip+" ditë)",s.daysPerTrip*s.driverPerDay*s.driversPerVan]];
+  const ex=tr?tripExp(tr):[];
+  if(ex.length){const sumG=g=>ex.filter(e=>EXPG[e.cat]===g).reduce((a,e)=>a+(+e.eur||0),0);
+    if(ex.some(e=>EXPG[e.cat]==="drv"))rows[4]=["Ushqim dhe fjetje (të shënuara)",sumG("drv")];
+    if(ex.some(e=>EXPG[e.cat]==="toll"))rows[2]=["Autostradat / tunelet (të shënuara)",sumG("toll")];
+    const oth=ex.filter(e=>!EXPG[e.cat]);if(oth.length)rows.push(["Shpenzime të tjera të shënuara",oth.reduce((a,e)=>a+(+e.eur||0),0)])}
   const total=rows.reduce((a,r)=>a+r[1],0),ret=total*s.returnShare/100;
   if(ret)rows.push(["E paguar nga veturat në kthim (−"+s.returnShare+"%)",-ret]);
   return {rows,total:total-ret};
 }
+// Shpenzimet që i shënon shoferi gjatë/në fund të udhëtimit
+const EXPCATS=[["ushqim","Ushqim"],["fjetje","Fjetje"],["autostrade","Autostradë / tunel"],["parking","Parking"],["servis","Servis / larje"],["gjobe","Gjobë"],["tjeter","Të tjera"]];
+const EXPG={ushqim:"drv",fjetje:"drv",autostrade:"toll"};
+const tripExp=tr=>Array.isArray(tr&&tr.exp)?tr.exp:[];
 function shareOf(g,v){return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))}
 // Dogana sipas vendit të destinacionit (Cilësimet). Porositë e vjetra pa vatRate mbajnë normën e vjetër (18%).
 const dutyRate=addr=>+((S().duty||{})[countryOf(addr)]||0);
@@ -876,6 +885,22 @@ function fillForm(pre={},onSaved){
     const f={id:uid(),date:new Date().toISOString(),by:whoAmI()||(DB.trips.find(t=>t.id===$("#fl-t").value)?.name)||"",c:$("#fl-c").value,lat:pre.lat||null,lng:pre.lng||null,
       station:$("#fl-s").value.trim(),price,liters:parseFloat(String($("#fl-l").value).replace(",","."))||0,tripId:$("#fl-t").value||null};
     DB.fills.unshift(f);save();m.remove();toast("Mbushja u ruajt");if(onSaved)onSaved();else render()};
+}
+function expCard(tr,p){
+  const ex=tripExp(tr),s=S(),extra=p.orders.length*s.handling+p.docs;
+  const est=tripCostBreakdown(p.v,p.kmTotal).total+extra,real=p.costs.total+extra,d=real-est;
+  const cn=c=>(EXPCATS.find(x=>x[0]===c)||[0,"Të tjera"])[1];
+  return `<div class="card" id="expCard"><h2>Shpenzimet e udhëtimit</h2>
+    <p class="mute" style="margin:0 0 6px">Shkruaji vetë: ushqimi, fjetja, autostrada, parkingu, etj. Ushqimi dhe fjetja zëvendësojnë vlerësimin për shoferin, autostrada zëvendëson vlerësimin e taksave, të tjerat shtohen.</p>
+    ${ex.map(e=>`<div class="stop" style="cursor:default"><div class="grow"><b>${esc(cn(e.cat))}</b> · <b>${eur(+e.eur||0)}</b>${e.note?` · ${esc(e.note)}`:""}<br><span class="mute">${esc(fmtDay(e.date))}${e.by?" · "+esc(e.by):""}</span></div><button class="x" style="background:none;border:0;font-size:22px;color:var(--mute)" data-delexp="${e.id}" aria-label="Fshi">×</button></div>`).join("")}
+    <div class="row" style="margin-top:8px"><div><label for="ex-cat">Lloji</label><select id="ex-cat">${EXPCATS.map(c=>`<option value="${c[0]}">${esc(c[1])}</option>`).join("")}</select></div>
+    <div><label for="ex-eur">Shuma €</label><input id="ex-eur" type="text" inputmode="decimal" placeholder="P.sh. 40"></div></div>
+    <label for="ex-note">Shënim (opsional)</label><input id="ex-note" placeholder="P.sh. hotel në Zagreb">
+    <button class="btn green full" type="button" id="addExp" style="margin-top:8px">Shto shpenzimin</button>
+    <table style="margin-top:10px"><tr><td>Vlerësimi fillestar i shpenzimeve</td><td>${eur(est)}</td></tr>
+    <tr><td>Me shpenzimet e vërteta</td><td><b>${eur(real)}</b></td></tr>
+    <tr><td>Diferenca</td><td><b style="color:${d>0.5?"var(--warn)":"var(--good)"}">${d>=0?"+":"−"}${eur(Math.abs(d))}</b></td></tr></table>
+    ${ex.length?`<p class="mute" style="margin:6px 0 0">Gjithsej të shënuara: ${eur(ex.reduce((a,e)=>a+(+e.eur||0),0))}. Fitimi te “Paratë” llogaritet me shpenzimet e vërteta.</p>`:""}</div>`;
 }
 function fillsCard(tr,p){
   const l=(DB.fills||[]).filter(f=>f.tripId===tr.id),L=l.reduce((a,f)=>a+(+f.liters||0),0),paid=l.reduce((a,f)=>a+(+f.liters||0)*f.price,0);
@@ -1664,7 +1689,7 @@ function renderTrips(){
   if(!ntf)ntf={name:"",start:s.base,dest:null,date:new Date(Date.now()+864e5).toISOString().slice(0,10),van:"A"};
   const active=DB.trips.filter(t=>!isPast(t)).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
   const hist=DB.trips.filter(isPast).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
-  $("#app").innerHTML=`<div class="card"><h2>Udhëtim i ri</h2>
+  $("#app").innerHTML=`${onTripCard()}<div class="card"><h2>Udhëtim i ri</h2>
     <label for="f-name">1. Shoferi</label>${driverSelect("f-name",ntf.name)}
     <label>2. Nisja</label>${addrField("f-start",ntf.start,"P.sh. Ferizaj")}
     <label for="f-destsel">3. Destinacioni i fundit</label>${destSelect()}<div id="f-destother" ${ntf.destOrder==="other"||!destOrders().length?"":"hidden"}>${addrField("f-dest",ntf.destOrder==="other"?ntf.dest:null,"P.sh. Dortmund")}</div>
@@ -1681,6 +1706,7 @@ function renderTrips(){
     if(v==="other"){ntf.dest=null;$("#f-destother").hidden=false}else{$("#f-destother").hidden=true;ntf.dest=DB.orders.find(o=>o.id===v)?.addr||null}renderPick()};
   $("#f-date").onchange=e=>ntf.date=e.target.value;
   $("#f-van").onchange=e=>{ntf.van=e.target.value;renderPick()};
+fillOnTrip();
   wireAddr("f-start",r=>{if(r){ntf.start=r;renderPick()}});
   wireAddr("f-dest",r=>{if(r){ntf.dest=r;ntf.destOrder="other";ntf._recDone=false;renderPick()}});
   renderPick();
@@ -1698,7 +1724,21 @@ function waitingOrders(exceptTrip){
   return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
 }
 function tripLabel(id){const t=DB.trips.find(x=>x.id===id);return t?dateTxt(t.date)+(t.name?" · "+t.name:""):""}
-const DRIVERS=["Maruf","Krenar"];
+const DRIVERS=["Maruf","Krenar","Fisnik"];
+const myNames=()=>{const w=whoAmI();return w==="Phis"?["Phis","Fisnik"]:w?[w]:[]};
+// Udhëtimi në rrugë: ndalesat me radhë, i yti i pari
+function onTripCard(){
+  const me=myNames(),mine=t=>me.includes(t.name);
+  const list=DB.trips.filter(t=>t.status==="onroad").sort((a,b)=>mine(b)-mine(a));
+  if(!list.length)return "";
+  return list.map(t=>`<div class="card" style="border:2px solid #f0b400"><h2>${mine(t)?"Udhëtimi yt":"Në rrugë: "+esc(t.name||"pa shofer")}</h2>
+    <div class="mute">${esc(dateTxt(t.date))} · ${esc(vanById(t.van).name)}</div><div data-ontrip="${t.id}"><p class="mute">Duke rregulluar ndalesat…</p></div>
+    <button class="btn yellow full" type="button" onclick="setTab('trips','${t.id}')" style="margin-top:8px">Hap udhëtimin dhe shpenzimet</button></div>`).join("");
+}
+async function fillOnTrip(){for(const el of document.querySelectorAll("[data-ontrip]")){const t=DB.trips.find(x=>x.id===el.dataset.ontrip);if(!t)continue;
+  try{const p=await planTrip(t);if(!el.isConnected)return;
+    el.innerHTML=p.stops.length?`<ol style="margin:8px 0 0;padding-left:22px">${p.stops.map(o=>`<li style="margin:4px 0${o.status==="delivered"?";color:var(--mute);text-decoration:line-through":""}"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}<br><span class="mute">${esc(o.addr.label)}</span></li>`).join("")}</ol>`
+      +(p.carStops.length?`<p class="mute" style="margin:6px 0 0">Në kthim: ${p.carStops.map(c=>esc((c.model||"Veturë")+" ("+cityOf(c.from)+")")).join(", ")}</p>`:""):`<p class="mute">Nuk ka porosi në këtë udhëtim.</p>`}catch(e){el.innerHTML=""}}}
 function driverSelect(id,cur){const list=[...DRIVERS,...(cur&&!DRIVERS.includes(cur)?[cur]:[])];
   return `<select id="${id}"><option value="">— Zgjidh shoferin —</option>${list.map(n=>`<option ${n===cur?"selected":""}>${esc(n)}</option>`).join("")}</select>`}
 // Destinacioni i fundit: porositë që presin, e madhja e para (zgjidhet vetë)
@@ -1828,6 +1868,7 @@ async function renderTrip(id){
   </div>
   <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
   ${fillsCard(tr,p)}
+  ${expCard(tr,p)}
   ${fuelDrop(tr)}
   <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
@@ -1848,6 +1889,10 @@ async function renderTrip(id){
       const c=countryAt(pos),near=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pos,x)})).sort((a,b)=>a.d-b.d)[0];
       pre={...pre,lat:pos.lat,lng:pos.lng,c,...(near&&near.d<0.4?{station:[near.x.name,near.x.city].filter(Boolean).join(", "),price:near.x.price}:{price:+dieselOf(c).toFixed(3)||""})}}catch(e){}
     fillForm(pre,()=>renderTrip(id))};
+  $("#addExp").onclick=()=>{const v=parseFloat(String($("#ex-eur").value).replace(",","."));if(!(v>0))return toast("Shkruaj shumën");
+    if(!Array.isArray(tr.exp))tr.exp=[];tr.exp.push({id:uid(),cat:$("#ex-cat").value,eur:Math.round(v*100)/100,note:$("#ex-note").value.trim(),date:new Date().toISOString(),by:whoAmI()});
+    save();toast("Shpenzimi u shtua");renderTrip(id).then(()=>$("#expCard")?.scrollIntoView({block:"center"}))};
+  document.querySelectorAll("[data-delexp]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;tr.exp=tripExp(tr).filter(e=>e.id!==b.dataset.delexp);save();renderTrip(id)});
   document.querySelectorAll("[data-delfill]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;DB.fills=DB.fills.filter(f=>f.id!==b.dataset.delfill);save();renderTrip(id)});
   $("#del").onclick=()=>{if(!twoTap($("#del")))return;tr.orderIds.forEach(oid=>{const o=DB.orders.find(x=>x.id===oid);if(o)o.tripId=null});(tr.carIds||[]).forEach(cid=>{const c=DB.cars.find(x=>x.id===cid);if(c)c.tripId=null});DB.trips=DB.trips.filter(x=>x!==tr);save();setTab("trips")};
   const lc=waitingCars(id);
