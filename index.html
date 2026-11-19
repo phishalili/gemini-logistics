@@ -1267,6 +1267,7 @@ Mercedes A W176|a klasse,a-klasse,a class,w176,a180,a200|2012|2018|4292|1780|143
 Mercedes C W203|c klasse,c-klasse,c class,w203,c200,c220|2000|2007|4526|1728|1426|1450
 Mercedes C W204|c klasse,c-klasse,c class,w204,c180,c200,c220,c250,c350|2007|2014|4581|1770|1447|1500
 Mercedes C W205|c klasse,c-klasse,c class,w205,c180,c200,c220,c250,c300|2014|2021|4686|1810|1442|1550
+Mercedes C W206|c klasse,c-klasse,c class,w206,c180,c200,c220,c300|2021|2026|4751|1820|1438|1650
 Mercedes E W211|e klasse,e-klasse,e class,w211,e200,e220,e270,e320|2002|2009|4818|1822|1452|1650
 Mercedes E W212|e klasse,e-klasse,e class,w212,e200,e220,e250,e350|2009|2016|4868|1854|1474|1700
 Mercedes E W213|e klasse,e-klasse,e class,w213,e200,e220,e300,e350|2016|2026|4923|1852|1468|1700
@@ -1467,6 +1468,7 @@ Mercedes A W176=A160,A180,A180 CDI:30,A200,A200 CDI:40,A220 CDI:60,A250:60,A45 A
 Mercedes C W203=C180,C200,C200 CDI:40,C220 CDI:60,C270 CDI:90,C320:110
 Mercedes C W204=C180,C200,C200 CDI:40,C220 CDI:60,C250 CDI:80,C300:90,C350 CDI:120,C63 AMG:200
 Mercedes C W205=C160:-30,C180,C200,C200d:30,C220d:60,C250d:80,C300:60,C300d:90,C350e:250,C43 AMG:180,C63 AMG:220
+Mercedes C W206=C180,C200,C200d:30,C220d:60,C300:60,C300d:90,C300e:300,C43 AMG:150
 Mercedes E W211=E200,E200 CDI:30,E220 CDI:50,E270 CDI:80,E280 CDI:100,E320 CDI:120,E350:90
 Mercedes E W212=E200,E200 CDI:30,E220 CDI:50,E250 CDI:70,E300:80,E350 CDI:120,E63 AMG:220
 Mercedes E W213=E200,E200d:30,E220d:50,E300:60,E300e:250,E350d:120,E400d 4Matic:180,E63 AMG:250
@@ -1583,6 +1585,14 @@ function carSuggest(q){const raw=norm(q).split(/[ ,]+/).filter(Boolean);if(!raw.
       return words.some(w=>w.startsWith(t)||w.startsWith(r))})})
     .map((c,i)=>{const lw=norm(c.lab+" "+c.d).split(/[ ,/()-]+/);return {c,i,sc:tk.reduce((n,t,j)=>n+(lw.some(w=>w===t||w===raw[j])?2:lw.some(w=>w.startsWith(t)||w.startsWith(raw[j]))?1:0),0)}})
     .sort((a,b)=>b.sc-a.sc||b.c.y1-a.c.y1||a.i-b.i).map(x=>x.c).slice(0,60)}
+// Kur ndryshon viti: gjen gjeneratën e të njëjtit model për atë vit (me të njëjtin motor nëse ekziston)
+function carForYear(c,y){if(!c||!y)return null;if(y>=c.y1&&y<=c.y2)return c;
+  const brand=c.n.split(" ")[0],fam=CARVARS.filter(x=>x.n.split(" ")[0]===brand&&x.a[0]===c.a[0]);
+  const dist=x=>y<x.y1?x.y1-y:y>x.y2?y-x.y2:0,best=Math.min(...fam.map(dist));if(!isFinite(best))return null;
+  const gens=fam.filter(x=>dist(x)===best);if(!gens.length)return null;
+  const num=t=>(String(t).match(/\d[\d.]*/)||[""])[0],fuel=t=>/d\b|tdi|cdi|dci|hdi|crdi|diesel|bluehdi|jtd/i.test(t);
+  return gens.find(x=>x.v===c.v)||gens.find(x=>c.v&&num(x.v)===num(c.v)&&fuel(x.v)===fuel(c.v))||gens.find(x=>c.v&&num(x.v)===num(c.v))
+    ||{...(CARSPECS.find(z=>z.n===gens[0].n)||gens[0]),lab:gens[0].d,v:""}}
 // Gjen veturën nga emri dhe viti. Kthen të dhënat ose null.
 function carLookup(model,year){
   const t=" "+String(model||"").toLowerCase().replace(/[^a-z0-9äöüë\- ]/g," ").replace(/\b([a-z]{0,3}\d{3})[a-z]{1,3}\b/g,"$1").replace(/\s+/g," ")+" ";if(t.trim().length<2)return null;
@@ -1675,7 +1685,8 @@ function renderCar(id){
     ml.innerHTML=sugs.map((c,i)=>`<li data-i="${i}">${esc(c.lab)} <span class="mute">${c.y1}–${c.y2>=2026?"sot":c.y2}</span></li>`).join("");ml.hidden=!sugs.length;lookD()};
   ml.addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(!li)return;const c=sugs[+li.dataset.i];
     $("#c-model").value=c.lab;forced=c;ml.hidden=true;const y=+$("#c-year").value;if(!y||y<c.y1||y>c.y2)$("#c-year").value=Math.min(c.y2,Math.max(c.y1,y||c.y1));look()});
-  $("#c-year").oninput=lookD;
+  $("#c-year").oninput=debounce(()=>{const y=+$("#c-year").value;
+    if(forced&&forced.lab===$("#c-model").value&&y>=1980&&y<=2030){const n=carForYear(forced,y);if(n&&n!==forced){forced=n;$("#c-model").value=n.lab}}look()},400);
   ["c-l","c-w","c-h","c-kg"].forEach(k=>$("#"+k).oninput=()=>{fit();qp()});
   fit();qp();
   $("#c-save").onclick=()=>{
