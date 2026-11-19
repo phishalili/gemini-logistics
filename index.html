@@ -1036,7 +1036,7 @@ function buildTripReport(tr,p){
 function reportCard(tr,p){
   const del=p.stops.filter(o=>o.status==="delivered"),ex=tripExp(tr),exT=ex.reduce((a,e)=>a+(+e.eur||0),0);
   return `<div class="card" style="border:2px solid #2fa36b"><h2>Raporti i udhëtimit</h2>
-    <p class="mute" style="margin:0 0 6px">Të gjitha porositë u dorëzuan. Ja përmbledhja.</p>
+    <p style="margin:0 0 6px">Udhëtimi përfundoi${tr.endedAt?" më "+esc(fmtDay(tr.endedAt)):""}. U dorëzuan <b>${del.length} nga ${p.stops.length}</b> porosi.</p>
     <ol style="margin:0;padding-left:22px">${del.map(o=>`<li style="margin:4px 0"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")} · ${eur(+o.price||0)}<br><span class="mute">${esc(o.full?"Transport i plotë":(o.items?itemsSummary(o.items):o.what||""))}${o.deliveredAt?" · dorëzuar "+esc(fmtDay(o.deliveredAt)):""}</span></li>`).join("")}</ol>
     ${p.carStops.length?`<p class="mute" style="margin:6px 0 0">Veturat në kthim: ${p.carStops.map(c=>esc(c.model||"Veturë")).join(", ")}</p>`:""}
     <p style="margin:8px 0 0">${km(p.kmTotal)} · shpenzime shtesë <b>${eur(exT)}</b>${ex.length?` (${ex.length})`:""}</p>
@@ -1875,7 +1875,7 @@ async function renderTrip(id){
     ${tr.status==="done"?`<p><span class="pill good">Udhëtimi ka përfunduar</span></p>`:tr.status==="onroad"?`<p style="margin:10px 0 0"><span class="pill road" style="font-size:14px">Në rrugë</span> <button class="btn ghost small" type="button" id="tStop">Ktheje në planifikim</button></p>`:`<button class="btn yellow full big" type="button" id="tStart" style="margin-top:10px">Nisu: fillo udhëtimin</button>`}
     ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
   </div>
-  ${p.stops.length&&!left.length?reportCard(tr,p):""}
+  ${tr.status==="done"?reportCard(tr,p):""}
   <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
     ${p.stops.length?"":`<p class="mute">Ende s'ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
     ${p.stops.map((o,i)=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}${telLink(o)}${o.status==="delivered"?` <span class="pill good">dorëzuar</span>`:""}<br><span class="mute">${esc(o.addr.label)}</span>
@@ -1917,7 +1917,7 @@ async function renderTrip(id){
   ${fillsCard(tr,p)}
   ${tr.status==="onroad"||tr.status==="done"||tripExp(tr).length?expCard(tr,p):""}
   ${fuelDrop(tr)}
-  <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
+  <div class="card"><div class="row"><button class="btn ${tr.status==="done"?"ghost":"green big"}" id="done">${tr.status==="done"?"Rihape udhëtimin":"Përfundo udhëtimin"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
   $("#t-date").onchange=e=>{tr.date=e.target.value;save();toast("Data u ndryshua");renderTrip(id)};
   document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{const d=new Date((tr.date||todayISO())+"T12:00:00");d.setDate(d.getDate()+ +b.dataset.shift);tr.date=d.toISOString().slice(0,10);save();toast("U shty për "+dateTxt(tr.date));renderTrip(id)});
@@ -1929,7 +1929,8 @@ async function renderTrip(id){
   if(tr.open3d)draw3();$("#t3d").ontoggle=e=>{tr.open3d=e.target.open;save();if(e.target.open)draw3()};
   $("#tk-tip").onchange=e=>{tr.tip=e.target.checked;save();renderTrip(id)};
   $("#t-van").onchange=e=>{tr.van=e.target.value;save();renderTrip(id)};
-  $("#done").onclick=()=>{tr.status=tr.status==="done"?"planned":"done";save();renderTrip(id)};
+  $("#done").onclick=()=>{const end=tr.status!=="done";tr.status=end?"done":"planned";if(end)tr.endedAt=new Date().toISOString();save();
+    renderTrip(id).then(()=>{if(end)$("#tripPdf")?.closest(".card")?.scrollIntoView({block:"start",behavior:"smooth"})})};
   if($("#tStart"))$("#tStart").onclick=()=>{tr.status="onroad";tr.startedAt=new Date().toISOString();save();toast("Udhëtimi filloi. Porositë janë në rrugë.");renderTrip(id)};
   if($("#tStop"))$("#tStop").onclick=()=>{tr.status="planned";save();renderTrip(id)};
   $("#addFill").onclick=async()=>{let pre={tripId:tr.id};try{const pos=LIVE.pos&&Date.now()-LIVE.at<3e5?LIVE.pos:await Promise.race([getPos(),new Promise((_,n)=>setTimeout(()=>n(0),6000))]);
