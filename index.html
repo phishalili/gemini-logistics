@@ -60,6 +60,7 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 .pill.good{background:var(--goodbg);color:var(--good)}
 .pill.road{background:#fff4cc;color:#8a6200}.pill.next{background:var(--acc2);color:var(--acc)}.pill.none{background:#fde8e8;color:#b42318}
 .ost{border-left:5px solid var(--line);padding-left:10px!important;margin-left:-4px}.ost.none{border-left-color:#e5484d}.ost.next{border-left-color:#3b6fe0}.ost.road{border-left-color:#f0b400}.ost.done{border-left-color:#2fa36b}
+.fchip{border:0;font:inherit;font-size:13.5px;font-weight:700;padding:7px 12px;cursor:pointer}.fchip.on{outline:2px solid currentColor;outline-offset:1px}
 .btn.big{font-size:17px;padding:14px}.btn.yellow{background:#f0b400;color:#1c2333}.btn.green{background:#2fa36b;color:#fff}
 .stop{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .stop:last-child{border-bottom:0}
@@ -1000,7 +1001,7 @@ function renderOrders(){
   const waitL=list.filter(o=>o.status!=="delivered"&&!onTrip(o)),tripL=list.filter(o=>o.status!=="delivered"&&onTrip(o)),doneL=list.filter(o=>o.status==="delivered");
   const row=o=>{const g=orderGoods(o),st=orderState(o);return `<div class="stop ost ${st.k}" style="cursor:default;flex-wrap:wrap">
     <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
-    <span class="pill ${st.k==="done"?"good":st.k}">${esc(st.t)}</span> <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span><span id="rec-${o.id}"></span></div>
+    <span class="pill ${st.k==="done"?"good":st.k}">${esc(st.t)}${st.k==="done"&&o.deliveredAt?" "+esc(fmtDay(o.deliveredAt)):""}</span> <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span><span id="rec-${o.id}"></span></div>
     <div><b>${eur(o.price)}</b></div>
     <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
       ${st.k==="road"?`<button class="btn green big" style="flex:1 1 100%" type="button" data-deliv="${o.id}">Dorëzuar</button>`:st.k==="done"?`<button class="btn ghost small" type="button" data-deliv="${o.id}">Anulo dorëzimin</button>`:""}
@@ -1008,21 +1009,26 @@ function renderOrders(){
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
       ${o.items?.length?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
-  $("#app").innerHTML=`<div class="card" style="padding:10px 14px"><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:13px"><span class="pill none">Pa udhëtim</span><span class="pill next">Për udhëtimin e radhës</span><span class="pill road">Në rrugë</span><span class="pill good">Dorëzuar</span></div></div>
-  <div class="card"><h2>Porositë që presin (${waitL.length})</h2>
-  ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
-  ${waitL.map(row).join("")}</div>
-  ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${tripL.some(o=>orderState(o).k==="road")?"open":""}><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
-  ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
+  const F=ordFilter(),cnt=k=>list.filter(o=>orderState(o).k===k).length,rank={road:0,next:1,none:2,done:3};
+  const active=list.filter(o=>o.status!=="delivered").sort((x,y)=>rank[orderState(x).k]-rank[orderState(y).k]);
+  const shown=F==="all"?active:F==="done"?doneL.sort((x,y)=>String(y.deliveredAt||y.created).localeCompare(String(x.deliveredAt||x.created))):active.filter(o=>orderState(o).k===F);
+  const chip=(k,cls,t,n)=>`<button type="button" class="pill ${cls} fchip ${F===k?"on":""}" data-of="${k}">${t}${n!=null?` (${n})`:""}</button>`;
+  $("#app").innerHTML=`<div class="card" style="padding:10px 14px"><div style="display:flex;flex-wrap:wrap;gap:6px">
+    ${chip("all","","Aktive",active.length)}${chip("none","none","Pa udhëtim",cnt("none"))}${chip("next","next","Udhëtimi i radhës",cnt("next"))}${chip("road","road","Në rrugë",cnt("road"))}${chip("done","good","Historia",doneL.length)}</div></div>
+  <div class="card"><h2>${{all:"Porositë aktive",none:"Pa udhëtim",next:"Për udhëtimin e radhës",road:"Në rrugë",done:"Historia: porositë e dorëzuara"}[F]} (${shown.length})</h2>
+  ${shown.length?shown.map(row).join(""):`<p class="mute">${list.length?(F==="done"?"Ende nuk ka porosi të dorëzuara.":"Nuk ka porosi me këtë ngjyrë."):"Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje."}</p>`}</div>
   ${carsCard()}`;
   document.querySelectorAll("[data-assign]").forEach(sel=>sel.onchange=()=>{assignOrder(sel.dataset.assign,sel.value);render()});
+  document.querySelectorAll("[data-of]").forEach(b=>b.onclick=()=>{ORD_F=b.dataset.of===ORD_F?"all":b.dataset.of;try{localStorage.setItem("gemini.ordF",ORD_F)}catch(e){}render()});
   document.querySelectorAll("[data-deliv]").forEach(b=>b.onclick=()=>{const o=DB.orders.find(x=>x.id===b.dataset.deliv);if(!o)return;o.status=o.status==="delivered"?"open":"delivered";if(o.status==="delivered")o.deliveredAt=new Date().toISOString();save();toast(o.status==="delivered"?"U shënua e dorëzuar":"Dorëzimi u anulua");render()});
   if(document.querySelector("[data-pdf]"))preloadPdf().catch(()=>{});
   document.querySelectorAll("[data-pdf]").forEach(btn=>btn.onclick=e=>{const o=DB.orders.find(x=>x.id===btn.dataset.pdf);if(o)shareOfferPdf(o,btn)});
   document.querySelectorAll("[data-delo]").forEach(btn=>btn.onclick=()=>{if(!twoTap(btn))return;const id=btn.dataset.delo;DB.orders=DB.orders.filter(x=>x.id!==id);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==id));save();toast("Porosia u fshi");render()});
   const waiting=waitL;recommendOrders(waiting);
-  if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
+  if(waiting.length>=2&&(F==="all"||F==="none")){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
 }
+let ORD_F=null;
+function ordFilter(){if(ORD_F==null){try{ORD_F=localStorage.getItem("gemini.ordF")||"all"}catch(e){ORD_F="all"}}return ORD_F}
 // Ngjyra e porosisë: e kuqe = pa udhëtim, blu = në udhëtimin e radhës, e verdhë = në rrugë, jeshile = dorëzuar
 function orderState(o){if(o.status==="delivered")return {k:"done",t:"Dorëzuar"};
   const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);
