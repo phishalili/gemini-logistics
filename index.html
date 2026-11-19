@@ -58,6 +58,9 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 .pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:99px;background:var(--acc2);color:var(--acc);font-weight:700}
 .pill.warn{background:var(--warnbg);color:var(--warn)}
 .pill.good{background:var(--goodbg);color:var(--good)}
+.pill.road{background:#fff4cc;color:#8a6200}.pill.next{background:var(--acc2);color:var(--acc)}.pill.none{background:#fde8e8;color:#b42318}
+.ost{border-left:5px solid var(--line);padding-left:10px!important;margin-left:-4px}.ost.none{border-left-color:#e5484d}.ost.next{border-left-color:#3b6fe0}.ost.road{border-left-color:#f0b400}.ost.done{border-left-color:#2fa36b}
+.btn.big{font-size:17px;padding:14px}.btn.yellow{background:#f0b400;color:#1c2333}.btn.green{background:#2fa36b;color:#fff}
 .stop{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .stop:last-child{border-bottom:0}
 .num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;font-weight:800;font-size:13px}
@@ -229,13 +232,19 @@ function fitsPiece(it,v){if(perM(it))return true;const p=[+it.l,+it.w,+it.h].map
 function orderGoods(o){return o.items?goods(o.items):{m3:+o.m3||0,kg:+o.kg||0,est:false,pcs:o.pcs||1}}
 
 /* ===================== KOSTOT DHE ÇMIMI ===================== */
-function dieselPrice(){const s=S(),h=s.fuelHomeShare/100;return h*(s.diesel.XK||0)+(1-h)*(s.diesel[s.fuelAwayCountry]||0)}
+// Çmimi i vendit: nëse shoferët kanë mbushur në 7 ditët e fundit, përdoret mesatarja e asaj që kanë paguar
+function paidAvg(c,days=7){const lim=Date.now()-days*864e5,l=(DB.fills||[]).filter(f=>f.c===c&&+f.price>0&&new Date(f.date).getTime()>=lim);
+  return l.length?{v:l.reduce((a,f)=>a+ +f.price,0)/l.length,n:l.length,last:l.sort((a,b)=>String(b.date).localeCompare(a.date))[0]}:null}
+function dieselOf(c){const p=paidAvg(c);return p?p.v:(S().diesel[c]||0)}
+function dieselPrice(){const s=S(),h=s.fuelHomeShare/100;return h*dieselOf("XK")+(1-h)*dieselOf(s.fuelAwayCountry)}
 function perKm(v){return v.lPer100/100*dieselPrice()+S().wearPerKm}
 function fixedPerTrip(){const s=S();return s.fixedYear.reduce((a,b)=>a+(+b.eur||0),0)/Math.max(1,s.tripsPerYear)}
-function tripCostBreakdown(v,kmTotal){
+function tripCostBreakdown(v,kmTotal,tr){
   const s=S(),L=kmTotal*v.lPer100/100;
+  const fl=tr?(DB.fills||[]).filter(f=>f.tripId===tr.id&&+f.price>0&&+f.liters>0):[],fL=fl.reduce((a,f)=>a+ +f.liters,0);
+  const dp=fL?fl.reduce((a,f)=>a+f.price*f.liters,0)/fL:dieselPrice();
   const rows=[
-    ["Nafta ("+Math.round(L)+" L × "+eur(dieselPrice())+")",L*dieselPrice()],
+    ["Nafta ("+Math.round(L)+" L × "+eur(dp)+(fL?", çmimi i paguar":"")+")",L*dp],
     ["Konsumimi & servisi ("+km(kmTotal)+" × "+eur(s.wearPerKm)+")",kmTotal*s.wearPerKm],
     ["Autostradat / taksat",s.tollsPerTrip.reduce((a,b)=>a+(+b.eur||0),0)],
     ["Sigurimi & vinjetat (pjesa për udhëtim)",fixedPerTrip()],
@@ -312,7 +321,7 @@ async function planTrip(trip){
   const s=S(),v=vanById(trip.van);
   const orders=trip.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
   const r=await routeOf(trip,orders);
-  const costs=tripCostBreakdown(v,r.len);
+  const costs=tripCostBreakdown(v,r.len,trip);
   const kg=orders.reduce((a,o)=>a+orderGoods(o).kg,0),m3=orders.reduce((a,o)=>a+orderGoods(o).m3,0);
   const tc=tripCars(trip),sum=(a,f)=>a.reduce((t,x)=>t+f(x),0);
   const carsIn=sum(tc,netRec),ordersIn=sum(orders,netRec),vatAmt=sum(tc,x=>+x.price||0)+sum(orders,x=>+x.price||0)-carsIn-ordersIn;
@@ -382,15 +391,16 @@ async function tripFuel(p,tr){
   const countries=Object.keys(order).filter(c=>CNAME[c]).sort((a,b)=>order[a]-order[b]);
   return {g,pts,countries,list:dedup,top:[...dedup].sort((a,b)=>a.price-b.price).slice(0,3)};
 }
-const stRow=(x,mark)=>`<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b> · <b style="${mark?"color:var(--good)":""}">${eur(x.price)}</b>${CNAME[x.c]?` <span class="mute">(${CNAME[x.c][2]})</span>`:""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}${x.at!=null?` · km ${Math.round(x.at)} e rrugës`:""}${x.off>3?` · ${Math.round(x.off)} km larg rrugës`:""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`;
+const stRow=(x0,mark)=>{const x=withPaid(x0);return `<div class="stop" style="cursor:default;padding:6px 0"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b> · <b style="${mark?"color:var(--good)":""}">${eur(x.price)}</b>${CNAME[x.c]?` <span class="mute">(${CNAME[x.c][2]})</span>`:""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}${x.at!=null?` · km ${Math.round(x.at)} e rrugës`:""}${x.off>3?` · ${Math.round(x.off)} km larg rrugës`:""}${x.mw?" · autostradë":""}${x.paidBy?`<br><span style="color:var(--good)">Paguar nga ${esc(x.paidBy)} më ${esc(fmtDay(x.paidOn))}</span>`:""}</span></div><a class="btn small" href="${stationMap(x)}" target="_blank" rel="noopener">Harta</a></div>`};
 // Në faqen e udhëtimit: vetëm një menu e mbyllur me 3 më të lirat
 function fuelDrop(tr){return `<div class="card"><details class="more" id="fuelDrop" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Nafta në rrugë</summary><div id="fuelTop"><p class="mute">Duke kërkuar pikat në rrugë…</p></div>
-  <button class="btn ghost full" type="button" onclick="setTab('trips','fuel:${tr.id}')">Shiko të gjitha pikat sipas vendit →</button></details></div>`}
+  <button class="btn ghost full" type="button" onclick="setTab('trips','fuel:${tr.id}')">Shiko të gjitha pikat sipas vendit →</button>
+  <button class="btn full" type="button" style="margin-top:8px" onclick="setTab('trips','near')">Pikat më të lira afër meje (GPS)</button></details></div>`}
 async function fillFuelDrop(p,tr){
   const el=$("#fuelTop");if(!el)return;
   if(!STN)await syncStations();
   const f=await tripFuel(p,tr);if(!$("#fuelTop"))return;
-  const cheapC=f.countries.map(c=>({c,v:S().diesel[c]})).filter(x=>x.v).sort((a,b)=>a.v-b.v)[0];
+  const cheapC=f.countries.map(c=>({c,v:dieselOf(c)})).filter(x=>x.v).sort((a,b)=>a.v-b.v)[0];
   $("#fuelTop").innerHTML=f.top.length?`<p class="mute" style="margin:0 0 4px">3 pikat më të lira në rrugën tënde${cheapC?` · vendi më i lirë: ${CNAME[cheapC.c][2]} ${eur(cheapC.v)}`:""}</p>${f.top.map(x=>stRow(x,true)).join("")}`
     :`<p class="mute">${STN?"S'u gjetën pika me çmim afër kësaj rruge.":"Pikat shfaqen pasi app-i lidhet me internetin."}</p>`;
 }
@@ -408,11 +418,12 @@ async function renderFuel(id){
     <h2 style="margin-top:10px">Nafta në rrugë</h2>
     <div class="mute">${esc(route.join(" → "))}${f.g.km?` · ${km(f.g.km)}`:""}${f.g.real?"":" · rruga e përafërt (pa internet)"}</div>
     <p class="mute" style="margin:6px 0 0">${f.list.length} pika me çmim brenda ~10 km nga rruga. Të gjelbrat janë 3 më të lirat. ${STN?.updated?"Çmimet e "+esc(fmtDay(STN.updated))+".":""}</p></div>
-    ${f.countries.map(c=>{const [code,flag,name]=CNAME[c],l=(by[c]||[]),avg=s.diesel[c],min=l.length?Math.min(...l.map(x=>x.price)):null;
+    ${f.countries.map(c=>{const [code,flag,name]=CNAME[c],l=(by[c]||[]),avg=dieselOf(c),paid=paidAvg(c),min=l.length?Math.min(...l.map(x=>x.price)):null;
       return `<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${l.length&&l.length<=6?"open":""}><summary style="font-size:18px">${name} · ${min!=null?`nga <b>${eur(min)}</b>`:avg?`<b>${eur(avg)}</b>`:"pa të dhëna"}${l.length?` · ${l.length} pika`:""}</summary>
+        <p class="mute" style="margin:2px 0 6px;font-size:13px">${paid?`Paguar nga shoferët: <b>${eur(paid.v)}</b> (${paid.n} mbushje në 7 ditë, e fundit ${esc(fmtDay(paid.last.date))}). `:""}${esc(srcTxt(c))}</p>
         ${l.length?l.map(x=>stRow(x,cheapest.has(x.c+x.name+x.address))).join(""):`<p class="mute" style="margin:4px 0">${code==="XK"?"Mesatarja e kompanive (NaftaSot)":code==="RS"?"Çmimi maksimal i shtetit, njësoj në të gjitha pikat":code==="CH"?"Zvicra nuk publikon çmime falas për çdo pikë":"Mesatarja e vendit (buletini i BE-së)"}${avg?`: <b>${eur(avg)}</b>/L`:""}. Çmime për çdo pikë nuk ka falas.</p>`}
         </details></div>`}).join("")}
-    <div class="card"><p class="mute" style="margin:0">Burimet: mzoe-gor.hr (HR), goriva.si (SI), E-Control (AT), clever-tanken.de (DE), prix-carburants.gouv.fr (FR), MIMIT (IT). Përditësohen çdo mëngjes.</p></div>`;
+    <div class="card"><p class="mute" style="margin:0">Burimet: mzoe-gor.hr (HR, të gjitha pikat), goriva.si (SI, të gjitha pikat), E-Control (AT), clever-tanken.de (DE), prix-carburants.gouv.fr (FR). Çmimi është i dizelit të zakonshëm, jo premium. Në autostradë çmimi zakonisht është më i lartë. Përditësohen çdo mëngjes.</p></div>`;
 }
 
 /* ===================== PJESË TË PËRBASHKËTA ===================== */
@@ -769,6 +780,76 @@ async function fitsOnTrips(o){
   return `<h3>Hyn në një udhëtim të planifikuar?</h3>`+rows.map((r,i)=>opt(r.tr.id,i===0&&r.ok,!r.ok,`<b>${esc(dateTxt(r.tr.date))}</b> +${km(r.ex)} rrugë shtesë (≈${eur(r.cost)}) ${r.ok?`<span class="pill good">hyn</span>`:`<span class="pill warn">plot</span>`}`)).join("")+opt("",!rows[0].ok,false,"Mos e shto ende në udhëtim");
 }
 
+
+/* ===================== NAFTA AFËR MEJE + MBUSHJET ===================== */
+const LIVE={pos:null,at:0};
+function srcTxt(c){const t=(S().dieselSrc||{})[c];return t?"Burimi: "+t.replace(/(\d{4}-\d\d-\d\d)/,m=>fmtDay(m)):""}
+function whoAmI(){const e=SYNC?.user?.email||"";return {"fisnikhalili@gmail.com":"Phis","marufhalili@gmail.com":"Maruf","halili.krenar@gmail.com":"Krenar"}[e]||""}
+// pika me çmimin që e kanë paguar shoferët (≤7 ditë, ≤300 m larg)
+function withPaid(x){const lim=Date.now()-7*864e5;
+  const f=(DB.fills||[]).filter(f=>f.lat&&+f.price>0&&new Date(f.date).getTime()>=lim&&hav(f,x)<0.3).sort((a,b)=>String(b.date).localeCompare(a.date))[0];
+  return f?{...x,price:+f.price,paidBy:f.by||"shoferi",paidOn:f.date}:x}
+function getPos(){return new Promise((ok,no)=>{if(!navigator.geolocation)return no(new Error("Ky telefon nuk e jep vendndodhjen"));
+  navigator.geolocation.getCurrentPosition(p=>{LIVE.pos={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};LIVE.at=Date.now();ok(LIVE.pos)},
+    e=>no(new Error(e.code===1?"Lejo vendndodhjen për këtë faqe te cilësimet e telefonit (Safari/Chrome → Location).":"Vendndodhja nuk u gjet. Provo jashtë ose ndez GPS.")),{enableHighAccuracy:true,timeout:20000,maximumAge:60000})})}
+const BOX={XK:[41.85,43.27,20.0,21.8],RS:[42.2,46.2,18.8,23.0],HR:[42.4,46.6,13.4,19.5],SI:[45.4,46.9,13.3,16.6],AT:[46.3,49.1,9.5,17.2],DE:[47.2,55.1,5.8,15.1],CH:[45.8,47.9,5.9,10.5],IT:[36.6,47.1,6.6,18.6],FR:[41.3,51.1,-5.2,9.6],LU:[49.4,50.2,5.7,6.6],BE:[49.5,51.6,2.5,6.4],NL:[50.7,53.6,3.3,7.3]};
+function countryAt(pt){const st=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pt,x)})).sort((a,b)=>a.d-b.d)[0];
+  if(st&&st.d<25)return st.x.c;const b=Object.keys(BOX).filter(c=>{const[a,b2,c1,d]=BOX[c];return pt.lat>=a&&pt.lat<=b2&&pt.lng>=c1&&pt.lng<=d});
+  return b.sort((a,b2)=>{const A=BOX[a],B=BOX[b2];return (A[1]-A[0])*(A[3]-A[2])-(B[1]-B[0])*(B[3]-B[2])})[0]||""}
+const dirUrl=x=>"https://www.google.com/maps/dir/?api=1&destination="+x.lat+","+x.lng+"&travelmode=driving";
+async function renderNear(){
+  $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button><h2 style="margin-top:10px">Nafta afër meje</h2><p class="mute" id="nearMsg">Duke gjetur vendndodhjen tënde…</p></div><div id="nearList"></div>`;
+  if(!STN)await syncStations();
+  let pos;try{pos=await getPos()}catch(e){$("#nearMsg").innerHTML=`<span class="pill warn">${esc(e.message)}</span>`;return}
+  if(TAB!=="trips"||VIEW!=="near")return;
+  const c=countryAt(pos),cn=CNAME[c];
+  const all=(STN?.stations||[]).filter(x=>x.lat).map(x=>({...withPaid(x),d:hav(pos,x)})).filter(x=>x.d<=40);
+  const cheap=[...all].sort((a,b)=>a.price-b.price||a.d-b.d).slice(0,8),close=[...all].sort((a,b)=>a.d-b.d).slice(0,3);
+  const row=x=>`<div class="stop" style="cursor:default;flex-wrap:wrap"><div class="grow"><b>${esc(x.name||x.address||"Pikë karburanti")}</b>${x.mw?' <span class="pill">autostradë</span>':""}<br><span class="mute">${esc([x.name?x.address:"",x.city].filter(Boolean).join(", "))}</span>
+      ${x.paidBy?`<br><span style="color:var(--good);font-size:13px">Paguar nga ${esc(x.paidBy)} më ${esc(fmtDay(x.paidOn))}</span>`:""}</div>
+    <div style="text-align:right"><b style="font-size:18px">${eur(x.price)}</b><br><span class="mute">${x.d<1?Math.round(x.d*1000)+" m":num1(x.d)+" km"}</span></div>
+    <div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><a class="btn small" style="flex:1;text-align:center" href="${dirUrl(x)}" target="_blank" rel="noopener">Navigo</a>
+    <button class="btn ghost small" style="flex:1" type="button" data-fillst='${esc(JSON.stringify({c:x.c,lat:x.lat,lng:x.lng,station:[x.name,x.city].filter(Boolean).join(", "),price:x.price}))}'>Mbusha këtu</button></div></div>`;
+  $("#nearMsg").innerHTML=`Je ${cn?"në "+esc(cn[2]):"këtu"} (saktësia ~${Math.round(pos.acc||0)} m). ${all.length?`${all.length} pika me çmim brenda 40 km (vijë e drejtë).`:""} ${STN?.updated?"Çmimet e "+esc(fmtDay(STN.updated))+".":""}`;
+  const paid=c&&paidAvg(c);
+  $("#nearList").innerHTML=(all.length?`<div class="card"><h2>Më të lirat afër</h2>${cheap.map(row).join("")}</div>
+    <div class="card"><h2>Më të afërtat</h2>${close.map(row).join("")}</div>`
+    :`<div class="card"><p style="margin:0">Për këtë vend nuk ka çmime për çdo pikë falas.${c&&dieselOf(c)?` Mesatarja: <b>${eur(dieselOf(c))}</b>/L.`:""}</p><p class="mute" style="margin:6px 0 0">${esc(srcTxt(c))}</p>
+      <a class="btn full" style="margin-top:8px" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("gas station diesel")}&center=${pos.lat},${pos.lng}" target="_blank" rel="noopener">Hap pikat në Google Maps</a></div>`)
+    +`<div class="card"><button class="btn green full big" type="button" data-fillst='${esc(JSON.stringify({c,lat:pos.lat,lng:pos.lng,station:"",price:paid?+paid.v.toFixed(3):(dieselOf(c)||"")}))}'>Shëno mbushjen (çmimi që pagova)</button>
+      <p class="mute" style="margin:6px 0 0">Kur shënon çmimin e vërtetë, ai shihet te të gjithë telefonat dhe përdoret në llogaritje për 7 ditë.</p></div>`;
+  document.querySelectorAll("[data-fillst]").forEach(b=>b.onclick=()=>fillForm(JSON.parse(b.dataset.fillst)));
+}
+// Forma e mbushjes: çmimi për litër, litrat, udhëtimi
+function fillForm(pre={},onSaved){
+  const act=DB.trips.filter(t=>t.status!=="done").sort((a,b)=>(b.status==="onroad")-(a.status==="onroad")||String(a.date||"").localeCompare(String(b.date||"")));
+  const tid=pre.tripId||act[0]?.id||"";
+  document.querySelector(".cmenu")?.remove();
+  const m=document.createElement("div");m.className="cmenu";
+  m.innerHTML=`<div class="cm-box" style="text-align:left"><h2 style="margin:0 0 6px">Mbushja me naftë</h2>
+    <div class="row"><div><label for="fl-p">Çmimi € për litër</label><input id="fl-p" type="text" inputmode="decimal" value="${pre.price||""}"></div>
+    <div><label for="fl-l">Litrat (nëse i di)</label><input id="fl-l" type="text" inputmode="decimal" value="${pre.liters||""}"></div></div>
+    <label for="fl-s">Pika e karburantit</label><input id="fl-s" value="${esc(pre.station||"")}" placeholder="P.sh. INA Lipovac">
+    <div class="row"><div><label for="fl-c">Vendi</label><select id="fl-c">${CTRY.map(x=>`<option value="${x[0]}" ${x[0]===pre.c?"selected":""}>${esc(x[2])}</option>`).join("")}</select></div>
+    <div><label for="fl-t">Udhëtimi</label><select id="fl-t"><option value="">Pa udhëtim</option>${act.map(t=>`<option value="${t.id}" ${t.id===tid?"selected":""}>${esc(tripLabel(t.id))}</option>`).join("")}</select></div></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" type="button" id="fl-x">Anulo</button><button class="btn green" type="button" id="fl-ok">Ruaje</button></div></div>`;
+  document.body.appendChild(m);
+  m.onclick=e=>{if(e.target===m)m.remove()};$("#fl-x").onclick=()=>m.remove();
+  $("#fl-ok").onclick=()=>{const price=parseFloat(String($("#fl-p").value).replace(",","."))||0;if(!(price>0.5&&price<4))return toast("Shkruaj çmimin për litër, p.sh. 1,84");
+    const f={id:uid(),date:new Date().toISOString(),by:whoAmI()||(DB.trips.find(t=>t.id===$("#fl-t").value)?.name)||"",c:$("#fl-c").value,lat:pre.lat||null,lng:pre.lng||null,
+      station:$("#fl-s").value.trim(),price,liters:parseFloat(String($("#fl-l").value).replace(",","."))||0,tripId:$("#fl-t").value||null};
+    DB.fills.unshift(f);save();m.remove();toast("Mbushja u ruajt");if(onSaved)onSaved();else render()};
+}
+function fillsCard(tr,p){
+  const l=(DB.fills||[]).filter(f=>f.tripId===tr.id),L=l.reduce((a,f)=>a+(+f.liters||0),0),paid=l.reduce((a,f)=>a+(+f.liters||0)*f.price,0);
+  const calcL=p.kmTotal*p.v.lPer100/100;
+  return `<div class="card"><h2>Mbushjet me naftë</h2>
+    ${l.length?l.map(f=>`<div class="stop" style="cursor:default"><div class="grow"><b>${eur(f.price)}</b>/L${+f.liters?` · ${num1(f.liters)} L = <b>${eur(f.price*f.liters)}</b>`:""}<br><span class="mute">${esc([f.station,CNAME[f.c]?.[2]].filter(Boolean).join(", "))} · ${esc(fmtDay(f.date))}${f.by?" · "+esc(f.by):""}</span></div><button class="x" style="background:none;border:0;font-size:22px;color:var(--mute)" data-delfill="${f.id}" aria-label="Fshi">×</button></div>`).join("")
+      +`<p class="mute" style="margin:6px 0 0">${L?`Paguar: <b>${eur(paid)}</b> për ${num1(L)} L. Llogaritja e udhëtimit tani përdor çmimin mesatar të paguar ${eur(paid/L)}. Sipas km duhen ~${Math.round(calcL)} L.`:"Shkruaj edhe litrat që llogaritja të përdorë çmimin e paguar."}</p>`
+      :`<p class="mute" style="margin:0">Ende nuk ka mbushje. Kur mbush, shëno çmimin e vërtetë. Nëse ndryshon nga llogaritja, kostoja e udhëtimit përditësohet.</p>`}
+    <button class="btn green full big" type="button" id="addFill" style="margin-top:8px">Shto mbushjen</button></div>`;
+}
+
 /* ===================== OFERTA PDF PËR KLIENTIN ===================== */
 // Vetëm çmimi final për klientin: pa kosto, pa naftë, pa fitim.
 const PDF={lib:null,logo:null,loading:null};
@@ -917,28 +998,37 @@ function renderOrders(){
   if(VIEW)return renderOrder(VIEW);
   const list=DB.orders;
   const waitL=list.filter(o=>o.status!=="delivered"&&!onTrip(o)),tripL=list.filter(o=>o.status!=="delivered"&&onTrip(o)),doneL=list.filter(o=>o.status==="delivered");
-  const row=o=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default;flex-wrap:wrap">
+  const row=o=>{const g=orderGoods(o),st=orderState(o);return `<div class="stop ost ${st.k}" style="cursor:default;flex-wrap:wrap">
     <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
-    <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span> ${o.status==="delivered"?`<span class="pill good">dorëzuar</span>`:""}${onTrip(o)&&o.status!=="delivered"?` <span class="pill">në udhëtim: ${esc(tripLabel(o.tripId))}</span>`:""}<span id="rec-${o.id}"></span></div>
+    <span class="pill ${st.k==="done"?"good":st.k}">${esc(st.t)}</span> <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span><span id="rec-${o.id}"></span></div>
     <div><b>${eur(o.price)}</b></div>
     <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
-      <select data-assign="${o.id}" style="flex:1 1 100%;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
+      ${st.k==="road"?`<button class="btn green big" style="flex:1 1 100%" type="button" data-deliv="${o.id}">Dorëzuar</button>`:st.k==="done"?`<button class="btn ghost small" type="button" data-deliv="${o.id}">Anulo dorëzimin</button>`:""}
+      ${st.k==="done"?"":`<select data-assign="${o.id}" style="flex:1 1 100%;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>`}
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
       ${o.items?.length?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
-  $("#app").innerHTML=`<div class="card"><h2>Porositë që presin (${waitL.length})</h2>
+  $("#app").innerHTML=`<div class="card" style="padding:10px 14px"><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:13px"><span class="pill none">Pa udhëtim</span><span class="pill next">Për udhëtimin e radhës</span><span class="pill road">Në rrugë</span><span class="pill good">Dorëzuar</span></div></div>
+  <div class="card"><h2>Porositë që presin (${waitL.length})</h2>
   ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
   ${waitL.map(row).join("")}</div>
-  ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
+  ${tripL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0" ${tripL.some(o=>orderState(o).k==="road")?"open":""}><summary style="font-size:18px">Në udhëtim (${tripL.length})</summary>${tripL.map(row).join("")}</details></div>`:""}
   ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
   ${carsCard()}`;
   document.querySelectorAll("[data-assign]").forEach(sel=>sel.onchange=()=>{assignOrder(sel.dataset.assign,sel.value);render()});
+  document.querySelectorAll("[data-deliv]").forEach(b=>b.onclick=()=>{const o=DB.orders.find(x=>x.id===b.dataset.deliv);if(!o)return;o.status=o.status==="delivered"?"open":"delivered";if(o.status==="delivered")o.deliveredAt=new Date().toISOString();save();toast(o.status==="delivered"?"U shënua e dorëzuar":"Dorëzimi u anulua");render()});
   if(document.querySelector("[data-pdf]"))preloadPdf().catch(()=>{});
   document.querySelectorAll("[data-pdf]").forEach(btn=>btn.onclick=e=>{const o=DB.orders.find(x=>x.id===btn.dataset.pdf);if(o)shareOfferPdf(o,btn)});
   document.querySelectorAll("[data-delo]").forEach(btn=>btn.onclick=()=>{if(!twoTap(btn))return;const id=btn.dataset.delo;DB.orders=DB.orders.filter(x=>x.id!==id);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==id));save();toast("Porosia u fshi");render()});
   const waiting=waitL;recommendOrders(waiting);
   if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
 }
+// Ngjyra e porosisë: e kuqe = pa udhëtim, blu = në udhëtimin e radhës, e verdhë = në rrugë, jeshile = dorëzuar
+function orderState(o){if(o.status==="delivered")return {k:"done",t:"Dorëzuar"};
+  const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);
+  if(t&&t.status==="onroad")return {k:"road",t:"Në rrugë"+(t.name?" · "+t.name:"")};
+  if(t&&t.status!=="done")return {k:"next",t:"Udhëtimi: "+tripLabel(t.id)};
+  return {k:"none",t:"Pa udhëtim"}}
 // A është porosia në një udhëtim që ende s'ka përfunduar?
 function onTrip(o){const t=o.tripId&&DB.trips.find(x=>x.id===o.tripId);return !!t&&t.status!=="done"}
 // "Rekomandohet": për çdo porosi që pret, udhëtimi i ardhshëm ku hyn me më pak rrugë shtesë (dhe ka vend)
@@ -983,6 +1073,11 @@ async function renderPlan(waiting){
   $("#mkTrip").onclick=()=>{const tr={id:uid(),date:new Date(Date.now()+864e5).toISOString().slice(0,10),name:"",van:v.id,orderIds:take.map(o=>o.id),carIds:[],status:"planned",returnIncome:0};
     take.forEach(o=>o.tripId=tr.id);DB.trips.unshift(tr);save();toast("Udhëtimi u krijua. Ndrysho datën nëse duhet.");setTab("trips",tr.id)};
 }
+// Emri që e njohin njerëzit: pa kodet e shasisë (W205, F30, B8, 8P…). Kodet mbeten për kërkim.
+function carDisplay(n){const MB={A:"A-Klasse",B:"B-Klasse",C:"C-Klasse",E:"E-Klasse"};
+  let w=n.split(" ");if(w[0]==="Mercedes"&&MB[w[1]])w[1]=MB[w[1]];
+  w=w.filter((t,i)=>i<2||!/^(W\d{3}|[EFG]\d{2}(\/[EFG]\d{2})?|B\d(\/B\d)?|C\d|8[A-Z]|T5\/T6|\(\d\)|[A-Z])$/.test(t));
+  return w.join(" ").replace("ML/GLE","ML / GLE")}
 const CARSPECS=`VW Golf 4|golf,golf 4,golf iv|1997|2003|4149|1735|1444|1200
 VW Golf 5|golf,golf 5,golf v|2003|2008|4204|1759|1485|1250
 VW Golf 6|golf,golf 6,golf vi|2008|2012|4199|1779|1479|1250
@@ -1028,13 +1123,13 @@ BMW X5 F15|x5,f15|2013|2018|4886|1938|1762|2100
 Mercedes A W169|a klasse,a-klasse,a class,w169,a160,a180|2004|2012|3838|1764|1593|1250
 Mercedes A W176|a klasse,a-klasse,a class,w176,a180,a200|2012|2018|4292|1780|1433|1400
 Mercedes C W203|c klasse,c-klasse,c class,w203,c200,c220|2000|2007|4526|1728|1426|1450
-Mercedes C W204|c klasse,c-klasse,c class,w204,c200,c220,c250|2007|2014|4581|1770|1447|1500
-Mercedes C W205|c klasse,c-klasse,c class,w205,c200,c220|2014|2021|4686|1810|1442|1550
+Mercedes C W204|c klasse,c-klasse,c class,w204,c180,c200,c220,c250,c350|2007|2014|4581|1770|1447|1500
+Mercedes C W205|c klasse,c-klasse,c class,w205,c180,c200,c220,c250,c300|2014|2021|4686|1810|1442|1550
 Mercedes E W211|e klasse,e-klasse,e class,w211,e200,e220,e270,e320|2002|2009|4818|1822|1452|1650
 Mercedes E W212|e klasse,e-klasse,e class,w212,e200,e220,e250,e350|2009|2016|4868|1854|1474|1700
-Mercedes E W213|e klasse,e-klasse,e class,w213,e200,e220|2016|2026|4923|1852|1468|1700
+Mercedes E W213|e klasse,e-klasse,e class,w213,e200,e220,e300,e350|2016|2026|4923|1852|1468|1700
 Mercedes ML W164|ml,w164,ml320,ml350|2005|2011|4780|1911|1815|2150
-Mercedes ML/GLE W166|ml,gle,w166|2011|2019|4804|1926|1796|2200
+Mercedes ML/GLE W166|ml,gle,w166,ml250,ml350,gle350|2011|2019|4804|1926|1796|2200
 Mercedes Vito|vito,viano|2003|2014|4748|1901|1880|1900
 Skoda Octavia 2|octavia|2004|2013|4569|1769|1462|1300
 Skoda Octavia 3|octavia|2012|2020|4659|1814|1461|1300
@@ -1110,8 +1205,8 @@ Volvo V60|v60|2010|2026|4761|1850|1427|1600
 Volvo XC60|xc60|2008|2026|4688|1902|1658|1850
 Volvo XC90|xc90|2002|2026|4953|1958|1776|2100
 Mercedes B W246|b klasse,b-klasse,b class,b-class,w246,b 180,b 200|2011|2019|4359|1786|1557|1400
-Mercedes CLA|cla|2013|2026|4630|1777|1432|1400
-Mercedes GLC|glc|2015|2026|4656|1890|1639|1800
+Mercedes CLA|cla,cla180,cla200,cla220|2013|2026|4630|1777|1432|1400
+Mercedes GLC|glc,glc220,glc250,glc300|2015|2026|4656|1890|1639|1800
 Mercedes GLA|gla|2014|2026|4417|1804|1494|1450
 Mercedes Sprinter|sprinter|2006|2026|5932|1993|2700|2100
 BMW X1 E84/F48|x1|2009|2022|4439|1821|1598|1550
@@ -1179,12 +1274,17 @@ Alfa Romeo Giulietta|giulietta|2010|2020|4351|1798|1465|1350
 Mini Cooper|mini,cooper|2006|2026|3821|1727|1414|1150
 Smart Fortwo|smart,fortwo|2007|2026|2695|1663|1555|900
 Tesla Model 3|model 3|2017|2026|4694|1849|1443|1650
-Lexus RX|rx|2009|2026|4890|1895|1690|2000`.split("\n").map(l=>{const [n,a,y1,y2,L,W,H,kg]=l.split("|");return {n,a:a.split(","),y1:+y1,y2:+y2,l:+L/10,w:+W/10,h:+H/10,kg:+kg}});
+Lexus RX|rx|2009|2026|4890|1895|1690|2000`.split("\n").map(l=>{const [n,a,y1,y2,L,W,H,kg]=l.split("|");return {n,d:carDisplay(n),a:a.split(","),y1:+y1,y2:+y2,l:+L/10,w:+W/10,h:+H/10,kg:+kg}});
 // Sugjerimet gjatë shkrimit: "cit" → Citroën, "merc" → Mercedes, "vw"/"volks" → VW …
 const BRANDSYN={"VW":"volkswagen vw","Mercedes":"mercedes benz mercedes-benz mb","Citroën":"citroen citroën","Skoda":"skoda škoda","BMW":"bmw beemer","Opel":"opel vauxhall","Land":"land rover","Alfa":"alfa romeo"};
-function carSuggest(q){const tk=norm(q).split(/[ ,]+/).filter(Boolean);if(!tk.length||norm(q).trim().length<2)return [];
+function carSuggest(q){const raw=norm(q).split(/[ ,]+/).filter(Boolean);if(!raw.length||norm(q).trim().length<2)return [];
+  const tk=raw.map(t=>t.replace(/^([a-z]{0,3}\d{3})[a-z]{1,3}$/,"$1"));
   return CARSPECS.filter(c=>{const words=norm(c.n+" "+(BRANDSYN[c.n.split(" ")[0]]||"")+" "+c.a.join(" ")).split(/[ ,/()-]+/);
-    return tk.every(t=>words.some(w=>w.startsWith(t)))}).slice(0,10)}
+    return tk.every(t=>words.some(w=>w.startsWith(t)))}).slice(0,10).map(c=>{
+    // nëse u shkrua varianti (c220, 320d, a180), shfaqet ai: "Mercedes C220"
+    const vi=raw.findIndex((t,i)=>/^[a-z]{0,3}\d{3}[a-z]{0,3}$/.test(t)&&!/^w\d{3}$/.test(t)&&c.a.includes(tk[i]));
+    const lab=vi>=0?c.n.split(" ")[0]+" "+(/^[a-z]/.test(raw[vi])?raw[vi].replace(/^[a-z]+/,m=>m.toUpperCase()):raw[vi]):c.d;
+    return {...c,lab}})}
 // Gjen veturën nga emri dhe viti. Kthen të dhënat ose null.
 function carLookup(model,year){
   const t=" "+String(model||"").toLowerCase().replace(/[^a-z0-9äöüë\- ]/g," ").replace(/\b([a-z]{0,3}\d{3})[a-z]{1,3}\b/g,"$1").replace(/\s+/g," ")+" ";if(t.trim().length<2)return null;
@@ -1241,8 +1341,8 @@ function renderCar(id){
   <details class="more" id="c-3d"><summary>Shiko si ngarkohet në rimorkio (3D)</summary><select id="c-3dvan" style="margin:6px 0">${S().vans.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join("")}</select><div id="pack-c"></div></details>
 
   <div class="row"><div><label for="c-owner">Klienti</label><input id="c-owner" value="${esc(c.owner||"")}"></div><div><label for="c-phone">Numri i telefonit</label><input id="c-phone" type="tel" inputmode="tel" value="${esc(c.phone||"")}"></div></div>
-  <label>Merret te (adresa në Gjermani)</label>${addrField("c-from",vdraft.from,"P.sh. Hauptstraße 5, Essen")}
-  <div class="row"><div><label for="c-to">Dorëzohet te (Kosovë)</label><input id="c-to" value="${esc(c.to||"")}" placeholder="p.sh. Prizren"></div><div><label for="c-price">Çmimi (€)</label><input id="c-price" type="number" inputmode="decimal" value="${c.price}"></div></div>
+  <label>Merret në (adresa në Gjermani)</label>${addrField("c-from",vdraft.from,"P.sh. Hauptstraße 5, Essen")}
+  <div class="row"><div><label for="c-to">Dorëzohet në (Kosovë)</label><input id="c-to" value="${esc(c.to||"")}" placeholder="p.sh. Prizren"></div><div><label for="c-price">Çmimi (€)</label><input id="c-price" type="number" inputmode="decimal" value="${c.price}"></div></div>
   <div class="row" style="align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="c-vat" style="width:auto" ${c.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
   <div><label for="c-docs">Dokumente / të tjera €</label><input id="c-docs" type="number" inputmode="decimal" value="${isNew?S().carDocs:(c.docs||"")}"></div></div>
   <div id="c-q" class="mute" style="margin:6px 0"></div>
@@ -1267,15 +1367,15 @@ function renderCar(id){
   $("#c-3d").ontoggle=draw;$("#c-3dvan").onchange=draw;
   const fit=()=>{draw();const d=cur();$("#c-fit").innerHTML=d.l?S().vans.map(v=>{const f=carFit(d,v);return `<span class="pill ${f.ok?"good":"warn"}">${esc(f.txt)}</span>`}).join(" "):""};
   let forced=null;
-  const look=()=>{const m=forced&&forced.n===$("#c-model").value?forced:carLookup($("#c-model").value,$("#c-year").value);
+  const look=()=>{const m=forced&&forced.lab===$("#c-model").value?forced:carLookup($("#c-model").value,$("#c-year").value);
     if(!m){$("#c-spec").innerHTML=$("#c-model").value.trim()?"Nuk e gjeta këtë model në listë. Shkruaj masat vetë.":"";fit();return}
-    $("#c-spec").innerHTML=`<b>${esc(m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
+    $("#c-spec").innerHTML=`<b>${esc(m.d||m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
     $("#c-l").value=Math.round(m.l);$("#c-w").value=Math.round(m.w);$("#c-h").value=Math.round(m.h);$("#c-kg").value=m.kg;fit();qp()};
   const lookD=debounce(look,300),ml=$("#c-model-list");let sugs=[];
   $("#c-model").oninput=()=>{sugs=carSuggest($("#c-model").value);
-    ml.innerHTML=sugs.map((c,i)=>`<li data-i="${i}">${esc(c.n)} <span class="mute">${c.y1}–${c.y2>=2026?"sot":c.y2}</span></li>`).join("");ml.hidden=!sugs.length;lookD()};
+    ml.innerHTML=sugs.map((c,i)=>`<li data-i="${i}">${esc(c.lab)} <span class="mute">${c.y1}–${c.y2>=2026?"sot":c.y2}</span></li>`).join("");ml.hidden=!sugs.length;lookD()};
   ml.addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(!li)return;const c=sugs[+li.dataset.i];
-    $("#c-model").value=c.n;forced=c;ml.hidden=true;const y=+$("#c-year").value;if(!y||y<c.y1||y>c.y2)$("#c-year").value=Math.min(c.y2,Math.max(c.y1,y||c.y1));look()});
+    $("#c-model").value=c.lab;forced=c;ml.hidden=true;const y=+$("#c-year").value;if(!y||y<c.y1||y>c.y2)$("#c-year").value=Math.min(c.y2,Math.max(c.y1,y||c.y1));look()});
   $("#c-year").oninput=lookD;
   ["c-l","c-w","c-h","c-kg"].forEach(k=>$("#"+k).oninput=()=>{fit();qp()});
   fit();qp();
@@ -1326,9 +1426,10 @@ const todayISO=()=>new Date().toISOString().slice(0,10);
 const isPast=t=>t.status==="done"||(t.date&&t.date<todayISO());
 function tripRow(tr){const os=tr.orderIds.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);const cities=[...new Set(os.map(o=>cityOf(o.addr)))];
   const title=tr.start&&tr.dest?cityOf(tr.start)+" → "+cityOf(tr.dest):(cities[cities.length-1]||"Udhëtim");const nc=(tr.carIds||[]).length;
-  return `<div class="stop" onclick="setTab('trips','${tr.id}')"><div class="grow"><b>${esc(title)}</b> ${tr.status==="done"?`<span class="pill good">përfunduar</span>`:""}<br>
+  return `<div class="stop" onclick="setTab('trips','${tr.id}')"><div class="grow"><b>${esc(title)}</b> ${tr.status==="done"?`<span class="pill good">përfunduar</span>`:tr.status==="onroad"?`<span class="pill road">në rrugë</span>`:""}<br>
     <span class="mute">${esc(dateTxt(tr.date))}${tr.name?" · Shoferi: "+esc(tr.name):""} · ${esc(vanById(tr.van).name)} · ${os.length} porosi${nc?" · "+nc+" veturë në kthim":""}${cities.length?" · "+esc(cities.join(", ")):""}</span></div><div>›</div></div>`}
 function renderTrips(){
+  if(VIEW==="near")return renderNear();
   if(VIEW&&String(VIEW).startsWith("fuel:"))return renderFuel(VIEW.slice(5));
   if(VIEW)return renderTrip(VIEW);
   const s=S();
@@ -1457,6 +1558,7 @@ async function renderTrip(id){
     ${p.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
     <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
     <label>Hapësira ${num1(p.m3)} / ${num1(vanVol(v))} m³</label><div class="bar ${m3Pct>100?"over":""}"><i style="width:${Math.min(100,m3Pct)}%"></i></div>
+    ${tr.status==="done"?`<p><span class="pill good">Udhëtimi ka përfunduar</span></p>`:tr.status==="onroad"?`<p style="margin:10px 0 0"><span class="pill road" style="font-size:14px">Në rrugë</span> <button class="btn ghost small" type="button" id="tStop">Ktheje në planifikim</button></p>`:`<button class="btn yellow full big" type="button" id="tStart" style="margin-top:10px">Nisu: fillo udhëtimin</button>`}
     ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
   </div>
   <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
@@ -1497,6 +1599,7 @@ async function renderTrip(id){
     <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
   </div>
   <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
+  ${fillsCard(tr,p)}
   ${fuelDrop(tr)}
   <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
@@ -1511,6 +1614,13 @@ async function renderTrip(id){
   $("#tk-tip").onchange=e=>{tr.tip=e.target.checked;save();renderTrip(id)};
   $("#t-van").onchange=e=>{tr.van=e.target.value;save();renderTrip(id)};
   $("#done").onclick=()=>{tr.status=tr.status==="done"?"planned":"done";save();renderTrip(id)};
+  if($("#tStart"))$("#tStart").onclick=()=>{tr.status="onroad";tr.startedAt=new Date().toISOString();save();toast("Udhëtimi filloi. Porositë janë në rrugë.");renderTrip(id)};
+  if($("#tStop"))$("#tStop").onclick=()=>{tr.status="planned";save();renderTrip(id)};
+  $("#addFill").onclick=async()=>{let pre={tripId:tr.id};try{const pos=LIVE.pos&&Date.now()-LIVE.at<3e5?LIVE.pos:await Promise.race([getPos(),new Promise((_,n)=>setTimeout(()=>n(0),6000))]);
+      const c=countryAt(pos),near=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pos,x)})).sort((a,b)=>a.d-b.d)[0];
+      pre={...pre,lat:pos.lat,lng:pos.lng,c,...(near&&near.d<0.4?{station:[near.x.name,near.x.city].filter(Boolean).join(", "),price:near.x.price}:{price:+dieselOf(c).toFixed(3)||""})}}catch(e){}
+    fillForm(pre,()=>renderTrip(id))};
+  document.querySelectorAll("[data-delfill]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;DB.fills=DB.fills.filter(f=>f.id!==b.dataset.delfill);save();renderTrip(id)});
   $("#del").onclick=()=>{if(!twoTap($("#del")))return;tr.orderIds.forEach(oid=>{const o=DB.orders.find(x=>x.id===oid);if(o)o.tripId=null});(tr.carIds||[]).forEach(cid=>{const c=DB.cars.find(x=>x.id===cid);if(c)c.tripId=null});DB.trips=DB.trips.filter(x=>x!==tr);save();setTab("trips")};
   const lc=waitingCars(id);
   if(lc.length){
@@ -1605,6 +1715,7 @@ function migrateSettings(st){if(!st)return false;let ch=false;
   (st.vans||[]).forEach(v=>{if(/^Furgoni\s*[AB]\b/i.test(v.name||"")){v.name="Sprinter "+v.id;ch=true}});
   return ch}
 if(migrateSettings(DB.settings))save();
+if(!Array.isArray(DB.fills))DB.fills=[];
 if(!DB.examplesCleaned){
   const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
   DB.orders=DB.orders.filter(o=>!fake.has(o.id));
@@ -1623,17 +1734,17 @@ if(!DB.examplesCleaned){
 const FB_CONFIG={apiKey:"AIzaSyBCZyTajkzRC8kHUcATgKpkDjG1VeQ64Gs",authDomain:"gemini-logistics.firebaseapp.com",projectId:"gemini-logistics",storageBucket:"gemini-logistics.firebasestorage.app",messagingSenderId:"537288327864",appId:"1:537288327864:web:7cd70b04a5d6613c8b6a4d"};
 const TEAM=["fisnikhalili@gmail.com","marufhalili@gmail.com","halili.krenar@gmail.com"];
 const FB_V="10.12.2",SYNC={on:false,user:null,fs:null,known:{},ready:false,last:null,err:""};
-const LOCAL_ONLY=["diesel","dieselUpdated","dieselChecked","dieselStations","routeStations","dieselAuto"];
+const LOCAL_ONLY=["diesel","dieselUpdated","dieselChecked","dieselStations","routeStations","dieselAuto","dieselSrc"];
 try{SYNC.known=JSON.parse(localStorage.getItem(KEY+".known")||"{}")}catch(e){}
 const saveKnown=()=>{try{localStorage.setItem(KEY+".known",JSON.stringify(SYNC.known))}catch(e){}};
 function syncRecords(){
   const m={};
-  DB.orders.forEach(o=>m["o_"+o.id]=JSON.stringify(o));DB.trips.forEach(t=>m["t_"+t.id]=JSON.stringify(t));DB.cars.forEach(c=>m["c_"+c.id]=JSON.stringify(c));
+  DB.orders.forEach(o=>m["o_"+o.id]=JSON.stringify(o));DB.trips.forEach(t=>m["t_"+t.id]=JSON.stringify(t));DB.cars.forEach(c=>m["c_"+c.id]=JSON.stringify(c));(DB.fills||[]).forEach(f=>m["f_"+f.id]=JSON.stringify(f));
   const st={...DB.settings};LOCAL_ONLY.forEach(k=>delete st[k]);m.settings=JSON.stringify(st);
   return m;
 }
 function applyRemote(key,v,del){
-  const t=key.slice(0,2),id=key.slice(2),arr=t==="o_"?DB.orders:t==="t_"?DB.trips:t==="c_"?DB.cars:null;
+  const t=key.slice(0,2),id=key.slice(2),arr=t==="o_"?DB.orders:t==="t_"?DB.trips:t==="c_"?DB.cars:t==="f_"?(DB.fills=DB.fills||[]):null;
   if(key==="settings"){if(!del&&v){const keep={};LOCAL_ONLY.forEach(k=>keep[k]=DB.settings[k]);DB.settings=Object.assign(structuredClone(DEFAULTS),JSON.parse(v),keep);migrateSettings(DB.settings)}return}
   if(!arr)return;const i=arr.findIndex(x=>x.id===id);
   if(del){if(i>=0)arr.splice(i,1)}else{const rec=JSON.parse(v);if(i>=0)arr[i]=rec;else arr.push(rec)}
@@ -1727,7 +1838,7 @@ const PRICES_URL="https://phishalili.github.io/gemini-logistics/prices.json";
 async function syncPrices(manual){
   const s=S();if(!manual&&s.dieselAuto===false)return;
   try{const r=await fetch(PRICES_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();
-    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;if(Array.isArray(j.route))s.routeStations=j.route;
+    s.dieselChecked=new Date().toISOString().slice(0,10);if(j.stations)s.dieselStations=j.stations;if(Array.isArray(j.route))s.routeStations=j.route;if(j.sources)s.dieselSrc=j.sources;
     const ch=Object.entries(j.diesel||{}).filter(([k,v])=>+v>0.5&&+v<4&&+s.diesel[k]!==+v);
     const was=s.dieselUpdated;s.dieselUpdated=j.updated||s.dieselChecked;
     if(ch.length){ch.forEach(([k,v])=>s.diesel[k]=+v);save();toast("Çmimet e naftës u përditësuan ("+fmtDay(s.dieselUpdated)+")");render()}
@@ -1736,7 +1847,7 @@ async function syncPrices(manual){
 }
 function fmtDay(d){const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||"");return m?`${m[3]}.${m[2]}.${m[1]}`:(d||"")}
 function fuelBarInner(){const s=S(),on=navigator.onLine!==false;
-  return `<div style="flex:1;min-width:0"><div>Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
+  return `<div style="flex:1;min-width:0"><div>Nafta sot: <b>${eur(dieselPrice())}</b>/L</div><div class="mute" style="font-size:.85em">${s.dieselUpdated?"Përditësuar "+esc(fmtDay(s.dieselUpdated)):"Pa përditësim ende"}${on?"":" · pa internet"}</div></div><button class="btn small" type="button" onclick="setTab('trips','near')">Afër meje</button><button class="btn ghost small" type="button" id="fuel-sync" aria-label="Kontrollo çmimet">↻</button>`}
 function fuelBar(){return `<div class="card" id="fuelbar" style="display:flex;gap:10px;align-items:center;padding:10px 14px">${fuelBarInner()}</div>`}
 function wireFuelBar(){const b=$("#fuel-sync");if(b)b.onclick=()=>syncPrices(true)}
 function refreshFuelBar(){const el=$("#fuelbar");if(el){el.innerHTML=fuelBarInner();wireFuelBar()}}
