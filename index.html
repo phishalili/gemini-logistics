@@ -61,6 +61,8 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 .pill.road{background:#fff4cc;color:#8a6200}.pill.next{background:var(--acc2);color:var(--acc)}.pill.none{background:#fde8e8;color:#b42318}
 .ost{border-left:5px solid var(--line);padding-left:10px!important;margin-left:-4px}.ost.none{border-left-color:#e5484d}.ost.next{border-left-color:#3b6fe0}.ost.road{border-left-color:#f0b400}.ost.done{border-left-color:#2fa36b}
 .fchip{border:0;font:inherit;font-size:13.5px;font-weight:700;padding:7px 12px;cursor:pointer}.fchip.on{outline:2px solid currentColor;outline-offset:1px}
+.seg{display:flex;gap:8px;margin:4px 0 10px}.seg button{flex:1;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px 8px;font:700 15px var(--f);cursor:pointer;text-align:center}
+.seg button small{display:block;font-weight:500;font-size:12px;color:var(--mute);margin-top:2px}.seg button.on{border-color:var(--acc);background:var(--acc2);color:var(--acc)}
 .btn.big{font-size:17px;padding:14px}.btn.yellow{background:#f0b400;color:#1c2333}.btn.green{background:#2fa36b;color:#fff}
 .stop{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .stop:last-child{border-bottom:0}
@@ -109,7 +111,7 @@ const DEFAULTS = {
   tollsPerTrip:[{name:"Autostrada Serbi (vajtje-ardhje)",eur:70},{name:"Autostrada Kroaci (vajtje-ardhje)",eur:80},{name:"Gjermani / tjetër",eur:0}],
   fixedYear:[{name:"Sigurimi (200 € × 4)",eur:800},{name:"Vinjeta Austri",eur:90},{name:"Tunelet Austri",eur:77},{name:"Vinjeta Slloveni",eur:240}],
   tripsPerYear:24, daysPerTrip:5, driversPerVan:1, driverPerDay:40, wearPerKm:0.08,
-  returnShare:0, vat:18, carDocs:75, carsPerTrip:1, carBase:150, carPerKm:0.25, carHeavyKg:1800, carHeavyPct:20, carMin:300, loadFactor:80, handling:20, margin:25, minPrice:80, roadFactor:1.25,
+  returnShare:0, vat:18, duty:{DE:19,AT:20,FR:20,CH:8.1,IT:22,BE:21,NL:21,LU:17,HR:25,SI:22,RS:20,XK:18}, carDocs:75, carsPerTrip:1, carBase:150, carPerKm:0.25, carHeavyKg:1800, carHeavyPct:20, carMin:300, loadFactor:80, handling:20, margin:25, minPrice:80, roadFactor:1.25,
   densityKgM3:150,   // kur pesha nuk dihet: kg për m³
   instagram:"https://www.instagram.com/geminilogistics.eu/",
   presets:[ // emri, gjatësi × gjerësi × lartësi (cm), kg për copë
@@ -255,9 +257,11 @@ function tripCostBreakdown(v,kmTotal,tr){
   return {rows,total:total-ret};
 }
 function shareOf(g,v){return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))}
-const vatR=()=>(+S().vat||0)/100;
-const netOf=(gross,on=true)=>(+gross||0)/(on?1+vatR():1);
-const netRec=x=>netOf(x.price,x.vatOn!==false);   // porosia/vetura: çmimi pa TVSH
+// Dogana sipas vendit të destinacionit (Cilësimet). Porositë e vjetra pa vatRate mbajnë normën e vjetër (18%).
+const dutyRate=addr=>+((S().duty||{})[countryOf(addr)]||0);
+const recRate=x=>x.vatRate!=null?+x.vatRate:(+S().vat||0);
+const netOf=(gross,on=true,rate=+S().vat||0)=>(+gross||0)/(on?1+rate/100:1);
+const netRec=x=>netOf(x.price,x.vatOn!==false,recRate(x));   // porosia/vetura: çmimi pa doganë
 function priceFromCost(c){const s=S();return Math.max(s.minPrice,Math.ceil(c*(1+s.margin/100)/5)*5)}
 // Mallrat me çmim fiks (p.sh. kuzhina 250 €/m) + mallrat e llogaritur sipas hapësirës/peshës + shtesa për adresën
 const rateOf=it=>it.preset==="x"?0:(+S().presets[it.preset]?.rate||0);
@@ -269,7 +273,7 @@ function mainHub(g,addr,selfId){
   if(big&&sizeOf(orderGoods(big))>sizeOf(g))return {addr:big.addr,why:"porosia më e madhe që pret: "+(big.customer||cityOf(big.addr)),self:false};
   return {addr,why:"kjo është porosia më e madhe",self:true};
 }
-async function quote(g,addr,items=[],opt={}){ // çmimi kthehet ME TVSH; net = pa TVSH
+async function quote(g,addr,items=[],opt={}){ // çmimi kthehet ME doganë; net = pa doganë
   const s=S(),v=avgVan(),mk=1+s.margin/100,hub=mainHub(g,addr,opt.selfId);
   const M=await distMatrix([s.base,hub.addr,addr]);
   const lineKm=M[0][1]+M[1][0];
@@ -283,10 +287,10 @@ async function quote(g,addr,items=[],opt={}){ // çmimi kthehet ME TVSH; net = p
   const gc=items.length?goods(calc):g, cShare=Math.min(1,shareOf(gc,v)/(s.loadFactor/100));
   const calcPrice=(gc.m3||gc.kg)?(trip.total*cShare+s.handling)*mk:0;
   const extra=detourCost*mk;
-  const vatOn=opt.vat!==false,docs=+opt.docs||0,vr=vatOn?vatR():0;
+  const rate=dutyRate(addr),vatOn=opt.vat!==false,docs=+opt.docs||0,vr=vatOn?rate/100:0;
   const netRaw=Math.max(s.minPrice,fixedSum+calcPrice+extra)+docs;
   const price=Math.ceil(netRaw*(1+vr)/5)*5,net=price/(1+vr),vat=price-net;
-  return {hub,net,vat,vatOn,docs,v,lineKm,detourKm,trip,share,byWeight:(g.kg/v.payloadKg)>=(g.m3/vanVol(v)),lineShare,detourCost,cost,price,real:M.real,fixed,fixedSum,calcPrice,cShare,extra,hasCalc:!!(gc.m3||gc.kg)};
+  return {hub,net,vat,vatOn,rate,docs,v,lineKm,detourKm,trip,share,byWeight:(g.kg/v.payloadKg)>=(g.m3/vanVol(v)),lineShare,detourCost,cost,price,real:M.real,fixed,fixedSum,calcPrice,cShare,extra,hasCalc:!!(gc.m3||gc.kg)};
 }
 // Rruga: nga nisja → ndalesat (radha më e mirë) → destinacioni → kthim në shtëpi. Pa nisje/destinacion: rreth nga shtëpia.
 function bestPath(M){ // 0 = nisja, n-1 = destinacioni (fiks)
@@ -698,29 +702,61 @@ const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(
 let draft=null;
 function renderQuote(){
   if(!draft)draft={customer:"",phone:"",what:"",addr:null,items:[newItem(0)]};
+  const full=!!draft.full;
   $("#app").innerHTML=`${fuelBar()}<div class="card"><h2>Ofertë e re</h2>
+  <div class="seg" role="group" aria-label="Lloji i transportit"><button type="button" class="${full?"on":""}" id="m-full">Transport i plotë<small>i gjithë furgoni për një vend</small></button><button type="button" class="${full?"":"on"}" id="m-part">Parcial<small>vetëm disa gjëra, furgoni mbushet me të tjera</small></button></div>
   <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(draft.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" placeholder="+383 …" value="${esc(draft.phone||"")}"></div></div>
   <label>Adresa e dorëzimit</label>${addrField("f-addr",draft.addr)}
+  ${full?`<label for="f-fdesc">Çfarë ngarkohet (për ofertën, opsionale)</label><input id="f-fdesc" value="${esc(draft.fullDesc||"")}" placeholder="P.sh. 1 kuzhinë, 1 dhomë gjumi">
+  <label for="f-fprice">Çmimi për furgonin e plotë (pa doganë) €</label><input id="f-fprice" type="number" inputmode="decimal" value="${draft.fullPrice||""}" placeholder="P.sh. 2300">`:`
   <h3>Mallrat</h3><p class="mute" style="margin:0">Zgjidh llojin, ose shkruaj masat. Nëse nuk e di peshën, lëre bosh: e vlerësojmë nga madhësia. Kuzhina: shkruaj gjatësinë totale te “Gjatësia cm” (p.sh. 550), sasia 1.</p>
   ${itemsEditor(draft.items,true)}
   <details class="more" id="q3d" ${draft.open3d?"open":""}><summary>Shiko si ngarkohet në furgon (3D)</summary>
   <div class="row"><select id="pk-van">${S().vans.map(v=>`<option value="${v.id}" ${v.id===(draft.pkVan||"A")?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
   <label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink);font-weight:500"><input type="checkbox" id="pk-tip" style="width:auto" ${draft.pkTip?"checked":""}>Lejo anash</label></div>
   <div id="pack-q"></div></details>
-  <div class="row" style="align-items:flex-end;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="q-vat" style="width:auto" ${draft.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
+  `}
+  <div class="row" style="align-items:flex-end;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="q-vat" style="width:auto" ${draft.vatOn!==false?"checked":""}>Dogana</label>
   <div><label for="q-docs">Dokumente / të tjera €</label><input id="q-docs" type="number" inputmode="decimal" value="${draft.docs||""}" placeholder="0"></div></div>
   <button class="btn full" id="calc">Llogarit çmimin</button></div><div id="result"></div>`;
   wireAddr("f-addr",r=>draft.addr=r);wireFuelBar();
   $("#f-cust").oninput=e=>draft.customer=e.target.value;$("#f-phone").oninput=e=>draft.phone=e.target.value;
   const repack=debounce(()=>packView("pack-q",piecesFromItems(draft.items).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h),vanById(draft.pkVan||"A"),draft.items.map((it,j)=>({color:j,label:it.qty+"× "+(it.preset==="x"?"Mall":(S().presets[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,""))})).filter(l=>!l.label.startsWith("0×")),{tip:draft.pkTip}),120);
-  $("#pk-van").onchange=e=>{draft.pkVan=e.target.value;repack()};
+  if(!full){$("#pk-van").onchange=e=>{draft.pkVan=e.target.value;repack()};
   $("#q3d").ontoggle=e=>{draft.open3d=e.target.open;if(e.target.open)repack()};
-  $("#pk-tip").onchange=e=>{draft.pkTip=e.target.checked;repack()};
-  wireItems(draft,renderQuote,repack);
-  $("#calc").onclick=calcCompany;
-  const rq=()=>{if($("#saveOrder"))calcCompany()};
+  $("#pk-tip").onchange=e=>{draft.pkTip=e.target.checked;repack()}}
+  $("#m-full").onclick=()=>{draft.full=true;renderQuote()};$("#m-part").onclick=()=>{draft.full=false;renderQuote()};
+  if(full){$("#f-fdesc").oninput=e=>draft.fullDesc=e.target.value;$("#f-fprice").oninput=e=>draft.fullPrice=parseFloat(e.target.value)||0}
+  else wireItems(draft,renderQuote,repack);
+  $("#calc").onclick=()=>draft.full?calcFull():calcCompany();
+  const rq=()=>{if($("#saveOrder"))draft.full?calcFull():calcCompany()};
   $("#q-vat").onchange=e=>{draft.vatOn=e.target.checked;rq()};
   $("#q-docs").oninput=debounce(e=>{draft.docs=parseFloat($("#q-docs").value)||0;rq()},400);
+}
+// Transport i plotë: çmimi i furgonit të plotë (më vonë: formula e Phis-it) + dogana e vendit
+const fullVanNet=()=>+draft.fullPrice||0;
+async function calcFull(){
+  if(!draft.addr)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Zgjidh adresën nga lista</span></div>`;
+  const net0=fullVanNet();if(!net0)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Shkruaj çmimin për furgonin e plotë</span></div>`;
+  $("#result").innerHTML=`<div class="card mute">Duke llogaritur rrugën…</div>`;
+  const s=S(),v=avgVan(),docs=+draft.docs||0,rate=dutyRate(draft.addr),vatOn=draft.vatOn!==false,vr=vatOn?rate/100:0;
+  const M=await distMatrix([s.base,draft.addr]),kmT=M[0][1]+M[1][0],trip=tripCostBreakdown(v,kmT);
+  const net=net0+docs,price=Math.ceil(net*(1+vr)/5)*5,cost=trip.total+s.handling+docs;
+  const q={price,net:price/(1+vr),vat:price-price/(1+vr),vatOn,rate,docs,cost};
+  $("#result").innerHTML=`<div class="card">
+    <div class="mute">Transport i plotë për në ${esc(cityOf(draft.addr))} (${vatOn?"me doganë":"pa doganë"})</div><div class="price">${eur(price)}</div>
+    <div class="mute">${vatOn?`Pa doganë ${eur(q.net)} · dogana ${eur(q.vat)} · `:""}kostoja jonë ${eur(cost)} (${km(kmT)} vajtje-ardhje) · fitimi ${eur(q.net-cost)}</div>
+    ${M.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
+    <p><a class="btn ghost small" href="${navUrl(draft.addr)}" target="_blank" rel="noopener">Shiko adresën në Google Maps</a></p>
+    <label for="f-price">Çmimi i dakorduar (${vatOn?"me doganë":"pa doganë"})</label><input id="f-price" type="number" inputmode="decimal" value="${price}">
+    <button class="btn full" id="saveOrder">Ruaje si porosi</button>
+    <button class="btn ghost full" id="pdfOffer" type="button" style="margin-top:8px">Ofertë PDF për klientin</button></div>`;
+  preloadPdf().catch(()=>{});if(!draft.offerId)draft.offerId=uid();
+  const rec=()=>({id:draft.offerId,created:Date.now(),customer:draft.customer,phone:draft.phone||"",addr:draft.addr,full:true,fullDesc:draft.fullDesc||"",
+    what:"Transport i plotë"+(draft.fullDesc?": "+draft.fullDesc:""),m3:+vanVol(v).toFixed(1),kg:0,price:parseFloat($("#f-price").value)||price,suggested:price,cost,vatOn,vatRate:rate,docs});
+  $("#pdfOffer").onclick=e=>shareOfferPdf(rec(),e.currentTarget);
+  $("#saveOrder").onclick=()=>{const o={...rec(),createdBy:whoAmI(),status:"open"};DB.orders.unshift(o);notifyNew("Porosi e re (transport i plotë)",o.customer,o.addr);
+    save();draft=null;toast("Porosia u ruajt");setTab("orders")};
 }
 async function calcCompany(){
   const g=goods(draft.items);
@@ -731,8 +767,8 @@ async function calcCompany(){
   const q=await quote(g,draft.addr,draft.items,{vat:draft.vatOn!==false,docs:draft.docs}),s=S();
   const fits=await fitsOnTrips({...draft,...g});
   $("#result").innerHTML=`<div class="card">
-    <div class="mute">Çmimi i sugjeruar (${q.vatOn?`me TVSH ${s.vat}%`:"pa TVSH"})</div><div class="price">${eur(q.price)}</div>
-    <div class="mute">${q.vatOn?`Pa TVSH ${eur(q.net)} · TVSH ${eur(q.vat)} · `:""}kostoja jonë ${eur(q.cost)} · fitimi ${eur(q.net-q.cost)}</div>
+    <div class="mute">Çmimi i sugjeruar (${q.vatOn?"me doganë":"pa doganë"})</div><div class="price">${eur(q.price)}</div>
+    <div class="mute">${q.vatOn?`Pa doganë ${eur(q.net)} · dogana ${eur(q.vat)} · `:""}kostoja jonë ${eur(q.cost)} · fitimi ${eur(q.net-q.cost)}</div>
     ${q.real?"":`<p><span class="pill warn">Kilometrat janë të përafërta (harta offline)</span></p>`}
     ${g.est?`<p><span class="pill">Pesha e vlerësuar nga madhësia: ≈ ${g.kg} kg</span></p>`:""}
     ${notExact?`<p><span class="pill warn">Adresa pa numër shtëpie: çmimi është i përafërt</span></p>`:""}
@@ -744,26 +780,26 @@ async function calcCompany(){
     <tr><td>Qyteti kryesor i udhëtimit: <b>${esc(cityOf(q.hub.addr))}</b> (${esc(q.hub.why)})</td><td></td></tr>
     <tr><td>Shtesa për adresën: ${q.hub.self?"0 km, ky është qyteti kryesor":`${km(q.detourKm)} rrugë shtesë nga rruga për në ${esc(cityOf(q.hub.addr))}`}, + ${s.margin}% fitim</td><td>${eur(q.extra)}</td></tr>
     ${q.docs?`<tr><td>Dokumente / shpenzime të tjera</td><td>${eur(q.docs)}</td></tr>`:""}
-    ${q.vatOn?`<tr><td>Çmimi pa TVSH (min. ${eur(s.minPrice)})</td><td>${eur(q.net)}</td></tr>
-    <tr><td>TVSH ${s.vat}%</td><td>${eur(q.vat)}</td></tr>`:""}
-    <tr><td><b>Çmimi ${q.vatOn?"me TVSH":"pa TVSH"}</b> (rrumbullakuar në 5 €)</td><td><b>${eur(q.price)}</b></td></tr></table>
+    ${q.vatOn?`<tr><td>Çmimi pa doganë (min. ${eur(s.minPrice)})</td><td>${eur(q.net)}</td></tr>
+    <tr><td>Dogana</td><td>${eur(q.vat)}</td></tr>`:""}
+    <tr><td><b>Çmimi ${q.vatOn?"me doganë":"pa doganë"}</b> (rrumbullakuar në 5 €)</td><td><b>${eur(q.price)}</b></td></tr></table>
     <h3>Kostoja jonë reale</h3><table>
     <tr><td>Pesha ${g.kg} kg = ${(g.kg/q.v.payloadKg*100).toFixed(1)}% e ${Math.round(q.v.payloadKg)} kg · Hapësira ${num1(g.m3)} m³ = ${(g.m3/vanVol(q.v)*100).toFixed(1)}% e ${num1(vanVol(q.v))} m³ → përdoret më e madhja</td><td></td></tr>
     <tr><td>Pjesa e udhëtimit (${km(q.lineKm)}, kosto e plotë ${eur(q.trip.total)}, furgoni ${s.loadFactor}% plot)</td><td>${eur(q.trip.total*q.lineShare)}</td></tr>
     <tr><td>Rruga shtesë deri te adresa</td><td>${eur(q.detourCost)}</td></tr>
     <tr><td>Ngarkim / shkarkim</td><td>${eur(s.handling)}</td></tr>
     ${q.docs?`<tr><td>Dokumente / të tjera</td><td>${eur(q.docs)}</td></tr>`:""}
-    <tr><td><b>Kostoja</b> → fitimi (pa TVSH) ${eur(q.net-q.cost)}</td><td><b>${eur(q.cost)}</b></td></tr></table></details>
-    <label for="f-price">Çmimi i dakorduar (${q.vatOn?"me TVSH":"pa TVSH"})</label><input id="f-price" type="number" inputmode="decimal" value="${q.price}">
+    <tr><td><b>Kostoja</b> → fitimi (pa doganë) ${eur(q.net-q.cost)}</td><td><b>${eur(q.cost)}</b></td></tr></table></details>
+    <label for="f-price">Çmimi i dakorduar (${q.vatOn?"me doganë":"pa doganë"})</label><input id="f-price" type="number" inputmode="decimal" value="${q.price}">
     ${fits}
     <button class="btn full" id="saveOrder">Ruaje si porosi</button>
     <button class="btn ghost full" id="pdfOffer" type="button" style="margin-top:8px">Ofertë PDF për klientin</button></div>`;
   preloadPdf().catch(()=>{});
   if(!draft.offerId)draft.offerId=uid();
-  $("#pdfOffer").onclick=e=>shareOfferPdf({id:draft.offerId,created:Date.now(),customer:draft.customer,phone:draft.phone,addr:draft.addr,items:draft.items,price:parseFloat($("#f-price").value)||q.price,vatOn:q.vatOn},e.currentTarget);
+  $("#pdfOffer").onclick=e=>shareOfferPdf({id:draft.offerId,created:Date.now(),customer:draft.customer,phone:draft.phone,addr:draft.addr,items:draft.items,price:parseFloat($("#f-price").value)||q.price,vatOn:q.vatOn,vatRate:q.rate},e.currentTarget);
   $("#saveOrder").onclick=()=>{
     const o={id:draft.offerId||uid(),created:Date.now(),createdBy:whoAmI(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
-      what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,docs:q.docs};
+      what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,vatRate:q.rate,docs:q.docs};
     DB.orders.unshift(o);notifyNew("Porosi e re",o.customer,o.addr);
     const pick=document.querySelector("input[name=fit]:checked");
     if(pick&&pick.value){const tr=DB.trips.find(x=>x.id===pick.value);if(tr){tr.orderIds.push(o.id);o.tripId=tr.id}}
@@ -914,6 +950,9 @@ function buildOfferPdf(o){
   doc.setFillColor(...blue);doc.rect(M,y,tw,8,"F");
   let x=M;cols.forEach(c=>{T(c.t,c.a?x+c.w-2:x+2,y+5.5,{b:1,size:9.5,c:[255,255,255],align:c.a});x+=c.w});y+=8;
   const items=(o.items||[]).filter(it=>+it.qty>0);let tot={kg:0,m3:0,est:false};
+  if(o.full){const name=doc.splitTextToSize("Transport i plotë (i gjithë furgoni)"+(o.fullDesc?": "+o.fullDesc:""),cols[1].w-4),h=Math.max(8,name.length*4.6+3.4);
+    x=M;cols.forEach((c,k)=>{if(k===1)name.forEach((l,j)=>T(l,x+2,y+5.5+j*4.6,{size:10}));else T(["1",null,"1 furgon","-","-"][k],c.a?x+c.w-2:x+2,y+5.5,{size:10,align:c.a});x+=c.w});
+    y+=h;doc.setDrawColor(...line);doc.setLineWidth(0.2);doc.line(M,y,M+tw,y)}
   items.forEach((it,i)=>{
     const g=goods([it]);tot.kg+=g.kg;tot.m3+=g.m3;tot.est=tot.est||g.est;
     const name=doc.splitTextToSize(pdfItemName(it),cols[1].w-4),h=Math.max(8,name.length*4.6+3.4);
@@ -922,18 +961,15 @@ function buildOfferPdf(o){
     const vals=[String(i+1),null,perM(it)?num1(units(it))+" m":(+it.qty)+" copë",it.l&&it.w&&it.h?`${+it.l} × ${+it.w} × ${+it.h}`:"-",(g.est?"~ ":"")+Math.round(g.kg).toLocaleString("de-DE")+" kg"];
     x=M;cols.forEach((c,k)=>{if(k===1)name.forEach((l,j)=>T(l,x+2,y+5.5+j*4.6,{size:10}));else T(vals[k],c.a?x+c.w-2:x+2,y+5.5,{size:10,align:c.a});x+=c.w});
     y+=h;doc.setDrawColor(...line);doc.setLineWidth(0.2);doc.line(M,y,M+tw,y)});
-  y+=6;T(`Gjithsej: ${num1(tot.m3)} m³ · ${tot.est?"~ ":""}${Math.round(tot.kg).toLocaleString("de-DE")} kg${tot.est?" (pesha e vlerësuar)":""}`,M,y,{size:9.5,c:mute});
+  y+=6;if(!o.full)T(`Gjithsej: ${num1(tot.m3)} m³ · ${tot.est?"~ ":""}${Math.round(tot.kg).toLocaleString("de-DE")} kg${tot.est?" (pesha e vlerësuar)":""}`,M,y,{size:9.5,c:mute});
   // çmimi
   y+=10;if(y>235){doc.addPage();y=24}
-  const price=+o.price||0,vatOn=o.vatOn!==false,net=netOf(price,vatOn),vat=price-net,bx=W-M-86;
-  doc.setFillColor(...light);doc.roundedRect(bx,y,86,vatOn?34:22,3,3,"F");
+  const price=+o.price||0,vatOn=o.vatOn!==false,bx=W-M-86;
+  doc.setFillColor(...light);doc.roundedRect(bx,y,86,22,3,3,"F");
   let py=y+8;
-  if(vatOn){T("Pa TVSH",bx+5,py,{size:10,c:mute});T(eur(net),W-M-5,py,{size:10,c:mute,align:"right"});py+=6;
-    T(`TVSH ${s.vat}%`,bx+5,py,{size:10,c:mute});T(eur(vat),W-M-5,py,{size:10,c:mute,align:"right"});py+=4;
-    doc.setDrawColor(...blue);doc.setLineWidth(0.3);doc.line(bx+5,py,W-M-5,py);py+=8}
-  T(vatOn?"ÇMIMI FINAL":"ÇMIMI (pa TVSH)",bx+5,py+1,{b:1,size:11,c:deep});T(eur(price),W-M-5,py+1.5,{b:1,size:17,c:blue,align:"right"});
+  T("ÇMIMI FINAL",bx+5,py+1,{b:1,size:11,c:deep});T(eur(price),W-M-5,py+1.5,{b:1,size:17,c:blue,align:"right"});
   // shënimet
-  let ny=y+4;const notes=[vatOn?`Çmimi përfshin TVSH ${s.vat}%.`:"Çmimi nuk përfshin TVSH.","Oferta vlen 14 ditë nga data e lëshimit."];
+  let ny=y+4;const notes=[...(vatOn&&recRate(o)>0?["Çmimi përfshin doganën."]:[]),"Oferta vlen 14 ditë nga data e lëshimit."];
   T("Kushtet",M,ny,{b:1,size:9,c:blue});ny+=6;notes.forEach(n=>{doc.splitTextToSize(n,bx-M-6).forEach(l=>{T(l,M,ny,{size:9.5,c:mute});ny+=4.8})});
   // fundi
   doc.setDrawColor(...line);doc.setLineWidth(0.3);doc.line(M,282,W-M,282);
@@ -980,9 +1016,9 @@ function renderClient(){
     $("#cresult").innerHTML=`<div class="card mute">Duke llogaritur…</div>`;
     const big=g.m3>vanVol(avgVan())||g.kg>avgVan().payloadKg;
     const q=await quote(g,cdraft.addr,cdraft.items);
-    const text=`Përshëndetje Gemini Logistics! Dua ofertë: ${itemsSummary(cdraft.items)} (${num1(g.m3)} m³, ${g.est?"≈":""}${g.kg} kg) për në ${cdraft.addr.label}. Çmimi në aplikacion: ${eur(q.price)} me TVSH. Google Maps: ${navUrl(cdraft.addr)}`;
+    const text=`Përshëndetje Gemini Logistics! Dua ofertë: ${itemsSummary(cdraft.items)} (${num1(g.m3)} m³, ${g.est?"≈":""}${g.kg} kg) për në ${cdraft.addr.label}. Çmimi në aplikacion: ${eur(q.price)}. Google Maps: ${navUrl(cdraft.addr)}`;
     $("#cresult").innerHTML=`<div class="card" style="text-align:center">
-      <div class="mute">Çmimi final i transportit (përfshin TVSH ${S().vat}%)</div><div class="price">${eur(q.price)}</div>
+      <div class="mute">Çmimi final i transportit${q.rate?" (përfshin doganën)":""}</div><div class="price">${eur(q.price)}</div>
       <div class="mute">${num1(g.m3)} m³ · ${g.est?"≈ ":""}${g.kg} kg · deri në ${esc(cdraft.addr.label.split(",").slice(-2).join(",").trim())}</div>
       ${big?`<p><span class="pill warn">Kjo ngarkesë është më e madhe se një furgon. Na kontaktoni.</span></p>`:""}
       <p class="mute">Dorëzimi brenda javës. Përfshin ngarkimin dhe shkarkimin.</p>
@@ -1032,7 +1068,7 @@ function renderOrders(){
       ${st.k==="road"?`<button class="btn green big" style="flex:1 1 100%" type="button" data-deliv="${o.id}">Dorëzuar</button>`:st.k==="done"?`<button class="btn ghost small" type="button" data-deliv="${o.id}">Anulo dorëzimin</button>`:""}
       ${st.k==="done"?"":`<select data-assign="${o.id}" style="flex:1 1 100%;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>`}
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
-      ${o.items?.length?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
+      ${o.items?.length||o.full?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
   const F=ordFilter(),cnt=k=>list.filter(o=>orderState(o).k===k).length,rank={road:0,next:1,none:2,done:3};
   const active=list.filter(o=>o.status!=="delivered").sort((x,y)=>rank[orderState(x).k]-rank[orderState(y).k]);
@@ -1498,10 +1534,10 @@ async function carQuote(c){ // c.vatOn, c.docs
   const M=await distMatrix([c.from,s.base]);const kmH=M[0][1];
   let p=s.carBase+s.carPerKm*kmH,heavy=false;
   if(+c.kg>s.carHeavyKg){p*=1+s.carHeavyPct/100;heavy=true}
-  const vr=c.vatOn===false?0:vatR(),docs=+c.docs||0;
+  const rate=dutyRate(c.from),vr=c.vatOn===false?0:rate/100,docs=+c.docs||0;
   const net=Math.max(s.carMin,p)+docs,price=Math.ceil(net*(1+vr)/5)*5;
   const cost=kmH*perKm(avgVan())*0.5+s.handling+docs;  // gjysma e kostos së kthimit (rruga bëhet gjithsesi) + ngarkimi
-  return {km:kmH,price,net:price/(1+vr),docs,vatOn:vr>0,heavy,cost,real:M.real};
+  return {km:kmH,price,net:price/(1+vr),docs,vatOn:c.vatOn!==false,rate,heavy,cost,real:M.real};
 }
 function carDims(c){return c&&c.l?`${num1(c.l/100)} × ${num1(c.w/100)} × ${num1(c.h/100)} m · ${(+c.kg||0).toLocaleString("de-DE")} kg`:""}
 function carsCard(){
@@ -1530,7 +1566,7 @@ function renderCar(id){
   <div class="row"><div><label for="c-owner">Klienti</label><input id="c-owner" value="${esc(c.owner||"")}"></div><div><label for="c-phone">Numri i telefonit</label><input id="c-phone" type="tel" inputmode="tel" value="${esc(c.phone||"")}"></div></div>
   <label>Merret në (adresa në Gjermani)</label>${addrField("c-from",vdraft.from,"P.sh. Hauptstraße 5, Essen")}
   <div class="row"><div><label for="c-to">Dorëzohet në (Kosovë)</label><input id="c-to" value="${esc(c.to||"")}" placeholder="p.sh. Prizren"></div><div><label for="c-price">Çmimi (€)</label><input id="c-price" type="number" inputmode="decimal" value="${c.price}"></div></div>
-  <div class="row" style="align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="c-vat" style="width:auto" ${c.vatOn!==false?"checked":""}>Me TVSH ${S().vat}%</label>
+  <div class="row" style="align-items:flex-end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--ink);font-weight:600"><input type="checkbox" id="c-vat" style="width:auto" ${c.vatOn!==false?"checked":""}>Dogana</label>
   <div><label for="c-docs">Dokumente / të tjera €</label><input id="c-docs" type="number" inputmode="decimal" value="${isNew?S().carDocs:(c.docs||"")}"></div></div>
   <div id="c-q" class="mute" style="margin:6px 0"></div>
   <label for="c-note">Shënime</label><textarea id="c-note" rows="2">${esc(c.note||"")}</textarea>
@@ -1543,7 +1579,7 @@ function renderCar(id){
     if(!q){$("#c-q").innerHTML="Zgjidh adresën ku merret vetura dhe çmimi llogaritet vetë.";return}
     const s=S();vdraft.auto=q.price;
     if(!vdraft.manual)$("#c-price").value=q.price;
-    $("#c-q").innerHTML=`Çmimi i llogaritur: <b>${eur(q.price)}</b> = ${eur(s.carBase)} bazë + ${km(q.km)}${q.real?"":" (përafërsisht)"} × ${eur(s.carPerKm)}${q.heavy?` + ${s.carHeavyPct}% (mbi ${s.carHeavyKg} kg)`:""}${s.carBase+s.carPerKm*q.km<s.carMin?` → minimumi ${eur(s.carMin)}`:""}${q.docs?` + ${eur(q.docs)} dokumente`:""}${q.vatOn?` + TVSH ${s.vat}%`:" (pa TVSH)"}. Kostoja jonë ≈ ${eur(q.cost)}.
+    $("#c-q").innerHTML=`Çmimi i llogaritur: <b>${eur(q.price)}</b> = ${eur(s.carBase)} bazë + ${km(q.km)}${q.real?"":" (përafërsisht)"} × ${eur(s.carPerKm)}${q.heavy?` + ${s.carHeavyPct}% (mbi ${s.carHeavyKg} kg)`:""}${s.carBase+s.carPerKm*q.km<s.carMin?` → minimumi ${eur(s.carMin)}`:""}${q.docs?` + ${eur(q.docs)} dokumente`:""}${q.vatOn?(q.rate?" + dogana":" (dogana 0 për këtë vend)"):" (pa doganë)"}. Kostoja jonë ≈ ${eur(q.cost)}.
       ${vdraft.manual?`<br><span class="pill">Çmim i ndryshuar me dorë</span> <button class="btn ghost small" type="button" id="c-auto">Kthe çmimin e llogaritur</button>`:""}`;
     const b=$("#c-auto");if(b)b.onclick=()=>{vdraft.manual=false;qp()};},250);
   $("#c-price").oninput=()=>{vdraft.manual=true;qp()};
@@ -1570,6 +1606,7 @@ function renderCar(id){
     if(!vdraft.from){toast("Zgjidh adresën ku merret vetura");return}
     const o=isNew?{id:uid(),created:Date.now(),createdBy:whoAmI(),status:"waiting",tripId:null}:c;
     Object.assign(o,{year:$("#c-year").value.trim(),...cur(),model:$("#c-model").value.trim(),owner:$("#c-owner").value.trim(),phone:$("#c-phone").value.trim(),from:vdraft.from,to:$("#c-to").value.trim(),price:parseFloat($("#c-price").value)||vdraft.auto||0,priceManual:!!vdraft.manual,vatOn:$("#c-vat").checked,docs:parseFloat($("#c-docs").value)||0,note:$("#c-note").value});
+    o.vatRate=dutyRate(o.from);
     if(!isNew){o.status=$("#c-home").checked?"home":"waiting";const nt=$("#c-trip").value;if(nt!==(o.tripId||"")){DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==o.id));if(nt)DB.trips.find(t=>t.id===nt).carIds.push(o.id);o.tripId=nt||null}}
     if(isNew){DB.cars.unshift(o);notifyNew("Veturë e re",(o.model||"Veturë")+(o.owner?" · "+o.owner:""),o.from)}
     save();vdraft=null;toast("Vetura u ruajt");setTab("orders");
@@ -1583,18 +1620,20 @@ function renderOrder(id){
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="odraft=null;setTab('orders')">← Kthehu</button>
   <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(o.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" value="${esc(o.phone||"")}"></div></div>
   <label>Adresa</label>${addrField("f-addr",odraft.addr)}
-  <h3>Mallrat</h3>${itemsEditor(odraft.items,true)}
+  ${o.full?`<p><span class="pill">Transport i plotë</span></p><label for="f-fdesc">Çfarë ngarkohet</label><input id="f-fdesc" value="${esc(o.fullDesc||"")}">`:`<h3>Mallrat</h3>${itemsEditor(odraft.items,true)}`}
   <div class="row" style="align-items:flex-end"><div><label for="f-price">Çmimi (€)</label><input id="f-price" type="number" value="${o.price}"></div>
   <div><label for="f-docs">Dokumente / të tjera €</label><input id="f-docs" type="number" inputmode="decimal" value="${o.docs||""}" placeholder="0"></div></div>
-  <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="f-vat" style="width:auto" ${o.vatOn!==false?"checked":""}>Çmimi përfshin TVSH ${S().vat}%</label>
+  <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:600"><input type="checkbox" id="f-vat" style="width:auto" ${o.vatOn!==false?"checked":""}>Dogana (e përfshirë në çmim)</label>
   <label for="f-note">Shënime</label><textarea id="f-note" rows="2">${esc(o.note||"")}</textarea>
   <label for="f-trip">Udhëtimi / furgoni</label><select id="f-trip">${tripOptions(o.tripId)}</select>
   <div class="row" style="margin-top:12px"><a class="btn ghost" href="${navUrl(o.addr)}" target="_blank" rel="noopener">Hap në Google Maps</a><button class="btn" id="save">Ruaj</button></div>
   <button class="btn warn full" id="del">Fshij porosinë</button></div>`;
   wireAddr("f-addr",r=>odraft.addr=r||o.addr);
-  wireItems(odraft,()=>renderOrder(id));
+  if(!o.full)wireItems(odraft,()=>renderOrder(id));
   $("#save").onclick=()=>{
     Object.assign(o,{customer:$("#f-cust").value,phone:$("#f-phone").value,addr:odraft.addr||o.addr,items:odraft.items,what:itemsSummary(odraft.items),price:+$("#f-price").value,docs:parseFloat($("#f-docs").value)||0,vatOn:$("#f-vat").checked,note:$("#f-note").value});
+    if(o.full){o.fullDesc=$("#f-fdesc").value.trim();o.what="Transport i plotë"+(o.fullDesc?": "+o.fullDesc:"");delete o.items;o.m3=+vanVol(avgVan()).toFixed(1);o.kg=0}
+    o.vatRate=dutyRate(o.addr);
     delete o.kg;delete o.m3;
     const nt=$("#f-trip").value;
     if(nt!==(o.tripId||""))assignOrder(o.id,nt);
@@ -1773,15 +1812,15 @@ async function renderTrip(id){
     <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:500"><input type="checkbox" id="tk-tip" style="width:auto" ${tr.tip?"checked":""}>Lejo vendosjen anash (dyshekë, tavolina)</label>
     <div id="pack-t"></div></details></div>
   <div class="card"><h2>Paratë</h2>
-    <div class="big3"><div><b>${eur(p.revenue)}</b><span>Të hyrat (pa TVSH)</span></div><div><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b><span>Shpenzimet</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi</span></div></div>
+    <div class="big3"><div><b>${eur(p.revenue)}</b><span>Të hyrat (pa doganë)</span></div><div><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b><span>Shpenzimet</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi</span></div></div>
     <details class="more"><summary>Shiko të gjitha shpenzimet</summary><table>
     ${p.costs.rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${eur(r[1])}</td></tr>`).join("")}
     <tr><td>Ngarkim / shkarkim (${p.orders.length} × ${eur(s.handling)})</td><td>${eur(p.orders.length*s.handling)}</td></tr>
     ${p.docs?`<tr><td>Dokumente / të tjera</td><td>${eur(p.docs)}</td></tr>`:""}
     <tr><td><b>Kostoja totale</b></td><td><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b></td></tr>
-    <tr><td>Të hyrat nga porositë (pa TVSH)</td><td>${eur(p.ordersIn)}</td></tr>
-    <tr><td>Të hyrat nga veturat në kthim (${p.carStops.length}, pa TVSH)</td><td>${eur(p.carsIn)}</td></tr>
-    <tr><td class="mute">TVSH ${s.vat}% që mblidhet dhe paguhet</td><td class="mute">${eur(p.vatAmt)}</td></tr>
+    <tr><td>Të hyrat nga porositë (pa doganë)</td><td>${eur(p.ordersIn)}</td></tr>
+    <tr><td>Të hyrat nga veturat në kthim (${p.carStops.length}, pa doganë)</td><td>${eur(p.carsIn)}</td></tr>
+    <tr><td class="mute">Dogana që mblidhet dhe paguhet</td><td class="mute">${eur(p.vatAmt)}</td></tr>
     ${+tr.returnIncome?`<tr><td>Të hyra të tjera</td><td>${eur(+tr.returnIncome)}</td></tr>`:""}
     <tr><td><b>Fitimi</b></td><td><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b></td></tr></table>
     <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
@@ -1842,7 +1881,9 @@ function renderSettings(){
     <div class="row">${num("margin","Fitimi %")}${num("minPrice","Çmimi minimal €")}</div>
     <div class="row">${num("handling","Ngarkim/shkarkim për porosi €")}${num("loadFactor","Furgoni zakonisht plot %")}</div>
     <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
-    <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}${num("vat","TVSH %")}</div>
+    <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}</div>
+    <h3>Dogana sipas vendit (%)</h3><p class="mute" style="margin:0 0 4px">Zgjidhet vetë nga vendi i adresës (për veturat: vendi ku merret). Nuk shfaqet te klienti, vetëm futet në çmimin final.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${CTRY.map(c=>`<div><label for="du-${c[0]}" style="margin-top:4px">${esc(c[2])}</label><input id="du-${c[0]}" type="number" inputmode="decimal" data-path="duty.${c[0]}" value="${+(s.duty||{})[c[0]]||0}"></div>`).join("")}</div>
     <p class="mute">“Furgoni zakonisht plot” e ndan koston: në 80%, një porosi që zë 10% të furgonit paguan 12,5% të udhëtimit. “Pesha e vlerësuar” përdoret kur pesha nuk dihet.</p></div></div>
   <div class="card"><h2>Çmimi i veturave në kthim</h2>
     <div class="row">${num("carBase","Bazë €")}${num("carPerKm","€ për km deri në Kosovë")}</div>
@@ -1904,6 +1945,7 @@ function migrateSettings(st){if(!st)return false;let ch=false;
   return ch}
 if(migrateSettings(DB.settings))save();
 if(!Array.isArray(DB.fills))DB.fills=[];
+if(!DB.settings.duty){DB.settings.duty=structuredClone(DEFAULTS.duty);save()}
 if(!DB.examplesCleaned){
   const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
   DB.orders=DB.orders.filter(o=>!fake.has(o.id));
