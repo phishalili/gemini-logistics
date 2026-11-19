@@ -1277,14 +1277,170 @@ Tesla Model 3|model 3|2017|2026|4694|1849|1443|1650
 Lexus RX|rx|2009|2026|4890|1895|1690|2000`.split("\n").map(l=>{const [n,a,y1,y2,L,W,H,kg]=l.split("|");return {n,d:carDisplay(n),a:a.split(","),y1:+y1,y2:+y2,l:+L/10,w:+W/10,h:+H/10,kg:+kg}});
 // Sugjerimet gjatë shkrimit: "cit" → Citroën, "merc" → Mercedes, "vw"/"volks" → VW …
 const BRANDSYN={"VW":"volkswagen vw","Mercedes":"mercedes benz mercedes-benz mb","Citroën":"citroen citroën","Skoda":"skoda škoda","BMW":"bmw beemer","Opel":"opel vauxhall","Land":"land rover","Alfa":"alfa romeo"};
+// Variantet (motori / versioni) për çdo gjeneratë: "emri=variant:kg shtesë,..."
+const CARVARIANTS=`VW Golf 4=1.4,1.6,1.9 TDI:40,GTI:40,V5:60
+VW Golf 5=1.4,1.6 FSI,1.4 TSI,1.9 TDI:40,2.0 TDI:60,GTI:60
+VW Golf 6=1.2 TSI:-30,1.4 TSI,1.6 TDI:40,2.0 TDI:60,GTI:60,R:120
+VW Golf 7=1.0 TSI:-40,1.2 TSI:-30,1.4 TSI,1.5 TSI,1.6 TDI:40,2.0 TDI:60,GTI:60,GTD:70,R:150,e-Golf:300
+VW Golf 8=1.0 TSI:-40,1.5 TSI,2.0 TDI:60,GTI:60,GTD:70,R:150,eHybrid:250
+VW Passat B5=1.6,1.8T,1.9 TDI:40,2.5 TDI V6:120
+VW Passat B6=1.4 TSI,1.6 FSI,1.9 TDI:30,2.0 TDI:60
+VW Passat B7=1.4 TSI,1.8 TSI,1.6 TDI:30,2.0 TDI:60
+VW Passat B8=1.4 TSI,1.5 TSI,1.6 TDI:30,2.0 TDI:60,2.0 BiTDI:150,GTE:200
+VW Polo 5=1.2:-20,1.2 TSI,1.4,1.6 TDI:40,GTI:60
+VW Polo 6=1.0:-20,1.0 TSI,1.6 TDI:40,GTI:60
+VW Tiguan 1=1.4 TSI,2.0 TSI:60,2.0 TDI:80,2.0 TDI 4Motion:140
+VW Tiguan 2=1.4 TSI,1.5 TSI,2.0 TDI:80,2.0 TDI 4Motion:150
+VW Touran 1=1.6,1.9 TDI:40,2.0 TDI:60
+VW Touran 2=1.4 TSI,1.6 TDI:40,2.0 TDI:60
+VW Touareg=3.0 TDI V6,4.2 TDI V8:150
+VW Caddy=1.6 TDI,2.0 TDI:40,Maxi:120
+VW Transporter T5/T6=T5 1.9 TDI,T5 2.5 TDI:60,T6 2.0 TDI:50,Multivan:150
+Audi A3 8P=1.6,1.9 TDI:40,2.0 TDI:60,S3:150
+Audi A3 8V=1.0 TFSI:-40,1.4 TFSI,1.6 TDI:30,2.0 TDI:60,S3:150,RS3:200
+Audi A4 B6/B7=1.8T,1.9 TDI:20,2.0 TDI:40,2.5 TDI V6:120,3.0 TDI quattro:180
+Audi A4 B8=1.8 TFSI,2.0 TFSI:30,2.0 TDI:50,3.0 TDI quattro:180,S4:200
+Audi A4 B9=35 TFSI,40 TFSI:30,35 TDI:40,40 TDI:60,40 TDI quattro:120,45 TDI quattro:180,S4:200
+Audi A6 C6=2.0 TDI,2.7 TDI:100,3.0 TDI quattro:180
+Audi A6 C7=2.0 TDI,3.0 TDI:100,3.0 TDI quattro:180
+Audi A6 C8=40 TDI,45 TDI quattro:150,50 TDI quattro:180
+Audi Q5=2.0 TDI,2.0 TDI quattro:60,3.0 TDI quattro:150
+Audi Q5 (2)=35 TDI,40 TDI quattro:80,50 TDI quattro:180
+Audi Q7=3.0 TDI quattro,4.2 TDI quattro:150
+Audi Q7 (2)=45 TDI quattro,50 TDI quattro:60
+BMW Seria 1 E87=116i:-30,118i,118d:30,120d:40
+BMW Seria 1 F20=114i:-30,116i:-20,116d,118i,118d:30,120d:40,M135i:150
+BMW Seria 3 E46=316i,318i,318d:30,320d:40,320i:20,325i:60,330d:100,330i:80
+BMW Seria 3 E90=316d,318d,318i,320d:30,320i,325d:80,325i:70,330d:110,335i:120
+BMW Seria 3 F30=316d,318d,318i,320d:30,320i,320d xDrive:90,325d:60,330d:110,330i:40,335d xDrive:190
+BMW Seria 3 G20=318d,318i,320d:30,320i,320d xDrive:90,330d:110,330e:250,330i:40,M340i:200
+BMW Seria 5 E60=520d,520i,525d:60,530d:80,530i:60,535d:110
+BMW Seria 5 F10=518d,520d,520i,525d:60,530d:100,535d:140,520d xDrive:80
+BMW Seria 5 G30=520d,520i,520d xDrive:80,530d:100,530e:200,540i:140
+BMW X3 F25=18d,20d,20d xDrive:40,30d xDrive:120,35d:140
+BMW X5 E70=30d,35d:40,40d:60,50i:120
+BMW X5 F15=25d,30d:60,40d:100,50i:150
+Mercedes A W169=A150,A160,A170,A180 CDI:40,A200:30,A200 CDI:50
+Mercedes A W176=A160,A180,A180 CDI:30,A200,A200 CDI:40,A220 CDI:60,A250:60,A45 AMG:150
+Mercedes C W203=C180,C200,C200 CDI:40,C220 CDI:60,C270 CDI:90,C320:110
+Mercedes C W204=C180,C200,C200 CDI:40,C220 CDI:60,C250 CDI:80,C300:90,C350 CDI:120,C63 AMG:200
+Mercedes C W205=C160:-30,C180,C200,C200d:30,C220d:60,C250d:80,C300:60,C300d:90,C350e:250,C43 AMG:180,C63 AMG:220
+Mercedes E W211=E200,E200 CDI:30,E220 CDI:50,E270 CDI:80,E280 CDI:100,E320 CDI:120,E350:90
+Mercedes E W212=E200,E200 CDI:30,E220 CDI:50,E250 CDI:70,E300:80,E350 CDI:120,E63 AMG:220
+Mercedes E W213=E200,E200d:30,E220d:50,E300:60,E300e:250,E350d:120,E400d 4Matic:180,E63 AMG:250
+Mercedes ML W164=ML280 CDI,ML320 CDI:30,ML350:20,ML350 CDI:50,ML420 CDI:150
+Mercedes ML/GLE W166=ML250 BlueTec,ML350 BlueTec:60,GLE250d,GLE350d:60,GLE43 AMG:150
+Mercedes Vito=109 CDI,111 CDI,115 CDI:20,116 CDI:30,Viano 2.2 CDI:150,Viano 3.0 CDI:200
+Mercedes B W246=B160,B180,B180 CDI:30,B200,B200 CDI:40,B220 CDI:70
+Mercedes CLA=CLA180,CLA200,CLA200d:30,CLA220d:50,CLA250:60,CLA45 AMG:150
+Mercedes GLC=GLC200,GLC220d 4Matic,GLC250 4Matic:20,GLC250d 4Matic:40,GLC300e:250,GLC43 AMG:150
+Mercedes GLA=GLA180,GLA200,GLA200d:30,GLA220d 4Matic:100,GLA45 AMG:150
+Mercedes Sprinter=211 CDI,213 CDI,313 CDI:100,316 CDI:120,319 CDI:150,516 CDI:300
+Skoda Octavia 2=1.4,1.6,1.4 TSI,1.8 TSI:40,1.9 TDI:40,2.0 TDI:60,RS:80
+Skoda Octavia 3=1.0 TSI:-40,1.2 TSI:-20,1.4 TSI,1.6 TDI:40,2.0 TDI:60,2.0 TDI 4x4:120,RS:80
+Skoda Octavia 4=1.0 TSI:-40,1.5 TSI,2.0 TDI:60,RS:80,iV:250
+Skoda Superb 2=1.4 TSI,1.8 TSI:30,1.6 TDI:20,2.0 TDI:50,3.6 V6 4x4:200
+Skoda Superb 3=1.4 TSI,1.5 TSI,2.0 TSI:60,1.6 TDI:20,2.0 TDI:50,2.0 TDI 4x4:120,iV:250
+Skoda Fabia=1.2,1.4,1.2 TSI,1.6 TDI:40
+Opel Astra H=1.4,1.6,1.7 CDTI:40,1.9 CDTI:60,OPC:100
+Opel Astra J=1.4,1.4 Turbo:20,1.6,1.7 CDTI:50,2.0 CDTI:70
+Opel Astra K=1.0 Turbo:-40,1.4 Turbo,1.6 CDTI:40
+Opel Corsa D=1.0:-30,1.2,1.4,1.3 CDTI:40,OPC:80
+Opel Insignia=1.6 Turbo,1.8,2.0 CDTI:60,2.0 CDTI 4x4:150,OPC:200
+Opel Zafira B=1.6,1.8,1.7 CDTI:40,1.9 CDTI:60
+Ford Focus 2=1.4:-20,1.6,1.6 TDCi:40,1.8 TDCi:60,2.0 TDCi:80,ST:100
+Ford Focus 3=1.0 EcoBoost:-30,1.6,1.6 TDCi:40,2.0 TDCi:70,ST:100
+Ford Fiesta=1.0 EcoBoost,1.25,1.4,1.4 TDCi:30,1.6 TDCi:40,ST:60
+Ford Mondeo 4=1.6,2.0,1.8 TDCi:60,2.0 TDCi:70,2.2 TDCi:90
+Renault Clio=1.2,1.5 dCi:40,0.9 TCe:-20,RS:80
+Renault Megane 3=1.6,1.2 TCe,1.5 dCi:30,1.9 dCi:70,RS:100
+Peugeot 208=1.2 PureTech,1.6 HDi:40,1.5 BlueHDi:40,GTi:60,e-208:350
+Peugeot 308=1.2 PureTech,1.6 HDi:40,1.5 BlueHDi:40,2.0 BlueHDi:80,GTi:80
+Toyota Yaris=1.0:-30,1.33,1.4 D-4D:40,Hybrid:60
+Toyota Corolla=1.2 Turbo,1.8 Hybrid:40,2.0 Hybrid:80
+Toyota RAV4=2.0,2.0 D-4D:60,2.2 D-4D:100,2.5 Hybrid:150
+Seat Leon=1.2 TSI:-30,1.4 TSI,1.6 TDI:40,2.0 TDI:60,FR,Cupra:120
+Seat Ibiza=1.2,1.4,1.2 TSI,1.6 TDI:40,FR:40
+Hyundai i30=1.4,1.6,1.6 CRDi:60
+Hyundai Tucson=1.6 GDI,1.6 T-GDI:60,1.7 CRDi:60,2.0 CRDi 4WD:150
+Kia Sportage=1.6 GDI,1.6 T-GDI:60,1.7 CRDi:60,2.0 CRDi 4WD:150
+Kia Ceed=1.4,1.6,1.6 CRDi:60
+Dacia Duster=1.6,1.5 dCi:40,1.5 dCi 4x4:110
+Dacia Logan=1.2,0.9 TCe,1.5 dCi:40,MCV:60
+Dacia Sandero=1.2,0.9 TCe,1.5 dCi:40,Stepway:30
+Fiat 500=1.2,0.9 TwinAir:-20,1.3 Multijet:40,Abarth:80
+Fiat Punto=1.2,1.4,1.3 Multijet:40
+Citroën C3 (2)=1.1,1.4,1.4 HDi:30,1.6 HDi:40
+Citroën C3 (3)=1.2 PureTech,1.6 BlueHDi:40,1.5 BlueHDi:40
+Citroën C4 (2)=1.4,1.6,1.6 HDi:40,2.0 HDi:70
+Citroën C4 Picasso=1.6,1.6 HDi:40,2.0 HDi:80,Grand C4 Picasso:120
+Citroën C5 (2)=1.6 THP,1.6 HDi:30,2.0 HDi:60,2.2 HDi:80,3.0 HDi V6:150
+Citroën Berlingo=1.6,1.6 HDi:30,1.5 BlueHDi:30,XL:120
+Peugeot 207=1.4,1.6,1.4 HDi:30,1.6 HDi:40,GTi:60
+Peugeot 3008=1.2 PureTech,1.6 THP,1.6 HDi:40,1.5 BlueHDi:40,2.0 HDi:80,Hybrid4:250
+Peugeot 5008=1.2 PureTech,1.6 THP,1.6 HDi:40,1.5 BlueHDi:40,2.0 HDi:80
+Peugeot 508=1.6 THP,1.6 HDi,2.0 HDi:60,2.2 HDi GT:100,Hybrid:200
+Renault Scenic=1.2 TCe,1.5 dCi:40,1.6 dCi:60,Grand Scenic:100
+Renault Kangoo=1.6,1.5 dCi:30,Maxi:150
+Nissan Qashqai=1.2 DIG-T:-30,1.3 DIG-T,1.5 dCi:40,1.6 dCi:70,1.6 dCi 4x4:140,+2:120
+Nissan Juke=1.0 DIG-T:-30,1.2 DIG-T,1.6,1.5 dCi:40
+Mazda 3=1.5,2.0,2.2 Skyactiv-D:80
+Mazda 6=2.0,2.5:50,2.2 Skyactiv-D:90
+Mazda CX-5=2.0,2.5 AWD:120,2.2 Skyactiv-D:90,2.2 Skyactiv-D AWD:170
+Honda Civic=1.0 VTEC Turbo,1.4,1.8,1.6 i-DTEC:60,2.2 i-CTDi:90,Type R:120
+Honda CR-V=2.0,2.2 i-CTDi:100,1.6 i-DTEC:80,Hybrid:150
+Volvo V40=T2,T3,D2:40,D3:60,D4:80
+Volvo V60=T4,T5,D3:40,D4:60,D5 AWD:150,T6 Recharge:300
+Volvo XC60=T5,D4:60,D5 AWD:150,T8 Recharge:300
+Volvo XC90=T5,D4,D5 AWD:100,T8 Recharge:250
+BMW X1 E84/F48=sDrive18i,sDrive18d:30,sDrive20d:40,xDrive20d:110,xDrive25e:250
+BMW Seria 1 F40=116i,116d,118i,118d:30,120d xDrive:110,M135i xDrive:150
+BMW Seria 4=418d,420d:20,420i,425d:40,430d:100,430i:40,435d xDrive:160,M440i:180
+BMW X6=xDrive30d,xDrive35d:30,xDrive40d:60,xDrive50i:150,M50d:200
+Audi A1=1.0 TFSI:-30,1.2 TFSI,1.4 TFSI,1.6 TDI:40
+Audi A5=1.8 TFSI,2.0 TFSI:40,2.0 TDI:60,3.0 TDI quattro:180,S5:200
+Audi Q3=1.4 TFSI,2.0 TFSI quattro:150,2.0 TDI:60,2.0 TDI quattro:150
+Audi A8=3.0 TDI quattro,4.2 TDI quattro:150,50 TDI quattro:100
+Land Rover Range Rover Evoque=eD4,TD4:40,SD4:80,Si4:60
+Land Rover Discovery Sport=eD4,TD4:40,SD4:80
+Porsche Cayenne=3.0 Diesel,S:60,Turbo:150,E-Hybrid:250
+Jeep Renegade=1.0 T3,1.4 MultiAir:40,1.6 Multijet:60,2.0 Multijet 4x4:160
+Jeep Compass=1.4 MultiAir,1.6 Multijet:40,2.0 Multijet 4x4:150,4xe:250
+Hyundai Santa Fe=2.2 CRDi,2.4,2.2 CRDi 4WD:80
+Kia Sorento=2.2 CRDi,2.2 CRDi AWD:80,2.4:-20
+Mitsubishi Outlander=2.0,2.2 DI-D 4WD:100,PHEV:250
+Fiat Ducato=2.0 Multijet,2.3 Multijet:60,3.0 Multijet:120
+Ford Transit=2.0 TDCi,2.2 TDCi:20
+Ford Kuga=1.5 EcoBoost,1.5 TDCi:40,2.0 TDCi:60,2.0 TDCi AWD:150
+Toyota Auris=1.33,1.4 D-4D:40,1.6,1.8 Hybrid:60
+Toyota Avensis=1.6,1.8,2.0 D-4D:80,2.2 D-4D:120
+Toyota C-HR=1.2 Turbo,1.8 Hybrid:60,2.0 Hybrid:100
+Opel Mokka=1.4 Turbo,1.6 CDTI:60,1.4 Turbo 4x4:100
+Opel Vectra C=1.8,2.2,1.9 CDTI:60,3.0 V6 CDTI:150
+Opel Meriva=1.4,1.4 Turbo,1.3 CDTI:30,1.7 CDTI:60
+VW Jetta=1.4 TSI,1.6 TDI:40,2.0 TDI:60
+VW Sharan=1.4 TSI,2.0 TDI:60,2.0 TDI 4Motion:140
+VW T-Roc=1.0 TSI,1.5 TSI:40,2.0 TDI:80,2.0 TSI 4Motion:120,R:150
+VW Arteon=1.5 TSI,2.0 TDI:60,2.0 TSI 4Motion:150
+Seat Ateca=1.0 TSI,1.5 TSI:40,1.6 TDI:50,2.0 TDI 4Drive:150
+Skoda Kodiaq=1.4 TSI,1.5 TSI,2.0 TDI:80,2.0 TDI 4x4:150,RS:200
+Skoda Karoq=1.0 TSI,1.5 TSI:40,1.6 TDI:50,2.0 TDI 4x4:150`;
+const CARVARS=(()=>{const V={};CARVARIANTS.split("\n").forEach(l=>{const i=l.indexOf("=");V[l.slice(0,i)]=l.slice(i+1).split(",").map(x=>{const [t,d]=x.split(":");return {t:t.trim(),d:+d||0}})});
+  const out=[];CARSPECS.forEach(c=>{const vs=V[c.n];if(!vs){out.push({...c,lab:c.d,v:""});return}
+    const brand=c.n.split(" ")[0]==="Land"?"Land Rover":c.n.split(" ")[0];
+    vs.forEach(x=>{const own=/^\d{3}[a-z]/.test(x.t)||/^[A-Z]{1,3}\d{2,3}/.test(x.t);
+      out.push({...c,kg:c.kg+x.d,lab:own?brand+" "+x.t:c.d+" "+x.t,v:x.t})})});
+  return out})();
 function carSuggest(q){const raw=norm(q).split(/[ ,]+/).filter(Boolean);if(!raw.length||norm(q).trim().length<2)return [];
   const tk=raw.map(t=>t.replace(/^([a-z]{0,3}\d{3})[a-z]{1,3}$/,"$1"));
-  return CARSPECS.filter(c=>{const words=norm(c.n+" "+(BRANDSYN[c.n.split(" ")[0]]||"")+" "+c.a.join(" ")).split(/[ ,/()-]+/);
-    return tk.every(t=>words.some(w=>w.startsWith(t)))}).slice(0,10).map(c=>{
-    // nëse u shkrua varianti (c220, 320d, a180), shfaqet ai: "Mercedes C220"
-    const vi=raw.findIndex((t,i)=>/^[a-z]{0,3}\d{3}[a-z]{0,3}$/.test(t)&&!/^w\d{3}$/.test(t)&&c.a.includes(tk[i]));
-    const lab=vi>=0?c.n.split(" ")[0]+" "+(/^[a-z]/.test(raw[vi])?raw[vi].replace(/^[a-z]+/,m=>m.toUpperCase()):raw[vi]):c.d;
-    return {...c,lab}})}
+  return CARVARS.filter(c=>{const words=norm(c.lab+" "+c.n+" "+(BRANDSYN[c.n.split(" ")[0]]||"")+" "+c.a.join(" ")+" "+c.v.replace(/^([A-Za-z]{0,3}\d{3})[a-z]{1,3}\b/,"$1 $&")).split(/[ ,/()-]+/);
+    return tk.every((t,i)=>{const r=raw[i];
+      // kodi i variantit (c220, 320d, a180): duhet të përputhet me variantin ose me emrin e modelit, jo me gjithë serinë
+      if(/^[a-z]{0,3}\d{3}[a-z]{0,3}$/.test(r)&&!/^w\d{3}$/.test(r)){const v=norm(c.v).replace(/\s+/g,"");
+        return v.startsWith(r)||v.replace(/^[a-z]+/,"").startsWith(r)||norm(c.d).split(/[ ,/()-]+/).some(w=>w.startsWith(r))}
+      return words.some(w=>w.startsWith(t)||w.startsWith(r))})})
+    .map((c,i)=>{const lw=norm(c.lab+" "+c.d).split(/[ ,/()-]+/);return {c,i,sc:tk.reduce((n,t,j)=>n+(lw.some(w=>w===t||w===raw[j])?2:lw.some(w=>w.startsWith(t)||w.startsWith(raw[j]))?1:0),0)}})
+    .sort((a,b)=>b.sc-a.sc||b.c.y1-a.c.y1||a.i-b.i).map(x=>x.c).slice(0,60)}
 // Gjen veturën nga emri dhe viti. Kthen të dhënat ose null.
 function carLookup(model,year){
   const t=" "+String(model||"").toLowerCase().replace(/[^a-z0-9äöüë\- ]/g," ").replace(/\b([a-z]{0,3}\d{3})[a-z]{1,3}\b/g,"$1").replace(/\s+/g," ")+" ";if(t.trim().length<2)return null;
@@ -1369,7 +1525,7 @@ function renderCar(id){
   let forced=null;
   const look=()=>{const m=forced&&forced.lab===$("#c-model").value?forced:carLookup($("#c-model").value,$("#c-year").value);
     if(!m){$("#c-spec").innerHTML=$("#c-model").value.trim()?"Nuk e gjeta këtë model në listë. Shkruaj masat vetë.":"";fit();return}
-    $("#c-spec").innerHTML=`<b>${esc(m.d||m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
+    $("#c-spec").innerHTML=`<b>${esc(m.lab||m.d||m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
     $("#c-l").value=Math.round(m.l);$("#c-w").value=Math.round(m.w);$("#c-h").value=Math.round(m.h);$("#c-kg").value=m.kg;fit();qp()};
   const lookD=debounce(look,300),ml=$("#c-model-list");let sugs=[];
   $("#c-model").oninput=()=>{sugs=carSuggest($("#c-model").value);
