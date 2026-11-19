@@ -826,7 +826,7 @@ function buildOfferPdf(o){
     doc.setDrawColor(...blue);doc.setLineWidth(0.3);doc.line(bx+5,py,W-M-5,py);py+=8}
   T(vatOn?"ÇMIMI FINAL":"ÇMIMI (pa TVSH)",bx+5,py+1,{b:1,size:11,c:deep});T(eur(price),W-M-5,py+1.5,{b:1,size:17,c:blue,align:"right"});
   // shënimet
-  let ny=y+4;const notes=["Çmimi përfshin transportin, ngarkimin dhe shkarkimin.",vatOn?`Çmimi përfshin TVSH ${s.vat}%.`:"Çmimi nuk përfshin TVSH.","Oferta vlen 14 ditë nga data e lëshimit."];
+  let ny=y+4;const notes=[vatOn?`Çmimi përfshin TVSH ${s.vat}%.`:"Çmimi nuk përfshin TVSH.","Oferta vlen 14 ditë nga data e lëshimit."];
   T("Kushtet",M,ny,{b:1,size:9,c:blue});ny+=6;notes.forEach(n=>{doc.splitTextToSize(n,bx-M-6).forEach(l=>{T(l,M,ny,{size:9.5,c:mute});ny+=4.8})});
   // fundi
   doc.setDrawColor(...line);doc.setLineWidth(0.3);doc.line(M,282,W-M,282);
