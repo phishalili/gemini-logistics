@@ -1864,7 +1864,7 @@ async function renderTrip(id){
   if(TAB!=="trips"||VIEW!==id)return;
   const kgPct=p.kg/v.payloadKg*100,m3Pct=p.m3/vanVol(v)*100;
   const loose=waitingOrders(id);
-  const left=p.stops.filter(o=>o.status!=="delivered");
+  const left=p.stops.filter(o=>o.status!=="delivered"),fin=tr.status==="done";
   $("#app").innerHTML=`<div class="card"><button class="btn ghost small" onclick="setTab('trips')">← Kthehu</button>
     <h2 style="margin-top:10px">${esc(dateTxt(tr.date))}</h2><div class="mute">${esc(v.name)} · ${tr.start&&tr.dest?`${esc(cityOf(tr.start))} → ${esc(cityOf(tr.dest))}, kthim në ${esc(cityOf(s.base))}`:`nisja dhe kthimi: ${esc(s.base.label)}`}</div>
     <label for="t-drv">Shoferi</label>${driverSelect("t-drv",tr.name||"")}
@@ -1873,10 +1873,10 @@ async function renderTrip(id){
     <label>Pesha ${Math.round(p.kg)} / ${v.payloadKg} kg</label><div class="bar ${kgPct>100?"over":""}"><i style="width:${Math.min(100,kgPct)}%"></i></div>
     <label>Hapësira ${num1(p.m3)} / ${num1(vanVol(v))} m³</label><div class="bar ${m3Pct>100?"over":""}"><i style="width:${Math.min(100,m3Pct)}%"></i></div>
     ${tr.status==="done"?`<p><span class="pill good">Udhëtimi ka përfunduar</span></p>`:tr.status==="onroad"?`<p style="margin:10px 0 0"><span class="pill road" style="font-size:14px">Në rrugë</span> <button class="btn ghost small" type="button" id="tStop">Ktheje në planifikim</button></p>`:`<button class="btn yellow full big" type="button" id="tStart" style="margin-top:10px">Nisu: fillo udhëtimin</button>`}
-    ${left[0]?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
+    ${left[0]&&!fin?`<a class="btn full" href="${navUrl(left[0].addr)}" target="_blank" rel="noopener">▶ Ndalesa e radhës: ${esc(left[0].addr.label.split(",").slice(0,2).join(","))}</a>`:""}
   </div>
   ${tr.status==="done"?reportCard(tr,p):""}
-  <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
+  ${fin?"":`  <div class="card"><h2>Ndalesat me radhë · ${km(p.kmTotal)} gjithsej (me kthim)</h2>
     ${p.stops.length?"":`<p class="mute">Ende s'ka porosi në këtë udhëtim. Shtoji më poshtë.</p>`}
     ${p.stops.map((o,i)=>{const g=orderGoods(o);return `<div class="stop" style="cursor:default"><div class="num">${i+1}</div><div class="grow"><b>${esc(cityOf(o.addr))}</b> · ${esc(o.customer||"")}${telLink(o)}${o.status==="delivered"?` <span class="pill good">dorëzuar</span>`:""}<br><span class="mute">${esc(o.addr.label)}</span>
       <ul style="margin:6px 0;padding-left:18px;font-size:14px">${itemLines(o)}</ul>
@@ -1898,7 +1898,7 @@ async function renderTrip(id){
     <div id="carsLoose"></div></div>
   <div class="card"><details class="more" id="t3d" style="border:0;margin:0;padding:0" ${tr.open3d?"open":""}><summary style="font-size:18px">Ngarkimi 3D</summary><p class="mute" style="margin:0">Ngarkohet së pari ndalesa e fundit (përpara), kështu e para del e para. Numrat = radha e ngarkimit.</p>
     <label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:500"><input type="checkbox" id="tk-tip" style="width:auto" ${tr.tip?"checked":""}>Lejo vendosjen anash (dyshekë, tavolina)</label>
-    <div id="pack-t"></div></details></div>
+    <div id="pack-t"></div></details></div>`}
   <div class="card"><h2>Paratë</h2>
     <div class="big3"><div><b>${eur(p.revenue)}</b><span>Të hyrat (pa doganë)</span></div><div><b>${eur(p.costs.total+p.orders.length*s.handling+p.docs)}</b><span>Shpenzimet</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi</span></div></div>
     <details class="more"><summary>Shiko të gjitha shpenzimet</summary><table>
@@ -1913,27 +1913,27 @@ async function renderTrip(id){
     <tr><td><b>Fitimi</b></td><td><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b></td></tr></table>
     <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
   </div>
-  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
+  ${fin?"":`  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
   ${fillsCard(tr,p)}
   ${tr.status==="onroad"||tr.status==="done"||tripExp(tr).length?expCard(tr,p):""}
-  ${fuelDrop(tr)}
+  ${fuelDrop(tr)}`}
   <div class="card"><div class="row"><button class="btn ${tr.status==="done"?"ghost":"green big"}" id="done">${tr.status==="done"?"Rihape udhëtimin":"Përfundo udhëtimin"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
   $("#t-date").onchange=e=>{tr.date=e.target.value;save();toast("Data u ndryshua");renderTrip(id)};
   document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{const d=new Date((tr.date||todayISO())+"T12:00:00");d.setDate(d.getDate()+ +b.dataset.shift);tr.date=d.toISOString().slice(0,10);save();toast("U shty për "+dateTxt(tr.date));renderTrip(id)});
   $("#t-drv").onchange=e=>{tr.name=e.target.value.trim();save()};
   if($("#carLoad"))$("#carLoad").ontoggle=e=>{if(e.target.open)carLoadView("pack-car",p.carStops,v)};
-  $("#fuelDrop").ontoggle=e=>{if(e.target.open)fillFuelDrop(p,tr)};
+  if(!fin){$("#fuelDrop").ontoggle=e=>{if(e.target.open)fillFuelDrop(p,tr)};
   const stopsAll=[...p.stops];const tripPieces=[...stopsAll].reverse().flatMap(o=>{const i=stopsAll.indexOf(o);return piecesFromItems(o.items||[],(i+1)+". "+cityOf(o.addr),i).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h)});
   const draw3=()=>packView("pack-t",tripPieces,v,stopsAll.map((o,i)=>({color:i,label:(i+1)+". "+cityOf(o.addr)+" · "+(o.customer||"")})),{tip:tr.tip});
   if(tr.open3d)draw3();$("#t3d").ontoggle=e=>{tr.open3d=e.target.open;save();if(e.target.open)draw3()};
-  $("#tk-tip").onchange=e=>{tr.tip=e.target.checked;save();renderTrip(id)};
+  $("#tk-tip").onchange=e=>{tr.tip=e.target.checked;save();renderTrip(id)}}
   $("#t-van").onchange=e=>{tr.van=e.target.value;save();renderTrip(id)};
   $("#done").onclick=()=>{const end=tr.status!=="done";tr.status=end?"done":"planned";if(end)tr.endedAt=new Date().toISOString();save();
     renderTrip(id).then(()=>{if(end)$("#tripPdf")?.closest(".card")?.scrollIntoView({block:"start",behavior:"smooth"})})};
   if($("#tStart"))$("#tStart").onclick=()=>{tr.status="onroad";tr.startedAt=new Date().toISOString();save();toast("Udhëtimi filloi. Porositë janë në rrugë.");renderTrip(id)};
   if($("#tStop"))$("#tStop").onclick=()=>{tr.status="planned";save();renderTrip(id)};
-  $("#addFill").onclick=async()=>{let pre={tripId:tr.id};try{const pos=LIVE.pos&&Date.now()-LIVE.at<3e5?LIVE.pos:await Promise.race([getPos(),new Promise((_,n)=>setTimeout(()=>n(0),6000))]);
+  if($("#addFill"))$("#addFill").onclick=async()=>{let pre={tripId:tr.id};try{const pos=LIVE.pos&&Date.now()-LIVE.at<3e5?LIVE.pos:await Promise.race([getPos(),new Promise((_,n)=>setTimeout(()=>n(0),6000))]);
       const c=countryAt(pos),near=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pos,x)})).sort((a,b)=>a.d-b.d)[0];
       pre={...pre,lat:pos.lat,lng:pos.lng,c,...(near&&near.d<0.4?{station:[near.x.name,near.x.city].filter(Boolean).join(", "),price:near.x.price}:{price:+dieselOf(c).toFixed(3)||""})}}catch(e){}
     fillForm(pre,()=>renderTrip(id))};
@@ -1944,6 +1944,7 @@ async function renderTrip(id){
   document.querySelectorAll("[data-delexp]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;tr.exp=tripExp(tr).filter(e=>e.id!==b.dataset.delexp);save();renderTrip(id)});
   document.querySelectorAll("[data-delfill]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;DB.fills=DB.fills.filter(f=>f.id!==b.dataset.delfill);save();renderTrip(id)});
   $("#del").onclick=()=>{if(!twoTap($("#del")))return;tr.orderIds.forEach(oid=>{const o=DB.orders.find(x=>x.id===oid);if(o)o.tripId=null});(tr.carIds||[]).forEach(cid=>{const c=DB.cars.find(x=>x.id===cid);if(c)c.tripId=null});DB.trips=DB.trips.filter(x=>x!==tr);save();setTab("trips")};
+  if(fin)return;
   const lc=waitingCars(id);
   if(lc.length){
     const cr=await rankCars(tr,lc,v);
