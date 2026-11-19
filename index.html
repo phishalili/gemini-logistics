@@ -66,6 +66,7 @@ td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-
 .bar.over i{background:var(--warn)}
 .item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--bg)}
 .item .top{display:flex;gap:8px;align-items:center;margin-top:8px}
+label.chk{display:flex;gap:8px;align-items:center;margin:0;font-weight:500;font-size:14px;cursor:pointer}label.chk input{width:auto;margin:0}
 .item .ihead{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-weight:600;min-height:32px}.item .ihead::-webkit-details-marker{display:none}
 .item .ihead::after{content:"▾";color:var(--mute);font-size:14px;transition:transform .15s}.item:not([open]) .ihead::after{transform:rotate(-90deg)}
 .item .inum{flex:0 0 24px;height:24px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:13px}
@@ -141,8 +142,8 @@ if(!DB.cars)DB.cars=[];DB.trips.forEach(t=>{if(!t.carIds)t.carIds=[]});
 // 7000 kg = pesha totale (Sprinter + rimorkio + ngarkesa); ngarkesa = 7000 − pesha bosh
 function fixPayload(){DB.settings.vans.forEach(v=>{if(v.totalKg===undefined)v.totalKg=7000;if(!DB.gross7t&&!(+v.emptyKg))v.emptyKg=3100;v.emptyKg=+v.emptyKg||0;v.payloadKg=Math.max(0,v.totalKg-v.emptyKg)});DB.gross7t=true}
 fixPayload();
-DB.settings.presets.forEach(p=>{if(p.name==="Kuzhinë (për metër)")p.name="Kuzhinë (sasia = metra, në elemente)";if(p.rate===undefined)p.rate=p.name.startsWith("Kuzhinë")?250:0;const d=DEFAULTS.presets.find(x=>x.name===p.name);if(d){if(d.noTop)p.noTop=true;if(d.up)p.up=true}if(/^(Divan|Kolltuk|Frigorifer)/.test(p.name))p.noTop=true;if(/^(Frigorifer|Lavatri)/.test(p.name))p.up=true;if(p.name.startsWith("Kuzhinë")&&p.perM===undefined){p.perM=true;p.name="Kuzhinë (shkruaj gjatësinë në cm)"}});
-DEFAULTS.presets.filter(d=>d.app).forEach(d=>{if(!DB.settings.presets.some(p=>p.name===d.name))DB.settings.presets.push(structuredClone(d))});
+if(!DB.settings.presetsV2){DB.settings.presets.forEach(p=>{if(p.name==="Kuzhinë (për metër)")p.name="Kuzhinë (sasia = metra, në elemente)";if(p.rate===undefined)p.rate=p.name.startsWith("Kuzhinë")?250:0;const d=DEFAULTS.presets.find(x=>x.name===p.name);if(d){if(d.noTop)p.noTop=true;if(d.up)p.up=true}if(/^(Divan|Kolltuk|Frigorifer)/.test(p.name))p.noTop=true;if(/^(Frigorifer|Lavatri)/.test(p.name))p.up=true;if(p.name.startsWith("Kuzhinë")&&p.perM===undefined){p.perM=true;p.name="Kuzhinë (shkruaj gjatësinë në cm)"}});
+DEFAULTS.presets.filter(d=>d.app).forEach(d=>{if(!DB.settings.presets.some(p=>p.name===d.name))DB.settings.presets.push(structuredClone(d))});DB.settings.presets.forEach(p=>{if(p.name==="Frigorifer")p.app=true});DB.settings.presetsV2=true}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast("Nuk u ruajt në këtë pajisje")}if(window.__syncPush)window.__syncPush()}
 const S=()=>DB.settings;
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -450,7 +451,7 @@ function vanSelect(sel){return `<select id="f-van">${S().vans.map(v=>`<option va
 /* --- redaktuesi i mallrave (përdoret nga kompania dhe klienti) --- */
 // Kutizat e pajisjeve te kuzhina: secila shtohet si mall më vete (çmimi sipas vëllimit)
 function kitchenApps(items){
-  const P=S().presets,apps=P.map((p,j)=>({p,j})).filter(x=>x.p.app||x.p.name==="Frigorifer");
+  const P=S().presets,apps=P.map((p,j)=>({p,j})).filter(x=>!x.p.del&&x.p.app);
   const order=["Shporet","Furrë inkaso","Pllakë gatimi","Frigorifer","Lavastovilje","Aspirator","Mikrovalë","Lavaman + rubinet"];
   apps.sort((a,b)=>(order.indexOf(a.p.name)+99)%99-(order.indexOf(b.p.name)+99)%99);
   return `<div style="margin-top:8px"><div class="mute" style="font-size:13px;margin-bottom:4px">Me kuzhinën vijnë edhe:</div>
@@ -461,7 +462,7 @@ function itemsEditor(items,showFit){
   const P=S().presets;
   return `<div id="items">${items.map((it,i)=>`<details class="item" data-i="${i}" ${ITEM_CLOSED.has(it)?"":"open"}>
     <summary class="ihead"><span class="inum">${i+1}</span><span class="ilab">${esc(itemLabel(it))}</span><button class="x" type="button" data-del="${i}" aria-label="Hiqe">×</button></summary>
-    <div class="top"><select data-k="preset">${P.map((p,j)=>`<option value="${j}" ${it.preset==j?"selected":""}>${esc(p.name)}</option>`).join("")}<option value="x" ${it.preset==="x"?"selected":""}>Tjetër (shkruaj masat)</option></select>
+    <div class="top"><select data-k="preset">${P.map((p,j)=>p.del&&it.preset!==j?"":`<option value="${j}" ${it.preset===j?"selected":""}>${esc(p.name)}</option>`).join("")}<option value="x" ${it.preset==="x"?"selected":""}>Tjetër (shkruaj masat)</option></select>
     <input type="number" inputmode="numeric" min="1" data-k="qty" value="${it.qty}" aria-label="Sasia"></div>
     <div class="dims lab"><span>Gjatësia cm</span><span>Gjerësia cm</span><span>Lartësia cm</span><span>${P[it.preset]?.perM?"kg/metër":"kg/copë"}</span></div>
     <div class="dims"><input type="number" inputmode="decimal" data-k="l" value="${it.l||""}" placeholder="Gjatësia cm"><input type="number" inputmode="decimal" data-k="w" value="${it.w||""}" placeholder="Gjerësia cm"><input type="number" inputmode="decimal" data-k="h" value="${it.h||""}" placeholder="Lartësia cm"><input type="number" inputmode="decimal" data-k="kg" value="${it.kg||""}" placeholder="kg/copë"></div>
@@ -489,7 +490,48 @@ function wireItems(state,rerender,onChange=()=>{}){
   $("#addItem").onclick=()=>{state.items.forEach(it=>ITEM_CLOSED.add(it));state.items.push(newItem());rerender()};
   upd();
 }
-function newItem(j=1){const p=S().presets[j];return {preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg}}
+function newItem(j){const P=S().presets;if(j==null||!P[j]||P[j].del)j=P.findIndex(p=>!p.del&&!p.app);if(j<0)return {preset:"x",qty:1,l:0,w:0,h:0,kg:0};const p=P[j];return {preset:j,qty:1,l:p.l,w:p.w,h:p.h,kg:p.kg}}
+
+/* ===================== LLOJET E MALLRAVE (Cilësimet) ===================== */
+// Çdo lloj ka: emrin, masat, peshën, si llogaritet çmimi. Fshirja vetëm e fsheh (porositë e vjetra e mbajnë).
+let PRESET_OPEN=-1;
+function presetMode(p){return p.perM?"m":(+p.rate>0?"pc":"vol")}
+function presetsCard(s){
+  const rows=s.presets.map((p,i)=>({p,i})).filter(x=>!x.p.del);
+  const mode=p=>presetMode(p);
+  return `<div class="card"><h2>Llojet e mallrave</h2><p class="mute" style="margin:0 0 6px">Këto shfaqen te "Shto mall". Shto, ndrysho ose fshi llojet këtu. Ndryshimet shihen në të gjithë telefonat.</p>
+  ${rows.map(({p,i})=>`<details class="item ptype" data-pi="${i}" ${PRESET_OPEN===i?"open":""}>
+    <summary class="ihead"><span class="ilab">${esc(p.name)}</span><span class="mute" style="font-size:13px;white-space:nowrap">${mode(p)==="m"?eur(p.rate)+"/m":mode(p)==="pc"?eur(p.rate)+"/copë":"sipas hapësirës"}</span></summary>
+    <label>Emri</label><input data-pp="${i}" data-k="name" value="${esc(p.name)}">
+    <label>Si llogaritet çmimi</label><select data-pp="${i}" data-k="mode">
+      <option value="vol" ${mode(p)==="vol"?"selected":""}>Sipas hapësirës dhe peshës (si zakonisht)</option>
+      <option value="pc" ${mode(p)==="pc"?"selected":""}>Çmim fiks për copë</option>
+      <option value="m" ${mode(p)==="m"?"selected":""}>Çmim fiks për metër (si kuzhina)</option></select>
+    ${mode(p)!=="vol"?`<label>Çmimi € ${mode(p)==="m"?"për metër":"për copë"}</label><input type="number" inputmode="decimal" data-pp="${i}" data-k="rate" value="${+p.rate||0}">`:""}
+    <div class="dims lab"><span>Gjatësia cm</span><span>Gjerësia cm</span><span>Lartësia cm</span><span>${p.perM?"kg/metër":"kg/copë"}</span></div>
+    <div class="dims">${["l","w","h","kg"].map(k=>`<input type="number" inputmode="decimal" data-pp="${i}" data-k="${k}" value="${+p[k]||0}">`).join("")}</div>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-top:8px">
+      <label class="chk"><input type="checkbox" data-pp="${i}" data-k="noTop" ${p.noTop?"checked":""}> Mos vendos gjë sipër</label>
+      <label class="chk"><input type="checkbox" data-pp="${i}" data-k="up" ${p.up?"checked":""}> Ngarkohet vetëm në këmbë</label>
+      ${p.perM?"":`<label class="chk"><input type="checkbox" data-pp="${i}" data-k="app" ${p.app?"checked":""}> Shfaqet si kuti te kuzhina (pajisje)</label>`}</div>
+    <button class="btn ghost small" type="button" data-pdel="${i}" style="margin-top:8px;color:var(--bad,#c33)">Fshi këtë lloj</button>
+  </details>`).join("")}
+  <button class="btn ghost small" id="addPreset" type="button" style="margin-top:10px">+ Shto lloj</button></div>`;
+}
+function wirePresets(s){
+  document.querySelectorAll("details.ptype").forEach(d=>d.addEventListener("toggle",()=>{const i=+d.dataset.pi;if(d.open)PRESET_OPEN=i;else if(PRESET_OPEN===i)PRESET_OPEN=-1}));
+  document.querySelectorAll("[data-pp]").forEach(el=>el.addEventListener("change",()=>{
+    const p=s.presets[+el.dataset.pp],k=el.dataset.k;PRESET_OPEN=+el.dataset.pp;
+    if(k==="name")p.name=el.value.trim()||p.name;
+    else if(k==="mode"){p.perM=el.value==="m";if(el.value==="vol")p.rate=0;else if(!(+p.rate>0))p.rate=el.value==="m"?250:50;if(p.perM)p.app=false}
+    else if(el.type==="checkbox")p[k]=el.checked;
+    else p[k]=parseFloat(String(el.value).replace(",","."))||0;
+    save();render()}));
+  document.querySelectorAll("[data-pdel]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;const left=s.presets.filter(p=>!p.del&&!p.app).length;
+    const p=s.presets[+b.dataset.pdel];if(!p.app&&left<=1){toast("Duhet të mbetet të paktën një lloj");return}p.del=true;PRESET_OPEN=-1;save();render();toast("U fshi")});
+  $("#addPreset").onclick=()=>{s.presets.push({name:"Lloj i ri",l:100,w:50,h:50,kg:20,rate:0});PRESET_OPEN=s.presets.length-1;save();render();
+    setTimeout(()=>{const el=document.querySelector(`[data-pp="${PRESET_OPEN}"][data-k="name"]`);if(el){el.scrollIntoView({block:"center"});el.select()}},50)};
+}
 
 /* ===================== NGARKIMI 3D ===================== */
 // Copat (cm). Kuzhina ndahet në elemente; çdo copë tjetër = sasia × L×W×H.
@@ -1444,10 +1486,7 @@ function renderSettings(){
     <label>Furgoni gjerësi × gjatësi × lartësi (m)</label><div class="row">${["w","l","h"].map(k=>`<input type="number" inputmode="decimal" data-path="vans.${i}.cargo.${k}" value="${v.cargo[k]}">`).join("")}</div>
     <label>Rimorkioja gjerësi × gjatësi × lartësi (m)</label><div class="row">${["w","l","h"].map(k=>`<input type="number" inputmode="decimal" data-path="vans.${i}.trailer.${k}" value="${v.trailer[k]}">`).join("")}</div>
     <p class="mute">Hapësira totale ${num1(vanVol(v))} m³ · kostoja për km tani ${eur(perKm(v))}</p></div>`).join("")}
-  <div class="card"><h2>Llojet e mallrave</h2><p class="mute">Masat në cm dhe pesha për copë. Këto i sheh edhe klienti.</p>
-    ${s.presets.map((p,i)=>`<div class="item"><input data-preset="${i}" data-k="name" value="${esc(p.name)}"><div class="dims">${["l","w","h","kg","rate"].map(k=>`<input type="number" inputmode="decimal" data-preset="${i}" data-k="${k}" value="${p[k]||0}" aria-label="${k}">`).join("")}</div></div>`).join("")}
-    <p class="mute">Radha: gjatësi, gjerësi, lartësi (cm), kg, çmim fiks € për copë/metër (0 = llogaritet nga hapësira dhe pesha). Fshi emrin për ta hequr.</p>
-    <button class="btn ghost small" id="addPreset">+ Shto lloj</button></div>
+  ${presetsCard(s)}
   <div class="card"><h2>Vendet</h2><label>Nisja / shtëpia</label>${addrField("f-base",s.base)}<p class="mute" style="margin:6px 0 0">Qyteti kryesor i çdo udhëtimi është qyteti i porosisë më të madhe. Rruga shtesë për porositë e tjera llogaritet nga ajo rrugë.</p>
     <label>Linku i Instagramit</label><input data-path="instagram" value="${esc(s.instagram)}"></div>
   <div class="card"><h2>Kopje rezervë</h2><p class="mute">Të gjitha të dhënat ruhen në këtë telefon. Bëj kopje rezervë herë pas here.</p>
@@ -1461,12 +1500,9 @@ function renderSettings(){
     const arr=s[el.dataset.list],r=arr[+el.dataset.i];r[el.dataset.k]=el.dataset.k==="eur"?(parseFloat(el.value)||0):el.value;
     if(el.dataset.k==="name"&&!el.value.trim())arr.splice(+el.dataset.i,1);save();render()}));
   document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{s[b.dataset.add].push({name:"I ri",eur:0});save();render()});
-  document.querySelectorAll("[data-preset]").forEach(el=>el.addEventListener("change",()=>{
-    const i=+el.dataset.preset,k=el.dataset.k;
-    if(k==="name"&&!el.value.trim()){s.presets.splice(i,1)}else s.presets[i][k]=k==="name"?el.value:(parseFloat(el.value)||0);save();render()}));
+  wirePresets(s);
   $("#d-auto").onchange=e=>{s.dieselAuto=e.target.checked;save();if(e.target.checked)syncPrices(true)};
   $("#d-sync").onclick=()=>syncPrices(true);
-  $("#addPreset").onclick=()=>{s.presets.push({name:"Lloj i ri",l:100,w:50,h:50,kg:20,rate:0});save();render()};
   wireAddr("f-base",r=>{if(r){s.base=r;save()}});
   $("#exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,1)],{type:"application/json"}));a.download="gemini-kopje-"+new Date().toISOString().slice(0,10)+".json";a.click()};
   $("#imp").onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!d.orders)throw 0;DB=d;save();render();toast("Kopja u rikthye")}catch(x){toast("Skedari nuk është kopje e vlefshme")}};
