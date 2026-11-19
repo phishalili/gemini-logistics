@@ -764,7 +764,7 @@ async function calcCompany(){
   $("#saveOrder").onclick=()=>{
     const o={id:draft.offerId||uid(),created:Date.now(),createdBy:whoAmI(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
       what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,docs:q.docs};
-    DB.orders.unshift(o);
+    DB.orders.unshift(o);notifyNew("Porosi e re",o.customer,o.addr);
     const pick=document.querySelector("input[name=fit]:checked");
     if(pick&&pick.value){const tr=DB.trips.find(x=>x.id===pick.value);if(tr){tr.orderIds.push(o.id);o.tripId=tr.id}}
     save();draft=null;toast("Porosia u ruajt");setTab("orders");
@@ -849,6 +849,31 @@ function fillsCard(tr,p){
       +`<p class="mute" style="margin:6px 0 0">${L?`Paguar: <b>${eur(paid)}</b> për ${num1(L)} L. Llogaritja e udhëtimit tani përdor çmimin mesatar të paguar ${eur(paid/L)}. Sipas km duhen ~${Math.round(calcL)} L.`:"Shkruaj edhe litrat që llogaritja të përdorë çmimin e paguar."}</p>`
       :`<p class="mute" style="margin:0">Ende nuk ka mbushje. Kur mbush, shëno çmimin e vërtetë. Nëse ndryshon nga llogaritja, kostoja e udhëtimit përditësohet.</p>`}
     <button class="btn green full big" type="button" id="addFill" style="margin-top:8px">Shto mbushjen</button></div>`;
+}
+
+
+/* ===================== NJOFTIMET (ntfy.sh) ===================== */
+// Kur shtohet porosi/veturë e re, dërgohet njoftim te telefonat që e kanë app-in "ntfy" të abonuar në këtë temë.
+// Tema është e fshehtë (e rastësishme) dhe ruhet te cilësimet, kështu e kanë të gjithë telefonat.
+function notifyNew(title,who,addr){const t=S().notifyTopic;if(!t)return;
+  const by=whoAmI(),body=`${by?by+": ":""}${who||"Pa emër"}${addr?", "+cityOf(addr):""}`;
+  ntfy({topic:t,title,message:body,tags:["truck"],click:location.href.split("#")[0]}).catch(()=>{})}
+// JSON në trup (pa header-a), që shkronjat ë/ç të dalin saktë
+function ntfy(msg){return fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(msg)})}
+function notifyCard(){const t=S().notifyTopic;
+  return `<div class="card"><h2>Njoftimet në telefon</h2>
+  ${t?`<p style="margin:0 0 6px">Të ndezura. Kur dikush shton porosi ose veturë të re, vjen njoftim në telefon.</p>
+    <ol style="margin:4px 0 8px;padding-left:20px;font-size:14px;line-height:1.5"><li>Shkarko app-in falas <b>ntfy</b> (App Store ose Google Play).</li><li>Hap ntfy, shtyp <b>+</b> dhe shkruaj këtë temë: <b style="user-select:all;word-break:break-all">${esc(t)}</b></li><li>Shtyp “Subscribe”. Kaq.</li></ol>
+    <div class="row"><button class="btn ghost small" type="button" id="nt-copy">Kopjo temën</button><button class="btn ghost small" type="button" id="nt-test">Dërgo njoftim provë</button></div>
+    <button class="btn ghost small" type="button" id="nt-off" style="margin-top:8px">Fik njoftimet</button>`
+  :`<p class="mute" style="margin:0 0 8px">Merr njoftim në telefon sa herë që Maruf, Krenar ose ti shtoni porosi të re. Funksionon në iPhone dhe Android me app-in falas “ntfy”.</p>
+    <button class="btn full" type="button" id="nt-on">Ndiz njoftimet</button>`}
+  <p class="mute" style="margin:8px 0 0;font-size:12.5px">Njoftimi përmban emrin e klientit dhe qytetin, dhe kalon nëpër shërbimin ntfy.sh.</p></div>`}
+function wireNotify(){const s=S();
+  const on=$("#nt-on");if(on)on.onclick=()=>{const a=new Uint8Array(12);crypto.getRandomValues(a);s.notifyTopic="gemini-"+[...a].map(x=>x.toString(36).padStart(2,"0")).join("").slice(0,18);save();render()};
+  const off=$("#nt-off");if(off)off.onclick=()=>{if(!twoTap(off))return;s.notifyTopic="";save();render()};
+  const cp=$("#nt-copy");if(cp)cp.onclick=()=>navigator.clipboard.writeText(s.notifyTopic).then(()=>toast("Tema u kopjua"),()=>toast(s.notifyTopic));
+  const ts=$("#nt-test");if(ts)ts.onclick=()=>{ntfy({topic:s.notifyTopic,title:"Gemini Logistics",message:"Njoftimet punojnë. Do të marrësh njoftim për çdo porosi të re."}).then(r=>toast(r.ok?"Njoftimi provë u dërgua":"Nuk u dërgua"),()=>toast("Nuk ka internet"))};
 }
 
 /* ===================== OFERTA PDF PËR KLIENTIN ===================== */
@@ -1546,7 +1571,7 @@ function renderCar(id){
     const o=isNew?{id:uid(),created:Date.now(),createdBy:whoAmI(),status:"waiting",tripId:null}:c;
     Object.assign(o,{year:$("#c-year").value.trim(),...cur(),model:$("#c-model").value.trim(),owner:$("#c-owner").value.trim(),phone:$("#c-phone").value.trim(),from:vdraft.from,to:$("#c-to").value.trim(),price:parseFloat($("#c-price").value)||vdraft.auto||0,priceManual:!!vdraft.manual,vatOn:$("#c-vat").checked,docs:parseFloat($("#c-docs").value)||0,note:$("#c-note").value});
     if(!isNew){o.status=$("#c-home").checked?"home":"waiting";const nt=$("#c-trip").value;if(nt!==(o.tripId||"")){DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==o.id));if(nt)DB.trips.find(t=>t.id===nt).carIds.push(o.id);o.tripId=nt||null}}
-    if(isNew)DB.cars.unshift(o);
+    if(isNew){DB.cars.unshift(o);notifyNew("Veturë e re",(o.model||"Veturë")+(o.owner?" · "+o.owner:""),o.from)}
     save();vdraft=null;toast("Vetura u ruajt");setTab("orders");
   };
   if(!isNew)$("#c-del").onclick=()=>{if(!twoTap($("#c-del")))return;DB.cars=DB.cars.filter(x=>x!==c);DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==c.id));save();vdraft=null;setTab("orders")};
@@ -1813,7 +1838,7 @@ function renderSettings(){
   const get=path=>path.split(".").reduce((a,k)=>a?.[k],s);
   const num=(path,label)=>`<div><label>${label}</label><input type="number" inputmode="decimal" step="any" data-path="${path}" value="${get(path)}"></div>`;
   const list=(name,arr,lab)=>`<h3>${lab}</h3>`+arr.map((r,i)=>`<div class="row" style="margin-bottom:6px"><input data-list="${name}" data-i="${i}" data-k="name" value="${esc(r.name)}" style="flex:2"><input type="number" inputmode="decimal" data-list="${name}" data-i="${i}" data-k="eur" value="${r.eur}"></div>`).join("")+`<button class="btn ghost small" data-add="${name}">+ Shto rresht</button>`;
-  $("#app").innerHTML=syncCard()+`<div class="card"><h2>Çmimi dhe fitimi</h2>
+  $("#app").innerHTML=syncCard()+notifyCard()+`<div class="card"><h2>Çmimi dhe fitimi</h2>
     <div class="row">${num("margin","Fitimi %")}${num("minPrice","Çmimi minimal €")}</div>
     <div class="row">${num("handling","Ngarkim/shkarkim për porosi €")}${num("loadFactor","Furgoni zakonisht plot %")}</div>
     <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
@@ -1853,7 +1878,7 @@ function renderSettings(){
   <div class="card"><h2>Kopje rezervë</h2><p class="mute">Të gjitha të dhënat ruhen në këtë telefon. Bëj kopje rezervë herë pas here.</p>
     <div class="row"><button class="btn ghost" id="exp">Shkarko kopjen</button><label class="btn ghost" style="margin:0;color:var(--acc);font-size:15px">Rikthe<input type="file" id="imp" accept=".json" hidden></label></div>
     <button class="btn warn full" id="reset">Kthe cilësimet në fillestare</button></div>`;
-  wireSync();
+  wireSync();wireNotify();
   document.querySelectorAll("[data-path]").forEach(el=>el.addEventListener("change",()=>{
     const ks=el.dataset.path.split(".");let o=s;ks.slice(0,-1).forEach(k=>o=o[k]);
     o[ks.at(-1)]=el.type==="number"?(parseFloat(el.value)||0):el.value;fixPayload();save();render()}));
