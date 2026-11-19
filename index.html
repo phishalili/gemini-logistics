@@ -762,7 +762,7 @@ async function calcCompany(){
   if(!draft.offerId)draft.offerId=uid();
   $("#pdfOffer").onclick=e=>shareOfferPdf({id:draft.offerId,created:Date.now(),customer:draft.customer,phone:draft.phone,addr:draft.addr,items:draft.items,price:parseFloat($("#f-price").value)||q.price,vatOn:q.vatOn},e.currentTarget);
   $("#saveOrder").onclick=()=>{
-    const o={id:draft.offerId||uid(),created:Date.now(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
+    const o={id:draft.offerId||uid(),created:Date.now(),createdBy:whoAmI(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
       what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,docs:q.docs};
     DB.orders.unshift(o);
     const pick=document.querySelector("input[name=fit]:checked");
@@ -1000,8 +1000,8 @@ function renderOrders(){
   const list=DB.orders;
   const waitL=list.filter(o=>o.status!=="delivered"&&!onTrip(o)),tripL=list.filter(o=>o.status!=="delivered"&&onTrip(o)),doneL=list.filter(o=>o.status==="delivered");
   const row=o=>{const g=orderGoods(o),st=orderState(o);return `<div class="stop ost ${st.k}" style="cursor:default;flex-wrap:wrap">
-    <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
-    <span class="pill ${st.k==="done"?"good":st.k}">${esc(st.t)}${st.k==="done"&&o.deliveredAt?" "+esc(fmtDay(o.deliveredAt)):""}</span> <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span><span id="rec-${o.id}"></span></div>
+    <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${o.createdBy?` <span class="mute">(${esc(o.createdBy)})</span>`:""}${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
+    <span class="pill ${st.k==="done"?"good":st.k}">${esc(st.t)}${st.k==="done"&&o.deliveredAt?" "+esc(fmtDay(o.deliveredAt)):""}</span> <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span><span id="rec-${o.id}"></span>${o.editedBy&&o.editedBy!==o.createdBy?`<br><span class="mute" style="font-size:12.5px">Ndryshuar nga ${esc(o.editedBy)}, ${esc(fmtDay(o.editedAt))}</span>`:""}</div>
     <div><b>${eur(o.price)}</b></div>
     <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
       ${st.k==="road"?`<button class="btn green big" style="flex:1 1 100%" type="button" data-deliv="${o.id}">Dorëzuar</button>`:st.k==="done"?`<button class="btn ghost small" type="button" data-deliv="${o.id}">Anulo dorëzimin</button>`:""}
@@ -1543,7 +1543,7 @@ function renderCar(id){
   fit();qp();
   $("#c-save").onclick=()=>{
     if(!vdraft.from){toast("Zgjidh adresën ku merret vetura");return}
-    const o=isNew?{id:uid(),created:Date.now(),status:"waiting",tripId:null}:c;
+    const o=isNew?{id:uid(),created:Date.now(),createdBy:whoAmI(),status:"waiting",tripId:null}:c;
     Object.assign(o,{year:$("#c-year").value.trim(),...cur(),model:$("#c-model").value.trim(),owner:$("#c-owner").value.trim(),phone:$("#c-phone").value.trim(),from:vdraft.from,to:$("#c-to").value.trim(),price:parseFloat($("#c-price").value)||vdraft.auto||0,priceManual:!!vdraft.manual,vatOn:$("#c-vat").checked,docs:parseFloat($("#c-docs").value)||0,note:$("#c-note").value});
     if(!isNew){o.status=$("#c-home").checked?"home":"waiting";const nt=$("#c-trip").value;if(nt!==(o.tripId||"")){DB.trips.forEach(t=>t.carIds=(t.carIds||[]).filter(x=>x!==o.id));if(nt)DB.trips.find(t=>t.id===nt).carIds.push(o.id);o.tripId=nt||null}}
     if(isNew)DB.cars.unshift(o);
@@ -1573,6 +1573,7 @@ function renderOrder(id){
     delete o.kg;delete o.m3;
     const nt=$("#f-trip").value;
     if(nt!==(o.tripId||""))assignOrder(o.id,nt);
+    const me=whoAmI();if(me){o.editedBy=me;o.editedAt=new Date().toISOString()}
     save();odraft=null;toast("U ruajt");setTab("orders");
   };
   $("#del").onclick=()=>{if(!twoTap($("#del")))return;DB.orders=DB.orders.filter(x=>x!==o);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==o.id));save();odraft=null;setTab("orders")};
