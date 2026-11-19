@@ -327,8 +327,8 @@ async function extraKm(trip,o){
 
 /* ===================== NAFTA NË RRUGË ===================== */
 // Vendet që na interesojnë. "src": pikat me çmim për secilën pikë; pa src = vetëm çmimi i vendit.
-const CTRY=[["XK","🇽🇰","Kosovë"],["RS","🇷🇸","Serbi"],["HR","🇭🇷","Kroaci"],["SI","🇸🇮","Slloveni"],["AT","🇦🇹","Austri"],["DE","🇩🇪","Gjermani"],
-  ["CH","🇨🇭","Zvicër"],["IT","🇮🇹","Itali"],["FR","🇫🇷","Francë"],["LU","🇱🇺","Luksemburg"],["BE","🇧🇪","Belgjikë"],["NL","🇳🇱","Holandë"]];
+const CTRY=[["XK","","Kosovë"],["RS","","Serbi"],["HR","","Kroaci"],["SI","","Slloveni"],["AT","","Austri"],["DE","","Gjermani"],
+  ["CH","","Zvicër"],["IT","","Itali"],["FR","","Francë"],["LU","","Luksemburg"],["BE","","Belgjikë"],["NL","","Holandë"]];
 const CNAME=Object.fromEntries(CTRY.map(c=>[c[0],c]));
 // vendi i një adrese, nga emri i shtetit në adresë
 const CRX={XK:/kosov|kosova/i,RS:/serbi|srbija|serbien/i,HR:/kroaci|hrvatska|kroatien|croatia/i,SI:/slloveni|slovenija|slowenien|slovenia/i,AT:/austri|österreich|austria/i,
@@ -441,7 +441,7 @@ function wireAddr(id,onPick){
       // gjithmonë lejo adresën siç është shkruar; vendndodhja merret nga rezultati i parë ose nga qyteti
       const near=results[0]||cityIn(q);
       if(near)results.push({label:q,lat:near.lat,lng:near.lng,exact:"typed"});
-      list.innerHTML=results.length?results.map((r,i)=>`<li data-i="${i}">${r.exact==="typed"?`✎ <b>Përdor siç e shkrova:</b> `:""}${esc(r.label)}${r.exact===false?` <span class="pill warn">pa numër</span>`:""}</li>`).join(""):`<li class="mute">Nuk u gjet. Shkruaj edhe qytetin, p.sh. “Hauptstraße 5, Stuttgart”.</li>`;
+      list.innerHTML=results.length?results.map((r,i)=>`<li data-i="${i}">${r.exact==="typed"?`<b>Përdor siç e shkrova:</b> `:""}${esc(r.label)}${r.exact===false?` <span class="pill warn">pa numër</span>`:""}</li>`).join(""):`<li class="mute">Nuk u gjet. Shkruaj edhe qytetin, p.sh. “Hauptstraße 5, Stuttgart”.</li>`;
       list.hidden=false;
     },350)});
   list.addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(!li)return;const r=results[+li.dataset.i];inp.value=r.label;list.hidden=true;onPick(r)});
@@ -887,14 +887,14 @@ function renderClient(){
 function clientLink(){return location.href.split("#")[0]+"#klient"}
 
 /* ===================== POROSITË ===================== */
-function telLink(o){return o.phone?` · <a href="tel:${esc(o.phone.replace(/[^\d+]/g,""))}" onclick="event.preventDefault();event.stopPropagation();contactMenu(this.getAttribute('href').slice(4),this.textContent.slice(3))">📞 ${esc(o.phone)}</a>`:""}
+function telLink(o){return o.phone?` · <a href="tel:${esc(o.phone.replace(/[^\d+]/g,""))}" onclick="event.preventDefault();event.stopPropagation();contactMenu(this.getAttribute('href').slice(4),this.textContent)">${esc(o.phone)}</a>`:""}
 function intlNum(n){n=n.replace(/[^\d+]/g,"");if(n.startsWith("00"))n="+"+n.slice(2);else if(n.startsWith("0"))n="+383"+n.slice(1);else if(!n.startsWith("+"))n="+"+n;return n}
 function contactMenu(raw,label){
   const n=intlNum(raw),d=n.slice(1);
   document.querySelector(".cmenu")?.remove();
   const m=document.createElement("div");m.className="cmenu";
   m.innerHTML=`<div class="cm-box"><div class="mute" style="text-align:center;margin-bottom:8px">${esc(label||n)}</div>
-    <a class="cm-btn" href="tel:${n}">📞 Telefono</a>
+    <a class="cm-btn" href="tel:${n}">Telefono</a>
     <a class="cm-btn" style="background:#25d366;color:#fff" href="https://wa.me/${d}" target="_blank" rel="noopener">WhatsApp</a>
     <a class="cm-btn" style="background:#7360f2;color:#fff" href="viber://chat?number=%2B${d}">Viber</a>
     <button class="cm-btn" style="background:var(--line)" type="button">Anulo</button></div>`;
@@ -1221,7 +1221,7 @@ function carsCard(){
   const w=DB.cars.filter(c=>c.status!=="home"),h=DB.cars.filter(c=>c.status==="home");
   const row=c=>`<div class="stop" onclick="setTab('orders','car:${c.id}')"><div class="grow"><b>${esc(c.model||"Veturë")}</b> · ${esc(cityOf(c.from))}${c.tripId&&c.status!=="home"?` <span class="pill">${esc(tripLabel(c.tripId))}</span>`:""}<br>
     <span class="mute">${c.year?esc(c.year)+" · ":""}${carDims(c)}</span><br><span class="mute">${esc(c.owner||"")}${telLink(c)}${c.to?" · për: "+esc(c.to):""}</span></div><div><b>${eur(c.price||0)}</b></div></div>`;
-  return `<div class="card"><h2>🚗 Veturat për në shtëpi (${w.length} presin)</h2>
+  return `<div class="card"><h2>Veturat për në shtëpi (${w.length} presin)</h2>
     <p class="mute" style="margin:0 0 6px">Veturat që i marrim në kthim. Te Udhëtimet të tregohet cila është më e leverdishme.</p>
     ${w.map(row).join("")||`<p class="mute">S'ka vetura që presin.</p>`}
     <button class="btn full" onclick="setTab('orders','car:new')">+ Shto veturë</button>
@@ -1269,7 +1269,7 @@ function renderCar(id){
   let forced=null;
   const look=()=>{const m=forced&&forced.n===$("#c-model").value?forced:carLookup($("#c-model").value,$("#c-year").value);
     if(!m){$("#c-spec").innerHTML=$("#c-model").value.trim()?"Nuk e gjeta këtë model në listë. Shkruaj masat vetë.":"";fit();return}
-    $("#c-spec").innerHTML=`✓ <b>${esc(m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
+    $("#c-spec").innerHTML=`<b>${esc(m.n)}</b> (${m.y1}–${m.y2>=2026?"sot":m.y2}): ${carDims(m)} <span class="mute">(përafërsisht, pesha bosh)</span>`;
     $("#c-l").value=Math.round(m.l);$("#c-w").value=Math.round(m.w);$("#c-h").value=Math.round(m.h);$("#c-kg").value=m.kg;fit();qp()};
   const lookD=debounce(look,300),ml=$("#c-model-list");let sugs=[];
   $("#c-model").oninput=()=>{sugs=carSuggest($("#c-model").value);
@@ -1438,7 +1438,7 @@ async function renderCarPick(){
       <input type="checkbox" data-car="${r.c.id}" ${ntf.cars.has(r.c.id)?"checked":""} style="width:auto;margin-top:3px">
       ${carRowHtml(r,(recIds.has(r.c.id)?` <span class="pill good">rekomandohet</span>`:"")+(r.c.tripId?` <span class="pill">tani në: ${esc(tripLabel(r.c.tripId))}</span>`:""),v)}</label>`).join("")}
     <p id="carNow" style="margin:8px 0 0"></p>`;
-  const now=()=>{const sel=rows.filter(r=>ntf.cars.has(r.c.id));$("#carNow").innerHTML=sel.length?`🚗 Merr në kthim: <b>${sel.map(r=>esc((r.c.model||"Veturë")+" nga "+cityOf(r.c.from))).join(", ")}</b>`:`<span class="mute">Pa veturë në kthim.</span>`};
+  const now=()=>{const sel=rows.filter(r=>ntf.cars.has(r.c.id));$("#carNow").innerHTML=sel.length?`Merr në kthim: <b>${sel.map(r=>esc((r.c.model||"Veturë")+" nga "+cityOf(r.c.from))).join(", ")}</b>`:`<span class="mute">Pa veturë në kthim.</span>`};
   box.querySelectorAll("[data-car]").forEach(c=>c.onchange=()=>{ntf._carAuto=false;c.checked?ntf.cars.add(c.dataset.car):ntf.cars.delete(c.dataset.car);now()});
   now();
 }
@@ -1465,17 +1465,17 @@ async function renderTrip(id){
       <ul style="margin:6px 0;padding-left:18px;font-size:14px">${itemLines(o)}</ul>
       <span class="mute">Gjithsej ${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³ · çmimi ${eur(o.price)}</span>${o.note?`<br><span class="mute">Shënim: ${esc(o.note)}</span>`:""}
       <div class="row" style="margin-top:6px"><a class="btn small" href="${navUrl(o.addr)}" target="_blank" rel="noopener">Harta</a>
-      <button class="btn ghost small" onclick="toggleDelivered('${o.id}','${tr.id}')">${o.status==="delivered"?"Anulo":"Dorëzuar ✓"}</button>
+      <button class="btn ghost small" onclick="toggleDelivered('${o.id}','${tr.id}')">${o.status==="delivered"?"Anulo":"Dorëzuar"}</button>
       <button class="btn warn small" onclick="removeFromTrip('${o.id}','${tr.id}')">Hiqe</button></div></div></div>`}).join("")}
     ${left.length?`<a class="btn ghost full" href="${routeUrl(left.map(o=>o.addr))}" target="_blank" rel="noopener">Hap gjithë rrugën në Google Maps</a><p class="mute">Telefoni tregon deri në ~9 ndalesa njëherësh; për udhëtime të gjata përdor “Ndalesa e radhës”.</p>`:""}
   </div>
   ${left.length>1?`<div class="card"><h2>Radha e ngarkimit</h2><p class="mute" style="margin:0 0 6px">Ngarko së pari ndalesën e fundit, në fund të rimorkios.</p>
     <ol style="margin:0;padding-left:20px;font-size:14px">${[...left].reverse().map(o=>`<li><b>${esc(o.customer||"")}</b> (${esc(cityOf(o.addr))}): ${esc(o.items?itemsSummary(o.items):o.what||"")}</li>`).join("")}</ol></div>`:""}
-  <div class="card"><h2>🚗 Veturat në kthim · ${km(p.back)} kthimi</h2>
+  <div class="card"><h2>Veturat në kthim · ${km(p.back)} kthimi</h2>
     ${p.carStops.length?p.carStops.map((c,i)=>`<div class="stop" style="cursor:default"><div class="num">K${i+1}</div><div class="grow"><b>${esc(c.model||"Veturë")}</b>${c.year?" "+esc(c.year):""} · merret në ${esc(cityOf(c.from))}${carFit(c,v).ok?"":` <span class="pill warn">${esc(carFit(c,v).txt)}</span>`}${c.status==="home"?` <span class="pill good">në shtëpi</span>`:""}<br>
       <span class="mute">${esc(c.from.label)}</span><br>${c.l?`<span class="mute">${carDims(c)}</span><br>`:""}<span class="mute">${esc(c.owner||"")}${telLink(c)} · ${eur(c.price||0)}${c.to?" · dorëzohet: "+esc(c.to):""}</span>
       <div class="row" style="margin-top:6px"><a class="btn small" href="${navUrl(c.from)}" target="_blank" rel="noopener">Harta</a>
-      <button class="btn ghost small" onclick="toggleCarHome('${c.id}','${tr.id}')">${c.status==="home"?"Anulo":"Në shtëpi ✓"}</button>
+      <button class="btn ghost small" onclick="toggleCarHome('${c.id}','${tr.id}')">${c.status==="home"?"Anulo":"Në shtëpi"}</button>
       <button class="btn warn small" onclick="carFromTrip('${c.id}','${tr.id}')">Hiqe</button></div></div></div>`).join(""):`<p class="mute">Ende s'ke zgjedhur veturë për kthim.</p>`}
     ${p.carStops.length?`<details class="more" id="carLoad"><summary>Shiko si ngarkohet vetura (3D)</summary><div id="pack-car"></div></details>`:""}
     <div id="carsLoose"></div></div>
@@ -1546,7 +1546,7 @@ function renderSettings(){
     <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
     <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}${num("vat","TVSH %")}</div>
     <p class="mute">“Furgoni zakonisht plot” e ndan koston: në 80%, një porosi që zë 10% të furgonit paguan 12,5% të udhëtimit. “Pesha e vlerësuar” përdoret kur pesha nuk dihet.</p></div></div>
-  <div class="card"><h2>🚗 Çmimi i veturave në kthim</h2>
+  <div class="card"><h2>Çmimi i veturave në kthim</h2>
     <div class="row">${num("carBase","Bazë €")}${num("carPerKm","€ për km deri në Kosovë")}</div>
     <div class="row">${num("carHeavyKg","Veturë e rëndë mbi kg")}${num("carHeavyPct","Shtesë për të rëndat %")}</div>
     <div class="row">${num("carMin","Çmimi minimal €")}${num("carDocs","Dokumente për veturë € (fillestare)")}</div>
@@ -1693,7 +1693,7 @@ function syncCard(){
     <button class="btn full" id="sy-login" type="button" style="margin-top:8px">Hyr</button>
     <div class="row" style="margin-top:6px"><button class="btn ghost small" id="sy-new" type="button">Herën e parë: krijo fjalëkalimin</button><button class="btn ghost small" id="sy-reset" type="button">Harrova fjalëkalimin</button></div>
     <p class="mute" style="margin:6px 0 0">Vetëm Phis, Maruf dhe Krenar kanë leje (me email-at e tyre).</p>${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}</div>`;
-  return `<div class="card"><h2>Account</h2><p style="margin:0">✓ I lidhur si <b>${esc(SYNC.user.email)}</b></p>
+  return `<div class="card"><h2>Account</h2><p style="margin:0">I lidhur si <b>${esc(SYNC.user.email)}</b></p>
     <p class="mute" style="margin:4px 0 8px">${SYNC.last?"Përditësuar "+SYNC.last.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"Duke sinkronizuar…"}${navigator.onLine===false?" · pa internet, dërgohet kur kthehet":""}</p>
     ${SYNC.err?`<p><span class="pill warn">${esc(SYNC.err)}</span></p>`:""}<button class="btn ghost small" id="sy-out" type="button">Dil</button></div>`;
 }
