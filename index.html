@@ -1860,7 +1860,7 @@ async function renderTrip(id){
   </div>
   <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
   ${fillsCard(tr,p)}
-  ${expCard(tr,p)}
+  ${tr.status==="onroad"||tr.status==="done"||tripExp(tr).length?expCard(tr,p):""}
   ${fuelDrop(tr)}
   <div class="card"><div class="row"><button class="btn ghost" id="done">${tr.status==="done"?"Rihape udhëtimin":"Shëno të përfunduar"}</button><button class="btn warn" id="del">Fshij udhëtimin</button></div></div>`;
   $("#f-ret").onchange=e=>{tr.returnIncome=parseFloat(e.target.value)||0;save();renderTrip(id)};
@@ -1881,7 +1881,7 @@ async function renderTrip(id){
       const c=countryAt(pos),near=(STN?.stations||[]).filter(x=>x.lat).map(x=>({x,d:hav(pos,x)})).sort((a,b)=>a.d-b.d)[0];
       pre={...pre,lat:pos.lat,lng:pos.lng,c,...(near&&near.d<0.4?{station:[near.x.name,near.x.city].filter(Boolean).join(", "),price:near.x.price}:{price:+dieselOf(c).toFixed(3)||""})}}catch(e){}
     fillForm(pre,()=>renderTrip(id))};
-  $("#addExp").onclick=()=>{const v=parseFloat(String($("#ex-eur").value).replace(",","."));if(!(v>0))return toast("Shkruaj shumën");
+  if($("#addExp"))$("#addExp").onclick=()=>{const v=parseFloat(String($("#ex-eur").value).replace(",","."));if(!(v>0))return toast("Shkruaj shumën");
     if(!Array.isArray(tr.exp))tr.exp=[];tr.exp.push({id:uid(),cat:$("#ex-cat").value,eur:Math.round(v*100)/100,note:$("#ex-note").value.trim(),date:new Date().toISOString(),by:whoAmI()});
     save();toast("Shpenzimi u shtua");renderTrip(id).then(()=>$("#expCard")?.scrollIntoView({block:"center"}))};
   document.querySelectorAll("[data-delexp]").forEach(b=>b.onclick=()=>{if(!twoTap(b))return;tr.exp=tripExp(tr).filter(e=>e.id!==b.dataset.delexp);save();renderTrip(id)});
