@@ -921,8 +921,8 @@ function renderOrders(){
     <div class="grow"><b>${esc(o.customer||"Pa emër")}</b>${telLink(o)} · ${esc(o.items?itemsSummary(o.items):o.what||"")}<br><span class="mute">${esc(o.addr?.label)}</span><br>
     <span class="mute">${g.est?"≈":""}${g.kg} kg · ${num1(g.m3)} m³</span> ${o.status==="delivered"?`<span class="pill good">dorëzuar</span>`:""}${onTrip(o)&&o.status!=="delivered"?` <span class="pill">në udhëtim: ${esc(tripLabel(o.tripId))}</span>`:""}<span id="rec-${o.id}"></span></div>
     <div><b>${eur(o.price)}</b></div>
-    <div style="flex-basis:100%;display:flex;gap:6px;margin-top:4px">
-      <select data-assign="${o.id}" style="flex:1;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
+    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+      <select data-assign="${o.id}" style="flex:1 1 100%;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
       ${o.items?.length?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
@@ -1743,7 +1743,11 @@ function refreshFuelBar(){const el=$("#fuelbar");if(el){el.innerHTML=fuelBarInne
 syncPrices(false);syncStations();
 addEventListener("online",()=>{refreshFuelBar();syncPrices(false)});addEventListener("offline",refreshFuelBar);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S().dieselChecked!==new Date().toISOString().slice(0,10))syncPrices(false)});
-if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+  const hadSW=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(hadSW&&!reloaded){reloaded=true;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;location.reload()}});
+  navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});setInterval(chk,10*60e3)}).catch(()=>{});
+}
 </script>
 </body>
 </html>
