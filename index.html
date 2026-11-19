@@ -1716,7 +1716,7 @@ function waitingOrders(exceptTrip){
   return DB.orders.filter(o=>o.status!=="delivered"&&o.tripId!==exceptTrip&&!onTrip(o));
 }
 function tripLabel(id){const t=DB.trips.find(x=>x.id===id);return t?dateTxt(t.date)+(t.name?" · "+t.name:""):""}
-const DRIVERS=["Maruf","Krenar","Fisnik"];
+const DRIVERS=["Maruf","Krenar"];
 const myNames=()=>{const w=whoAmI();return w==="Phis"?["Phis","Fisnik"]:w?[w]:[]};
 // Udhëtimi në rrugë: ndalesat me radhë, i yti i pari
 function onTripCard(){
