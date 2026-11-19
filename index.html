@@ -709,7 +709,8 @@ let draft=null;
 function renderQuote(){
   if(!draft)draft={customer:"",phone:"",what:"",addr:null,items:[newItem(0)]};
   const full=!!draft.full;
-  $("#app").innerHTML=`${fuelBar()}<div class="card"><h2>Ofertë e re</h2>
+  const ft=draft.forTrip&&DB.trips.find(x=>x.id===draft.forTrip);
+  $("#app").innerHTML=`${fuelBar()}${ft?`<div class="card" style="border:2px solid #f0b400"><b>Porosi e re për udhëtimin ${esc(dateTxt(ft.date))}</b><br><span class="mute">Pas ruajtjes shtohet te ky udhëtim.</span><div class="row" style="margin-top:6px"><button class="btn ghost small" type="button" id="ftBack">← Kthehu te udhëtimi</button><button class="btn ghost small" type="button" id="ftOff">Mos e shto te udhëtimi</button></div></div>`:""}<div class="card"><h2>Ofertë e re</h2>
   <div class="seg" role="group" aria-label="Lloji i transportit"><button type="button" class="${full?"on":""}" id="m-full">Transport i plotë<small>i gjithë furgoni për një vend</small></button><button type="button" class="${full?"":"on"}" id="m-part">Parcial<small>vetëm disa gjëra, furgoni mbushet me të tjera</small></button></div>
   <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(draft.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" placeholder="+383 …" value="${esc(draft.phone||"")}"></div></div>
   <label>Adresa e dorëzimit</label>${addrField("f-addr",draft.addr)}
@@ -726,6 +727,7 @@ function renderQuote(){
   <div><label for="q-docs">Dokumente / të tjera €</label><input id="q-docs" type="number" inputmode="decimal" value="${draft.docs||""}" placeholder="0"></div></div>
   <button class="btn full" id="calc">Llogarit çmimin</button></div><div id="result"></div>`;
   wireAddr("f-addr",r=>draft.addr=r);wireFuelBar();
+  if(ft){$("#ftBack").onclick=()=>{const t=draft.forTrip;draft=null;setTab("trips",t)};$("#ftOff").onclick=()=>{delete draft.forTrip;renderQuote()}}
   $("#f-cust").oninput=e=>draft.customer=e.target.value;$("#f-phone").oninput=e=>draft.phone=e.target.value;
   const repack=debounce(()=>packView("pack-q",piecesFromItems(draft.items).sort((a,b)=>b.l*b.w*b.h-a.l*a.w*a.h),vanById(draft.pkVan||"A"),draft.items.map((it,j)=>({color:j,label:it.qty+"× "+(it.preset==="x"?"Mall":(S().presets[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,""))})).filter(l=>!l.label.startsWith("0×")),{tip:draft.pkTip}),120);
   if(!full){$("#pk-van").onchange=e=>{draft.pkVan=e.target.value;repack()};
@@ -739,6 +741,11 @@ function renderQuote(){
   $("#q-vat").onchange=e=>{draft.vatOn=e.target.checked;rq()};
   $("#q-docs").oninput=debounce(e=>{draft.docs=parseFloat($("#q-docs").value)||0;rq()},400);
 }
+// Pas ruajtjes: nëse porosia u hap nga një udhëtim, shtohet aty dhe kthehemi te udhëtimi
+function afterOrderSaved(o){const tid=draft?.forTrip,tr=tid&&DB.trips.find(x=>x.id===tid);
+  if(tr&&!o.tripId){DB.trips.forEach(x=>x.orderIds=x.orderIds.filter(y=>y!==o.id));tr.orderIds.push(o.id);o.tripId=tr.id}
+  save();draft=null;toast(tr?"Porosia u shtua te udhëtimi":"Porosia u ruajt");tr?setTab("trips",tr.id):setTab("orders")}
+function newOrderForTrip(tid){draft={customer:"",phone:"",what:"",addr:null,items:[newItem(0)],forTrip:tid};setTab("quote")}
 // Transport i plotë: kostoja e gjithë udhëtimit (vajtje-ardhje) + fitimi për furgon të plotë + dogana e vendit
 const fullMargin=()=>{const m=S().fullMargin;return m==null||m===""?40:+m};
 async function calcFull(){
@@ -761,7 +768,7 @@ async function calcFull(){
     what:"Transport i plotë"+(draft.fullDesc?": "+draft.fullDesc:""),m3:+vanVol(v).toFixed(1),kg:0,price:parseFloat($("#f-price").value)||price,suggested:price,cost,vatOn,vatRate:rate,docs});
   $("#pdfOffer").onclick=e=>shareOfferPdf(rec(),e.currentTarget);
   $("#saveOrder").onclick=()=>{const o={...rec(),createdBy:whoAmI(),status:"open"};DB.orders.unshift(o);notifyNew("Porosi e re (transport i plotë)",o.customer,o.addr);
-    save();draft=null;toast("Porosia u ruajt");setTab("orders")};
+    afterOrderSaved(o)};
 }
 async function calcCompany(){
   const g=goods(draft.items);
@@ -808,7 +815,7 @@ async function calcCompany(){
     DB.orders.unshift(o);notifyNew("Porosi e re",o.customer,o.addr);
     const pick=document.querySelector("input[name=fit]:checked");
     if(pick&&pick.value){const tr=DB.trips.find(x=>x.id===pick.value);if(tr){tr.orderIds.push(o.id);o.tripId=tr.id}}
-    save();draft=null;toast("Porosia u ruajt");setTab("orders");
+    afterOrderSaved(o);
   };
 }
 function itemsSummary(items){const P=S().presets;return items.filter(i=>i.qty).map(i=>i.qty+"× "+(i.preset==="x"?"mall":(P[i.preset]?.name||"mall").replace(/\s*\(shkruaj.*\)/,"")+(perM(i)?" "+num1(units(i))+" m":""))).join(", ")}
@@ -1797,7 +1804,7 @@ function driverList(){const n=[...new Set(["Maruf","Krenar",...DB.trips.map(t=>t
 async function renderPick(){
   const box=$("#pickBox");if(!box)return;
   const waiting=waitingOrders(null);
-  if(!waiting.length){box.innerHTML=`<p class="mute">S'ka porosi që presin. Shtoji te Çmimi dhe pastaj zgjidhi këtu.</p>`;return}
+  if(!waiting.length){box.innerHTML=`<p class="mute">Nuk ka porosi që presin. Shtoji te Çmimi dhe pastaj zgjidhi këtu.</p>`;return}
   const mo=mainOrderOf(waiting),dest=ntf.dest||mo?.addr||ntf.start,D=!!(ntf.dest||mo);
   const v=vanById(ntf.van),pk=perKm(v);
   const M=await distMatrix([ntf.start,dest,...waiting.map(o=>o.addr)]);
@@ -1913,7 +1920,7 @@ async function renderTrip(id){
     <tr><td><b>Fitimi</b></td><td><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b></td></tr></table>
     <label for="f-ret">Të hyra të tjera (€)</label><input id="f-ret" type="number" inputmode="decimal" value="${tr.returnIncome||""}"></details>
   </div>
-  ${fin?"":`  <div class="card"><h2>Shto porosi që presin</h2><div id="loose">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">S'ka porosi që presin.</p>`}</div></div>
+  ${fin?"":`  <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2 style="margin:0">Shto porosi që presin</h2><button class="btn small" type="button" onclick="newOrderForTrip('${tr.id}')" aria-label="Porosi e re">+ Porosi e re</button></div><div id="loose" style="margin-top:8px">${loose.length?`<p class="mute">Duke kontrolluar rrugën shtesë…</p>`:`<p class="mute">Nuk ka porosi që presin. Shtyp “+ Porosi e re” për të shtuar një.</p>`}</div></div>
   ${fillsCard(tr,p)}
   ${tr.status==="onroad"||tr.status==="done"||tripExp(tr).length?expCard(tr,p):""}
   ${fuelDrop(tr)}`}
