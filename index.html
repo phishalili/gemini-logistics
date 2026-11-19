@@ -254,17 +254,13 @@ function tripCostBreakdown(v,kmTotal,tr){
     ["Sigurimi & vinjetat (pjesa për udhëtim)",fixedPerTrip()],
     ["Shpenzimet e shoferit ("+s.daysPerTrip+" ditë)",s.daysPerTrip*s.driverPerDay*s.driversPerVan]];
   const ex=tr?tripExp(tr):[];
-  if(ex.length){const sumG=g=>ex.filter(e=>EXPG[e.cat]===g).reduce((a,e)=>a+(+e.eur||0),0);
-    if(ex.some(e=>EXPG[e.cat]==="drv"))rows[4]=["Ushqim dhe fjetje (të shënuara)",sumG("drv")];
-    if(ex.some(e=>EXPG[e.cat]==="toll"))rows[2]=["Autostradat / tunelet (të shënuara)",sumG("toll")];
-    const oth=ex.filter(e=>!EXPG[e.cat]);if(oth.length)rows.push(["Shpenzime të tjera të shënuara",oth.reduce((a,e)=>a+(+e.eur||0),0)])}
+  if(ex.length)rows.push(["Shpenzime shtesë (të shënuara)",ex.reduce((a,e)=>a+(+e.eur||0),0)]);
   const total=rows.reduce((a,r)=>a+r[1],0),ret=total*s.returnShare/100;
   if(ret)rows.push(["E paguar nga veturat në kthim (−"+s.returnShare+"%)",-ret]);
   return {rows,total:total-ret};
 }
 // Shpenzimet që i shënon shoferi gjatë/në fund të udhëtimit
 const EXPCATS=[["ushqim","Ushqim"],["fjetje","Fjetje"],["autostrade","Autostradë / tunel"],["parking","Parking"],["servis","Servis / larje"],["gjobe","Gjobë"],["tjeter","Të tjera"]];
-const EXPG={ushqim:"drv",fjetje:"drv",autostrade:"toll"};
 const tripExp=tr=>Array.isArray(tr&&tr.exp)?tr.exp:[];
 function shareOf(g,v){return Math.max((g.kg||0)/v.payloadKg,(g.m3||0)/vanVol(v))}
 // Dogana sipas vendit të destinacionit (Cilësimet). Porositë e vjetra pa vatRate mbajnë normën e vjetër (18%).
@@ -887,20 +883,16 @@ function fillForm(pre={},onSaved){
     DB.fills.unshift(f);save();m.remove();toast("Mbushja u ruajt");if(onSaved)onSaved();else render()};
 }
 function expCard(tr,p){
-  const ex=tripExp(tr),s=S(),extra=p.orders.length*s.handling+p.docs;
-  const est=tripCostBreakdown(p.v,p.kmTotal).total+extra,real=p.costs.total+extra,d=real-est;
+  const ex=tripExp(tr),tot=ex.reduce((a,e)=>a+(+e.eur||0),0);
   const cn=c=>(EXPCATS.find(x=>x[0]===c)||[0,"Të tjera"])[1];
   return `<div class="card" id="expCard"><h2>Shpenzimet e udhëtimit</h2>
-    <p class="mute" style="margin:0 0 6px">Shkruaji vetë: ushqimi, fjetja, autostrada, parkingu, etj. Ushqimi dhe fjetja zëvendësojnë vlerësimin për shoferin, autostrada zëvendëson vlerësimin e taksave, të tjerat shtohen.</p>
+    <p class="mute" style="margin:0 0 6px">Shto shpenzimet shtesë: ushqim, fjetje, parking, etj.</p>
     ${ex.map(e=>`<div class="stop" style="cursor:default"><div class="grow"><b>${esc(cn(e.cat))}</b> · <b>${eur(+e.eur||0)}</b>${e.note?` · ${esc(e.note)}`:""}<br><span class="mute">${esc(fmtDay(e.date))}${e.by?" · "+esc(e.by):""}</span></div><button class="x" style="background:none;border:0;font-size:22px;color:var(--mute)" data-delexp="${e.id}" aria-label="Fshi">×</button></div>`).join("")}
     <div class="row" style="margin-top:8px"><div><label for="ex-cat">Lloji</label><select id="ex-cat">${EXPCATS.map(c=>`<option value="${c[0]}">${esc(c[1])}</option>`).join("")}</select></div>
     <div><label for="ex-eur">Shuma €</label><input id="ex-eur" type="text" inputmode="decimal" placeholder="P.sh. 40"></div></div>
     <label for="ex-note">Shënim (opsional)</label><input id="ex-note" placeholder="P.sh. hotel në Zagreb">
     <button class="btn green full" type="button" id="addExp" style="margin-top:8px">Shto shpenzimin</button>
-    <table style="margin-top:10px"><tr><td>Vlerësimi fillestar i shpenzimeve</td><td>${eur(est)}</td></tr>
-    <tr><td>Me shpenzimet e vërteta</td><td><b>${eur(real)}</b></td></tr>
-    <tr><td>Diferenca</td><td><b style="color:${d>0.5?"var(--warn)":"var(--good)"}">${d>=0?"+":"−"}${eur(Math.abs(d))}</b></td></tr></table>
-    ${ex.length?`<p class="mute" style="margin:6px 0 0">Gjithsej të shënuara: ${eur(ex.reduce((a,e)=>a+(+e.eur||0),0))}. Fitimi te “Paratë” llogaritet me shpenzimet e vërteta.</p>`:""}</div>`;
+    <div class="big3" style="margin-top:12px"><div><b>${eur(tot)}</b><span>Shpenzime shtesë</span></div><div><b style="color:${p.profit<0?"var(--warn)":"var(--good)"}">${eur(p.profit)}</b><span>Fitimi final</span></div></div></div>`;
 }
 function fillsCard(tr,p){
   const l=(DB.fills||[]).filter(f=>f.tripId===tr.id),L=l.reduce((a,f)=>a+(+f.liters||0),0),paid=l.reduce((a,f)=>a+(+f.liters||0)*f.price,0);
