@@ -105,6 +105,56 @@ def spain():
     return out
 
 
+def croatia_all():
+    """Të gjitha pikat në Kroaci (mzoe-gor.hr). Çmimi = eurodizeli më i lirë (i rregullt), jo premium."""
+    j = json.loads(get("https://mzoe-gor.hr/data.json"))
+    vrsta = {g["id"]: g.get("vrsta_goriva_id") for g in j.get("gorivos", [])}
+    comp = {o["id"]: o.get("naziv", "") for o in j.get("obvezniks", [])}
+    out = []
+    for st in j.get("postajas", []):
+        try:
+            a, b = float(st["long"]), float(st["lat"])
+            la, lo = (a, b) if a > b else (b, a)
+        except Exception:
+            continue
+        pr = [float(c["cijena"]) for c in st.get("cjenici", []) if vrsta.get(c.get("gorivo_id")) in (7, 8) and c.get("cijena")]
+        pr = [x for x in pr if 1.2 <= x <= 2.6]
+        if not pr:
+            continue
+        brand = re.sub(r"\s*d\.o\.o\.?|\s*d\.d\.?|\s*–\s*Industrija nafte", "", comp.get(st.get("obveznik_id"), "")).strip()
+        nm = st.get("naziv") or ""
+        out.append({"c": "HR", "name": (brand + " " + nm).strip(), "address": st.get("adresa") or "", "city": st.get("mjesto") or "",
+                    "lat": round(la, 5), "lng": round(lo, 5), "price": round(min(pr), 3),
+                    "mw": bool(re.search(r"autocest|odmori", (nm + " " + (st.get("adresa") or "")).lower()))})
+    print("HR all stations:", len(out))
+    return out
+
+
+def slovenia_all():
+    """Të gjitha pikat në Slloveni (goriva.si), dizeli i rregullt. AC = pikë në autostradë."""
+    out, url, n = [], "https://goriva.si/api/v1/search/?position=46.1,14.8&radius=300000", 0
+    while url and n < 60:
+        d = json.loads(get(url)); n += 1
+        for x in d.get("results", []):
+            v = (x.get("prices") or {}).get("dizel")
+            if not v:
+                continue
+            nm = x.get("name") or ""
+            out.append({"c": "SI", "name": nm.title(), "address": (x.get("address") or "").title(), "city": "",
+                        "lat": round(x["lat"], 5), "lng": round(x["lng"], 5), "price": round(float(v), 3), "mw": bool(re.search(r"\bAC\b", nm))})
+        url = d.get("next")
+    print("SI all stations:", len(out))
+    return out
+
+
+def no_outliers(lst):
+    import statistics
+    if not lst:
+        return lst
+    med = statistics.median(x["price"] for x in lst)
+    return [x for x in lst if x["price"] >= 0.9 * med]
+
+
 def build(route_stations):
     """route_stations: lista nga update_prices.py (HR, SI, AT, DE). Kthen stations.json."""
     try:
@@ -123,9 +173,18 @@ def build(route_stations):
         except Exception as e:
             print(code, "failed:", e, file=sys.stderr)
             out += old.get(code, [])
+    full = {}
+    for code, fn in (("HR", croatia_all), ("SI", slovenia_all)):
+        try:
+            full[code] = no_outliers(fn())
+        except Exception as e:
+            print(code, "all failed:", e, file=sys.stderr)
+    route_stations = [x for x in route_stations if x["c"] not in full or not full[x["c"]]]
+    for code, l in full.items():
+        route_stations += l
     have = {x["c"] for x in route_stations}
     out += route_stations + [s for c, l in old.items() if c in ("HR", "SI", "AT", "DE") and c not in have for s in l]
     # vetëm fushat që i duhen app-it, numrat e shkurtuar
-    out = [{k: s.get(k, "") for k in ("c", "name", "address", "city", "lat", "lng", "price")} for s in out]
+    out = [{**{k: s.get(k, "") for k in ("c", "name", "address", "city", "lat", "lng", "price")}, **({"mw": 1} if s.get("mw") else {})} for s in out]
     json.dump({"updated": today, "stations": out}, open("stations.json", "w"), ensure_ascii=False, separators=(",", ":"))
     print("stations.json:", len(out), {c: sum(1 for s in out if s["c"] == c) for c in sorted({s["c"] for s in out})})
