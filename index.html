@@ -112,7 +112,7 @@ const DEFAULTS = {
   tollsPerTrip:[{name:"Autostrada Serbi (vajtje-ardhje)",eur:70},{name:"Autostrada Kroaci (vajtje-ardhje)",eur:80},{name:"Gjermani / tjetër",eur:0}],
   fixedYear:[{name:"Sigurimi (200 € × 4)",eur:800},{name:"Vinjeta Austri",eur:90},{name:"Tunelet Austri",eur:77},{name:"Vinjeta Slloveni",eur:240}],
   tripsPerYear:24, daysPerTrip:5, driversPerVan:1, driverPerDay:40, wearPerKm:0.08,
-  returnShare:0, vat:18, duty:{DE:19,AT:20,FR:20,CH:8.1,IT:22,BE:21,NL:21,LU:17,HR:25,SI:22,RS:20,XK:18}, carDocs:75, carsPerTrip:1, carBase:150, carPerKm:0.25, carHeavyKg:1800, carHeavyPct:20, carMin:300, loadFactor:80, handling:20, margin:25, minPrice:80, roadFactor:1.25,
+  returnShare:0, fullMargin:40, vat:18, duty:{DE:19,AT:20,FR:20,CH:8.1,IT:22,BE:21,NL:21,LU:17,HR:25,SI:22,RS:20,XK:18}, carDocs:75, carsPerTrip:1, carBase:150, carPerKm:0.25, carHeavyKg:1800, carHeavyPct:20, carMin:300, loadFactor:80, handling:20, margin:25, minPrice:80, roadFactor:1.25,
   densityKgM3:150,   // kur pesha nuk dihet: kg për m³
   instagram:"https://www.instagram.com/geminilogistics.eu/",
   presets:[ // emri, gjatësi × gjerësi × lartësi (cm), kg për copë
@@ -709,7 +709,7 @@ function renderQuote(){
   <div class="row"><div><label for="f-cust">Emri i klientit</label><input id="f-cust" value="${esc(draft.customer)}"></div><div><label for="f-phone">Numri i telefonit</label><input id="f-phone" type="tel" inputmode="tel" placeholder="+383 …" value="${esc(draft.phone||"")}"></div></div>
   <label>Adresa e dorëzimit</label>${addrField("f-addr",draft.addr)}
   ${full?`<label for="f-fdesc">Çfarë ngarkohet (për ofertën, opsionale)</label><input id="f-fdesc" value="${esc(draft.fullDesc||"")}" placeholder="P.sh. 1 kuzhinë, 1 dhomë gjumi">
-  <label for="f-fprice">Çmimi për furgonin e plotë (pa doganë) €</label><input id="f-fprice" type="number" inputmode="decimal" value="${draft.fullPrice||""}" placeholder="P.sh. 2300">`:`
+  <p class="mute" style="margin:6px 0 0">Çmimi llogaritet vetë: kostoja e gjithë udhëtimit vajtje-ardhje plus fitimi për transport të plotë (te Cilësimet).</p>`:`
   <h3>Mallrat</h3><p class="mute" style="margin:0">Zgjidh llojin, ose shkruaj masat. Nëse nuk e di peshën, lëre bosh: e vlerësojmë nga madhësia. Kuzhina: shkruaj gjatësinë totale te “Gjatësia cm” (p.sh. 550), sasia 1.</p>
   ${itemsEditor(draft.items,true)}
   <details class="more" id="q3d" ${draft.open3d?"open":""}><summary>Shiko si ngarkohet në furgon (3D)</summary>
@@ -727,22 +727,21 @@ function renderQuote(){
   $("#q3d").ontoggle=e=>{draft.open3d=e.target.open;if(e.target.open)repack()};
   $("#pk-tip").onchange=e=>{draft.pkTip=e.target.checked;repack()}}
   $("#m-full").onclick=()=>{draft.full=true;renderQuote()};$("#m-part").onclick=()=>{draft.full=false;renderQuote()};
-  if(full){$("#f-fdesc").oninput=e=>draft.fullDesc=e.target.value;$("#f-fprice").oninput=e=>draft.fullPrice=parseFloat(e.target.value)||0}
+  if(full){$("#f-fdesc").oninput=e=>draft.fullDesc=e.target.value}
   else wireItems(draft,renderQuote,repack);
   $("#calc").onclick=()=>draft.full?calcFull():calcCompany();
   const rq=()=>{if($("#saveOrder"))draft.full?calcFull():calcCompany()};
   $("#q-vat").onchange=e=>{draft.vatOn=e.target.checked;rq()};
   $("#q-docs").oninput=debounce(e=>{draft.docs=parseFloat($("#q-docs").value)||0;rq()},400);
 }
-// Transport i plotë: çmimi i furgonit të plotë (më vonë: formula e Phis-it) + dogana e vendit
-const fullVanNet=()=>+draft.fullPrice||0;
+// Transport i plotë: kostoja e gjithë udhëtimit (vajtje-ardhje) + fitimi për furgon të plotë + dogana e vendit
+const fullMargin=()=>{const m=S().fullMargin;return m==null||m===""?40:+m};
 async function calcFull(){
   if(!draft.addr)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Zgjidh adresën nga lista</span></div>`;
-  const net0=fullVanNet();if(!net0)return $("#result").innerHTML=`<div class="card"><span class="pill warn">Shkruaj çmimin për furgonin e plotë</span></div>`;
   $("#result").innerHTML=`<div class="card mute">Duke llogaritur rrugën…</div>`;
   const s=S(),v=avgVan(),docs=+draft.docs||0,rate=dutyRate(draft.addr),vatOn=draft.vatOn!==false,vr=vatOn?rate/100:0;
   const M=await distMatrix([s.base,draft.addr]),kmT=M[0][1]+M[1][0],trip=tripCostBreakdown(v,kmT);
-  const net=net0+docs,price=Math.ceil(net*(1+vr)/5)*5,cost=trip.total+s.handling+docs;
+  const cost=trip.total+s.handling+docs,net=(trip.total+s.handling)*(1+fullMargin()/100)+docs,price=Math.max(Math.ceil(net*(1+vr)/5)*5,+s.minPrice||0);
   const q={price,net:price/(1+vr),vat:price-price/(1+vr),vatOn,rate,docs,cost};
   $("#result").innerHTML=`<div class="card">
     <div class="mute">Transport i plotë për në ${esc(cityOf(draft.addr))} (${vatOn?"me doganë":"pa doganë"})</div><div class="price">${eur(price)}</div>
@@ -1883,7 +1882,7 @@ function renderSettings(){
     <div class="row">${num("margin","Fitimi %")}${num("minPrice","Çmimi minimal €")}</div>
     <div class="row">${num("handling","Ngarkim/shkarkim për porosi €")}${num("loadFactor","Furgoni zakonisht plot %")}</div>
     <div class="row">${num("returnShare","% e kostos që e paguajnë veturat në kthim")}${num("densityKgM3","Pesha e vlerësuar kg për m³")}</div>
-    <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}</div>
+    <div class="row">${num("carsPerTrip","Vetura në kthim për udhëtim")}${num("fullMargin","Fitimi për transport të plotë %")}</div>
     <h3>Dogana sipas vendit (%)</h3><p class="mute" style="margin:0 0 4px">Zgjidhet vetë nga vendi i adresës (për veturat: vendi ku merret). Nuk shfaqet te klienti, vetëm futet në çmimin final.</p>
     <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${CTRY.map(c=>`<div><label for="du-${c[0]}" style="margin-top:4px">${esc(c[2])}</label><input id="du-${c[0]}" type="number" inputmode="decimal" data-path="duty.${c[0]}" value="${+(s.duty||{})[c[0]]||0}"></div>`).join("")}</div>
     <p class="mute">“Furgoni zakonisht plot” e ndan koston: në 80%, një porosi që zë 10% të furgonit paguan 12,5% të udhëtimit. “Pesha e vlerësuar” përdoret kur pesha nuk dihet.</p></div></div>
@@ -1948,6 +1947,7 @@ function migrateSettings(st){if(!st)return false;let ch=false;
 if(migrateSettings(DB.settings))save();
 if(!Array.isArray(DB.fills))DB.fills=[];
 if(!DB.settings.duty){DB.settings.duty=structuredClone(DEFAULTS.duty);save()}
+if(DB.settings.fullMargin==null){DB.settings.fullMargin=DEFAULTS.fullMargin;save()}
 if(!DB.examplesCleaned){
   const fake=new Set(DB.orders.filter(o=>/^SHEMBULL/i.test(o.customer||"")).map(o=>o.id));
   DB.orders=DB.orders.filter(o=>!fake.has(o.id));
