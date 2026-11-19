@@ -744,9 +744,13 @@ async function calcCompany(){
     <tr><td><b>Kostoja</b> → fitimi (pa TVSH) ${eur(q.net-q.cost)}</td><td><b>${eur(q.cost)}</b></td></tr></table></details>
     <label for="f-price">Çmimi i dakorduar (${q.vatOn?"me TVSH":"pa TVSH"})</label><input id="f-price" type="number" inputmode="decimal" value="${q.price}">
     ${fits}
-    <button class="btn full" id="saveOrder">Ruaje si porosi</button></div>`;
+    <button class="btn full" id="saveOrder">Ruaje si porosi</button>
+    <button class="btn ghost full" id="pdfOffer" type="button" style="margin-top:8px">Ofertë PDF për klientin</button></div>`;
+  preloadPdf().catch(()=>{});
+  if(!draft.offerId)draft.offerId=uid();
+  $("#pdfOffer").onclick=e=>shareOfferPdf({id:draft.offerId,created:Date.now(),customer:draft.customer,phone:draft.phone,addr:draft.addr,items:draft.items,price:parseFloat($("#f-price").value)||q.price,vatOn:q.vatOn},e.currentTarget);
   $("#saveOrder").onclick=()=>{
-    const o={id:uid(),created:Date.now(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
+    const o={id:draft.offerId||uid(),created:Date.now(),status:"open",customer:draft.customer,phone:draft.phone||"",addr:draft.addr,items:structuredClone(draft.items),
       what:itemsSummary(draft.items),price:parseFloat($("#f-price").value)||q.price,suggested:q.price,cost:q.cost,vatOn:q.vatOn,docs:q.docs};
     DB.orders.unshift(o);
     const pick=document.querySelector("input[name=fit]:checked");
@@ -763,6 +767,87 @@ async function fitsOnTrips(o){
   rows.sort((a,b)=>(b.ok-a.ok)||(a.ex-b.ex));
   const opt=(v,checked,dis,html)=>`<label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;font-weight:500"><input type="radio" name="fit" value="${v}" style="width:auto" ${checked?"checked":""} ${dis?"disabled":""}><span>${html}</span></label>`;
   return `<h3>Hyn në një udhëtim të planifikuar?</h3>`+rows.map((r,i)=>opt(r.tr.id,i===0&&r.ok,!r.ok,`<b>${esc(dateTxt(r.tr.date))}</b> +${km(r.ex)} rrugë shtesë (≈${eur(r.cost)}) ${r.ok?`<span class="pill good">hyn</span>`:`<span class="pill warn">plot</span>`}`)).join("")+opt("",!rows[0].ok,false,"Mos e shto ende në udhëtim");
+}
+
+/* ===================== OFERTA PDF PËR KLIENTIN ===================== */
+// Vetëm çmimi final për klientin: pa kosto, pa naftë, pa fitim.
+const PDF={lib:null,logo:null,loading:null};
+function preloadPdf(){
+  if(PDF.loading)return PDF.loading;
+  PDF.loading=(async()=>{
+    if(!window.jspdf)await new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="jspdf.min.js";sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});
+    PDF.lib=window.jspdf.jsPDF;
+    try{const b=await (await fetch("logo.png")).blob();PDF.logo=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)})}catch(e){PDF.logo=null}
+  })().catch(e=>{PDF.loading=null;throw e});
+  return PDF.loading;
+}
+function offerNo(o){const d=new Date(o.created||Date.now());return "GL-"+String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"-"+String(o.id||uid()).slice(-4).toUpperCase()}
+function pdfItemName(it){const P=S().presets;return it.preset==="x"?"Mall":(P[it.preset]?.name||"Mall").replace(/\s*\(.*\)/,"")}
+function buildOfferPdf(o){
+  const doc=new PDF.lib({unit:"mm",format:"a4"}),s=S(),W=210,M=16,blue=[31,63,160],deep=[32,52,113],ink=[28,35,51],mute=[100,108,128],light=[230,236,250],line=[221,226,238];
+  const T=(t,x,y,o2={})=>{doc.setFont("helvetica",o2.b?"bold":"normal");doc.setFontSize(o2.size||10);doc.setTextColor(...(o2.c||ink));doc.text(String(t),x,y,o2.align?{align:o2.align}:undefined)};
+  const d=new Date(o.created||Date.now()),fd=x=>x.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const valid=new Date(d.getTime()+14*864e5);
+  // koka
+  if(PDF.logo)doc.addImage(PDF.logo,"PNG",M,12,36,26.8);
+  T("OFERTË TRANSPORTI",W-M,20,{b:1,size:18,c:blue,align:"right"});
+  T("Nr. "+offerNo(o),W-M,27,{size:10,c:mute,align:"right"});
+  T("Data: "+fd(d),W-M,32,{size:10,c:mute,align:"right"});
+  T("Vlen deri më: "+fd(valid),W-M,37,{size:10,c:mute,align:"right"});
+  doc.setDrawColor(...blue);doc.setLineWidth(0.8);doc.line(M,44,W-M,44);
+  // klienti dhe rruga
+  let y=54;const colW=(W-2*M-8)/2;
+  const box=(x,title,lines)=>{T(title,x,y,{b:1,size:9,c:blue});let yy=y+6;lines.forEach(([t,b])=>{doc.splitTextToSize(t,colW).forEach(l=>{T(l,x,yy,{size:10.5,b});yy+=5})});return yy};
+  const y1=box(M,"KLIENTI",[[o.customer||"-",1],...(o.phone?[["Tel: "+o.phone]]:[])]);
+  const y2=box(M+colW+8,"TRANSPORTI",[["Nga: "+(s.base?.label||"Kosovë")],["Për: "+(o.addr?.label||"-"),1]]);
+  y=Math.max(y1,y2)+6;
+  // tabela e mallrave
+  const cols=[{t:"Nr.",w:10},{t:"Malli",w:66},{t:"Sasia",w:24,a:"right"},{t:"Masat (cm)",w:46,a:"right"},{t:"Pesha",w:32,a:"right"}];
+  const tw=cols.reduce((a,c)=>a+c.w,0);
+  doc.setFillColor(...blue);doc.rect(M,y,tw,8,"F");
+  let x=M;cols.forEach(c=>{T(c.t,c.a?x+c.w-2:x+2,y+5.5,{b:1,size:9.5,c:[255,255,255],align:c.a});x+=c.w});y+=8;
+  const items=(o.items||[]).filter(it=>+it.qty>0);let tot={kg:0,m3:0,est:false};
+  items.forEach((it,i)=>{
+    const g=goods([it]);tot.kg+=g.kg;tot.m3+=g.m3;tot.est=tot.est||g.est;
+    const name=doc.splitTextToSize(pdfItemName(it),cols[1].w-4),h=Math.max(8,name.length*4.6+3.4);
+    if(y+h>250){doc.addPage();y=20}
+    if(i%2)doc.setFillColor(...light),doc.rect(M,y,tw,h,"F");
+    const vals=[String(i+1),null,perM(it)?num1(units(it))+" m":(+it.qty)+" copë",it.l&&it.w&&it.h?`${+it.l} × ${+it.w} × ${+it.h}`:"-",(g.est?"~ ":"")+Math.round(g.kg).toLocaleString("de-DE")+" kg"];
+    x=M;cols.forEach((c,k)=>{if(k===1)name.forEach((l,j)=>T(l,x+2,y+5.5+j*4.6,{size:10}));else T(vals[k],c.a?x+c.w-2:x+2,y+5.5,{size:10,align:c.a});x+=c.w});
+    y+=h;doc.setDrawColor(...line);doc.setLineWidth(0.2);doc.line(M,y,M+tw,y)});
+  y+=6;T(`Gjithsej: ${num1(tot.m3)} m³ · ${tot.est?"~ ":""}${Math.round(tot.kg).toLocaleString("de-DE")} kg${tot.est?" (pesha e vlerësuar)":""}`,M,y,{size:9.5,c:mute});
+  // çmimi
+  y+=10;if(y>235){doc.addPage();y=24}
+  const price=+o.price||0,vatOn=o.vatOn!==false,net=netOf(price,vatOn),vat=price-net,bx=W-M-86;
+  doc.setFillColor(...light);doc.roundedRect(bx,y,86,vatOn?34:22,3,3,"F");
+  let py=y+8;
+  if(vatOn){T("Pa TVSH",bx+5,py,{size:10,c:mute});T(eur(net),W-M-5,py,{size:10,c:mute,align:"right"});py+=6;
+    T(`TVSH ${s.vat}%`,bx+5,py,{size:10,c:mute});T(eur(vat),W-M-5,py,{size:10,c:mute,align:"right"});py+=4;
+    doc.setDrawColor(...blue);doc.setLineWidth(0.3);doc.line(bx+5,py,W-M-5,py);py+=8}
+  T(vatOn?"ÇMIMI FINAL":"ÇMIMI (pa TVSH)",bx+5,py+1,{b:1,size:11,c:deep});T(eur(price),W-M-5,py+1.5,{b:1,size:17,c:blue,align:"right"});
+  // shënimet
+  let ny=y+4;const notes=["Çmimi përfshin transportin, ngarkimin dhe shkarkimin.",vatOn?`Çmimi përfshin TVSH ${s.vat}%.`:"Çmimi nuk përfshin TVSH.","Oferta vlen 14 ditë nga data e lëshimit."];
+  T("Kushtet",M,ny,{b:1,size:9,c:blue});ny+=6;notes.forEach(n=>{doc.splitTextToSize(n,bx-M-6).forEach(l=>{T(l,M,ny,{size:9.5,c:mute});ny+=4.8})});
+  // fundi
+  doc.setDrawColor(...line);doc.setLineWidth(0.3);doc.line(M,282,W-M,282);
+  T("Gemini Cars & Logistics · Kosovë - Evropë",M,288,{size:8.5,c:mute});
+  T((s.instagram||"").replace(/^https?:\/\/(www\.)?/,""),W-M,288,{size:8.5,c:mute,align:"right"});
+  return doc;
+}
+async function shareOfferPdf(o,btn){
+  const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent="Duke krijuar PDF…"}
+  try{
+    if(!PDF.lib)await preloadPdf();
+    const doc=buildOfferPdf(o),blob=doc.output("blob");
+    const name=("Oferta-Gemini-"+(o.customer||"klient")).normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+"-"+offerNo(o).slice(3)+".pdf";
+    const file=new File([blob],name,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:"Oferta e transportit"});return}catch(e){if(e.name==="AbortError")return}
+    }
+    const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),60000);toast("PDF u ruajt në telefon");
+  }catch(e){toast("PDF nuk u krijua: "+(e.message||"pa internet?"))}
+  finally{if(btn){btn.disabled=false;btn.textContent=old}}
 }
 
 /* ===================== KLIENTI ===================== */
@@ -839,6 +924,7 @@ function renderOrders(){
     <div style="flex-basis:100%;display:flex;gap:6px;margin-top:4px">
       <select data-assign="${o.id}" style="flex:1;padding:7px;font-size:13px">${tripOptions(o.tripId)}</select>
       <button class="btn ghost small" onclick="setTab('orders','${o.id}')">Ndrysho</button>
+      ${o.items?.length?`<button class="btn ghost small" type="button" data-pdf="${o.id}">PDF</button>`:""}
       <button class="btn warn small" data-delo="${o.id}">Fshij</button></div></div>`};
   $("#app").innerHTML=`<div class="card"><h2>Porositë që presin (${waitL.length})</h2>
   ${list.length?(waitL.length?"":`<p class="mute">Të gjitha porositë janë në udhëtime.</p>`):`<p class="mute">Ende s'ka porosi. Bëj një ofertë te Çmimi dhe ruaje.</p>`}
@@ -847,6 +933,8 @@ function renderOrders(){
   ${doneL.length?`<div class="card"><details class="more" style="border:0;margin:0;padding:0"><summary style="font-size:18px">Të dorëzuara (${doneL.length})</summary>${doneL.map(row).join("")}</details></div>`:""}
   ${carsCard()}`;
   document.querySelectorAll("[data-assign]").forEach(sel=>sel.onchange=()=>{assignOrder(sel.dataset.assign,sel.value);render()});
+  if(document.querySelector("[data-pdf]"))preloadPdf().catch(()=>{});
+  document.querySelectorAll("[data-pdf]").forEach(btn=>btn.onclick=e=>{const o=DB.orders.find(x=>x.id===btn.dataset.pdf);if(o)shareOfferPdf(o,btn)});
   document.querySelectorAll("[data-delo]").forEach(btn=>btn.onclick=()=>{if(!twoTap(btn))return;const id=btn.dataset.delo;DB.orders=DB.orders.filter(x=>x.id!==id);DB.trips.forEach(tr=>tr.orderIds=tr.orderIds.filter(x=>x!==id));save();toast("Porosia u fshi");render()});
   const waiting=waitL;recommendOrders(waiting);
   if(waiting.length>=2){$("#app").insertAdjacentHTML("afterbegin",`<div class="card" id="plan"><h2>Plani për porositë që presin</h2><p class="mute">Duke llogaritur…</p></div>`);renderPlan(waiting)}
