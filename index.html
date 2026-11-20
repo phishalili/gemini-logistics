@@ -915,9 +915,14 @@ function fillsCard(tr,p){
 /* ===================== NJOFTIMET (ntfy.sh) ===================== */
 // Kur shtohet porosi/veturë e re, dërgohet njoftim te telefonat që e kanë app-in "ntfy" të abonuar në këtë temë.
 // Tema është e fshehtë (e rastësishme) dhe ruhet te cilësimet, kështu e kanë të gjithë telefonat.
+// ID e këtij telefoni: app-i Android nuk i shfaq njoftimet që i ka dërguar vetë ky telefon
+const DEV_ID=(()=>{try{let d=localStorage.getItem("gemini.dev");if(!d){d=Math.random().toString(36).slice(2,10);localStorage.setItem("gemini.dev",d)}return d}catch(e){return "x"}})();
+let NATIVE_NT="";
+// I tregon app-it Android temën e njoftimeve, që ta dëgjojë edhe kur app-i është i mbyllur
+function syncNativeNotify(){try{const b=window.GeminiAndroid;if(!b||!b.setNotify)return;const k=(S().notifyTopic||"")+"|"+DEV_ID+"|"+whoAmI();if(k===NATIVE_NT)return;NATIVE_NT=k;b.setNotify(S().notifyTopic||"",DEV_ID,whoAmI()||"")}catch(e){}}
 function notifyNew(title,who,addr){const t=S().notifyTopic;if(!t)return;
   const by=whoAmI(),body=`${by?by+": ":""}${who||"Pa emër"}${addr?", "+cityOf(addr):""}`;
-  ntfy({topic:t,title,message:body,tags:["truck"],click:location.href.split("#")[0]}).catch(()=>{})}
+  ntfy({topic:t,title,message:body,tags:["truck","dev-"+DEV_ID],click:location.href.split("#")[0]}).catch(()=>{})}
 // JSON në trup (pa header-a), që shkronjat ë/ç të dalin saktë
 function ntfy(msg){return fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(msg)})}
 function notifyCard(){const t=S().notifyTopic;
@@ -2169,7 +2174,7 @@ function wireSync(){
 syncStart();
 
 /* ===================== NISJA ===================== */
-function render(){
+function render(){syncNativeNotify();
   const client=location.hash==="#klient";
   document.body.classList.toggle("client",client);
   $("#nav").hidden=client;
